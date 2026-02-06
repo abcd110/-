@@ -930,6 +930,13 @@ export class GameManager {
     }
   }
 
+  // 消费列车币
+  consumeTrainCoins(amount: number): boolean {
+    if (this.trainCoins < amount) return false;
+    this.trainCoins -= amount;
+    return true;
+  }
+
   // 休息
   rest(): { success: boolean; message: string; logs: string[] } {
     const logs: string[] = [];

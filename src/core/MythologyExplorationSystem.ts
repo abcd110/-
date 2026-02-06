@@ -228,7 +228,7 @@ export class MythologyExplorationSystem {
     let progressGained = 0;
     const loot: string[] = [];
     let interference = null;
-    let storyFragment = null;
+    const storyFragment = null;
     let eventTriggered = false;
 
     // 检查是否触发神明干扰（20%概率）

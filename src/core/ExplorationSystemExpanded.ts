@@ -220,7 +220,7 @@ export class ExplorationSystemExpanded {
     this.state.turnCount++;
     const logs: string[] = [];
     let progressGained = this.config.progressPerTurn;
-    let loot: { itemId: string; quantity: number; name: string }[] = [];
+    const loot: { itemId: string; quantity: number; name: string }[] = [];
     let combatInfo = undefined;
 
     // 检查是否触发战斗

@@ -295,6 +295,13 @@ export class Player {
     return true;
   }
 
+  // 消耗精神值
+  consumeSpirit(amount: number): boolean {
+    if (this.spirit < amount) return false;
+    this.spirit -= amount;
+    return true;
+  }
+
   // 增加经验
   addExp(amount: number): string[] {
     const logs: string[] = [];

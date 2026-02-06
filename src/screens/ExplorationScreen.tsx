@@ -110,14 +110,13 @@ export default function ExplorationScreen({ onBack, onStartBattle, initialLocati
 
   // 选择狩猎 - 普通难度
   const startHuntingNormal = () => {
-    // 检查体力是否足够
-    if (gameManager.player.stamina < 10) {
+    // 消耗时间和体力
+    gameManager.advanceTime(15);
+    const success = gameManager.player.consumeStamina(10);
+    if (!success) {
       addLog('⚠️ 体力不足，无法狩猎');
       return;
     }
-    // 消耗时间和体力
-    gameManager.advanceTime(15);
-    gameManager.player.stamina -= 10;
     addLog('👹 开始狩猎（普通）...');
     // 狩猎一定会遇到普通敌人
     if (exploration.locationId) {
@@ -127,14 +126,13 @@ export default function ExplorationScreen({ onBack, onStartBattle, initialLocati
 
   // 选择狩猎 - 困难难度（精英敌人）
   const startHuntingHard = () => {
-    // 检查体力是否足够
-    if (gameManager.player.stamina < 15) {
+    // 消耗时间和体力
+    gameManager.advanceTime(20);
+    const success = gameManager.player.consumeStamina(15);
+    if (!success) {
       addLog('⚠️ 体力不足，无法狩猎（困难）');
       return;
     }
-    // 消耗时间和体力
-    gameManager.advanceTime(20);
-    gameManager.player.stamina -= 15;
     addLog('👹 开始狩猎（困难）...');
     // 狩猎一定会遇到精英敌人
     if (exploration.locationId) {
@@ -165,7 +163,11 @@ export default function ExplorationScreen({ onBack, onStartBattle, initialLocati
 
     // 消耗时间和体力
     gameManager.advanceTime(15);
-    gameManager.player.stamina -= 10;
+    const bossSuccess = gameManager.player.consumeStamina(10);
+    if (!bossSuccess) {
+      addLog('⚠️ 体力不足，无法挑战BOSS');
+      return;
+    }
     addLog('👹 挑战BOSS！');
 
     onStartBattle(exploration.locationId, true);
@@ -175,15 +177,13 @@ export default function ExplorationScreen({ onBack, onStartBattle, initialLocati
   const doSweep = () => {
     if (!exploration.locationId) return;
 
-    // 检查体力
-    if (gameManager.player.stamina < 10) {
+    // 消耗时间和体力
+    gameManager.advanceTime(15);
+    const sweepSuccess = gameManager.player.consumeStamina(10);
+    if (!sweepSuccess) {
       addLog('⚠️ 体力不足，无法扫荡');
       return;
     }
-
-    // 消耗时间和体力
-    gameManager.advanceTime(15);
-    gameManager.player.stamina -= 10;
 
     // 根据地点生成不同的奖励
     const location = LOCATIONS.find(l => l.id === exploration.locationId);

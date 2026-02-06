@@ -67,13 +67,13 @@ export default function MythologyEnhanceScreen({ onBack }: MythologyEnhanceScree
     await new Promise(resolve => setTimeout(resolve, 800));
 
     const successRate = getEnhanceRate(selectedEquipment.enhanceLevel);
+    // eslint-disable-next-line react-hooks/purity
     const success = Math.random() < successRate;
 
     // 扣除费用（这里简化处理）
     const cost = calculateEnhanceCost(selectedEquipment.enhanceLevel);
-    if (gameManager.trainCoins >= cost) {
-      gameManager.trainCoins -= cost;
-
+    const consumeSuccess = gameManager.consumeTrainCoins(cost);
+    if (consumeSuccess) {
       const updated = equipmentSystem.enhanceEquipment(selectedEquipment, success);
 
       // 更新装备
@@ -104,12 +104,12 @@ export default function MythologyEnhanceScreen({ onBack }: MythologyEnhanceScree
     await new Promise(resolve => setTimeout(resolve, 800));
 
     const successRate = getSublimationRate(selectedEquipment.sublimationLevel);
+    // eslint-disable-next-line react-hooks/purity
     const success = Math.random() < successRate;
 
     const cost = calculateSublimationCost(selectedEquipment.sublimationLevel);
-    if (gameManager.trainCoins >= cost) {
-      gameManager.trainCoins -= cost;
-
+    const consumeSuccess = gameManager.consumeTrainCoins(cost);
+    if (consumeSuccess) {
       const updated = equipmentSystem.sublimateEquipment(selectedEquipment, success);
       player.equipMythologyItem(updated);
 

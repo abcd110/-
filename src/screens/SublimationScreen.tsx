@@ -61,12 +61,12 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
     await new Promise(resolve => setTimeout(resolve, 800));
 
     const successRate = getSublimationRate(selectedEquipment.sublimationLevel);
+    // eslint-disable-next-line react-hooks/purity
     const success = Math.random() < successRate;
 
     const cost = calculateSublimationCost(selectedEquipment.rarity);
-    if (player.spirit >= cost) {
-      player.spirit -= cost;
-
+    const consumeSuccess = player.consumeSpirit(cost);
+    if (consumeSuccess) {
       const updated = equipmentSystem.sublimateEquipment(selectedEquipment, success);
       player.equipMythologyItem(updated);
 

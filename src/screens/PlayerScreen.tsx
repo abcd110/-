@@ -215,7 +215,7 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
               // 从旧装备系统获取
               const oldEquippedItems = gameManager.inventory.getEquippedItems();
               let unifiedItem: UnifiedEquipment | null = null;
-              let equippedItem: EquipmentInstance | undefined = mythEquippedItem;
+              const equippedItem: EquipmentInstance | undefined = mythEquippedItem;
 
               if (mythEquippedItem) {
                 // 使用神话装备

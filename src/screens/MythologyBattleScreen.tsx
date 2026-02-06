@@ -146,7 +146,7 @@ export default function MythologyBattleScreen({ locationId, onBack, onVictory, o
   }, [addLog, onDefeat]);
 
   // 使用技能
-  const useSkill = useCallback((skillId: string) => {
+  const executeSkill = useCallback((skillId: string) => {
     if (battleStateRef.current !== 'fighting') return false;
 
     const skill = activeSkills.get(skillId);
@@ -230,10 +230,10 @@ export default function MythologyBattleScreen({ locationId, onBack, onVictory, o
     activeSkills.forEach((skill, skillId) => {
       const cooldown = skillCooldowns.get(skillId);
       if (cooldown && cooldown.currentCooldown === 0) {
-        useSkill(skillId);
+        executeSkill(skillId);
       }
     });
-  }, [activeSkills, skillCooldowns, useSkill]);
+  }, [activeSkills, skillCooldowns, executeSkill]);
 
   // 减少技能冷却
   const reduceCooldowns = useCallback(() => {
