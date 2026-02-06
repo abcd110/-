@@ -43,7 +43,7 @@ interface GameStore {
   buyItem: (itemId: string, quantity?: number) => { success: boolean; message: string };
 
   // 制造系统
-  craftItem: (recipeId: string) => { success: boolean; message: string };
+  craftItem: (slot: import('../data/equipmentTypes').EquipmentSlot, selection: import('../core/CraftingSystem').MaterialSelection) => { success: boolean; message: string };
 
   // 分解系统
   decomposeItem: (itemId: string) => { success: boolean; message: string; rewards?: any[] };
@@ -202,9 +202,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   // 制造物品
-  craftItem: (recipeId: string) => {
+  craftItem: (slot: import('../data/equipmentTypes').EquipmentSlot, selection: import('../core/CraftingSystem').MaterialSelection) => {
     const { gameManager } = get();
-    const result = gameManager.craftItem(recipeId);
+    const result = gameManager.craftItem(slot, selection);
     get().saveGame();
     set({ logs: gameManager.logs });
     return result;

@@ -13,6 +13,7 @@ export interface CalculatedStats {
   attack: number;
   defense: number;
   hp: number;
+  agility: number; // 敏捷
   hit: number;
   dodge: number;
   speed: number;
@@ -31,7 +32,7 @@ export interface EquipmentInstance extends MythologyEquipment {
   equipped: boolean;
   enhanceLevel: number;
   sublimationLevel: number;
-  isCrafted: boolean; // 是否为制造装备（非神话装备）
+  isCrafted?: boolean; // 是否为制造装备（非神话装备）
 }
 
 export interface BattleContext {
@@ -60,6 +61,7 @@ export class EquipmentSystem {
       attack: 0,
       defense: 0,
       hp: 0,
+      agility: 0,
       hit: 0,
       dodge: 0,
       speed: 0,
@@ -76,6 +78,7 @@ export class EquipmentSystem {
       attack: 0,
       defense: 0,
       hp: 0,
+      agility: 0,
       hit: 0,
       dodge: 0,
       speed: 0,
@@ -97,6 +100,7 @@ export class EquipmentSystem {
       baseStats.attack += calculatedStats.attack;
       baseStats.defense += calculatedStats.defense;
       baseStats.hp += calculatedStats.hp;
+      baseStats.agility += calculatedStats.agility || 0;
       baseStats.hit += calculatedStats.hit;
       baseStats.dodge += calculatedStats.dodge;
       baseStats.speed += calculatedStats.speed;
@@ -129,6 +133,7 @@ export class EquipmentSystem {
       attack: Math.floor(baseStats.attack * (1 + percentBonuses.attack)),
       defense: Math.floor(baseStats.defense * (1 + percentBonuses.defense)),
       hp: Math.floor(baseStats.hp * (1 + percentBonuses.hp)),
+      agility: Math.floor(baseStats.agility * (1 + percentBonuses.agility)),
       hit: Math.floor(baseStats.hit * (1 + percentBonuses.hit)),
       dodge: Math.floor(baseStats.dodge * (1 + percentBonuses.dodge)),
       speed: baseStats.speed * (1 + percentBonuses.speed),

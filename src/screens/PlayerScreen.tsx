@@ -366,7 +366,7 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
               <EquipmentBonusItem label="生命" value={player.equipmentStats.hp} color="#ef4444" />
               <EquipmentBonusItem label="命中" value={player.equipmentStats.hit} color="#fbbf24" />
               <EquipmentBonusItem label="闪避" value={player.equipmentStats.dodge} color="#4ade80" />
-              <EquipmentBonusItem label="攻速" value={player.equipmentStats.speed.toFixed(1)} color="#c084fc" />
+              <EquipmentBonusItem label="攻速" value={parseFloat(player.equipmentStats.speed.toFixed(1))} color="#c084fc" />
               <EquipmentBonusItem label="暴击" value={player.equipmentStats.crit} color="#ef4444" />
               <EquipmentBonusItem label="穿透" value={player.equipmentStats.penetration} color="#fb923c" />
             </div>

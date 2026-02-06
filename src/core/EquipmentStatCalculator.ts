@@ -22,6 +22,7 @@ export interface CalculatedEquipmentStats {
   attack: number;
   defense: number;
   hp: number;
+  agility: number;
   speed: number;
   dodge: number;
   hit: number;
@@ -46,6 +47,7 @@ export function calculateEquipmentStats(equipment: EquipmentInstance): Calculate
   const enhancedAttack = (baseStats.attack || 0) > 0 ? (baseStats.attack || 0) + enhanceLevel * 1 : 0;
   const enhancedDefense = (baseStats.defense || 0) > 0 ? (baseStats.defense || 0) + enhanceLevel * 1 : 0;
   const enhancedHp = (baseStats.hp || 0) > 0 ? (baseStats.hp || 0) + enhanceLevel * 2 : 0;
+  const enhancedAgility = (baseStats.agility || 0) > 0 ? (baseStats.agility || 0) + enhanceLevel * 1 : (baseStats.agility || 0);
   const enhancedSpeed = (baseStats.speed || 0) > 0 ? (baseStats.speed || 0) + enhanceLevel * 0.1 : 0;
   const enhancedDodge = (baseStats.dodge || 0) > 0 ? (baseStats.dodge || 0) + enhanceLevel * 5 : 0;
   const enhancedHit = (baseStats.hit || 0) > 0 ? (baseStats.hit || 0) + enhanceLevel * 5 : 0;
@@ -67,6 +69,7 @@ export function calculateEquipmentStats(equipment: EquipmentInstance): Calculate
     hp: enhancedHp > 0 ? Math.floor(enhancedHp * sublimationMultiplier) : 0,
 
     // 攻速、闪避、命中不受升华影响
+    agility: enhancedAgility,
     speed: enhancedSpeed,
     dodge: enhancedDodge,
     hit: enhancedHit,
@@ -96,6 +99,7 @@ export function calculateEnhancedStatsPreview(
   const enhancedAttack = (baseStats.attack || 0) > 0 ? (baseStats.attack || 0) + targetEnhanceLevel * 1 : 0;
   const enhancedDefense = (baseStats.defense || 0) > 0 ? (baseStats.defense || 0) + targetEnhanceLevel * 1 : 0;
   const enhancedHp = (baseStats.hp || 0) > 0 ? (baseStats.hp || 0) + targetEnhanceLevel * 2 : 0;
+  const enhancedAgility = (baseStats.agility || 0) > 0 ? (baseStats.agility || 0) + targetEnhanceLevel * 1 : (baseStats.agility || 0);
   const enhancedSpeed = (baseStats.speed || 0) > 0 ? (baseStats.speed || 0) + targetEnhanceLevel * 0.1 : 0;
   const enhancedDodge = (baseStats.dodge || 0) > 0 ? (baseStats.dodge || 0) + targetEnhanceLevel * 5 : 0;
   const enhancedHit = (baseStats.hit || 0) > 0 ? (baseStats.hit || 0) + targetEnhanceLevel * 5 : 0;
@@ -114,6 +118,7 @@ export function calculateEnhancedStatsPreview(
     attack: enhancedAttack > 0 ? Math.floor(enhancedAttack * sublimationMultiplier) : 0,
     defense: enhancedDefense > 0 ? Math.floor(enhancedDefense * sublimationMultiplier) : 0,
     hp: enhancedHp > 0 ? Math.floor(enhancedHp * sublimationMultiplier) : 0,
+    agility: enhancedAgility,
     speed: enhancedSpeed,
     dodge: enhancedDodge,
     hit: enhancedHit,
@@ -141,6 +146,7 @@ export function calculateSublimationStatsPreview(
   const enhancedAttack = (baseStats.attack || 0) > 0 ? (baseStats.attack || 0) + enhanceLevel * 1 : 0;
   const enhancedDefense = (baseStats.defense || 0) > 0 ? (baseStats.defense || 0) + enhanceLevel * 1 : 0;
   const enhancedHp = (baseStats.hp || 0) > 0 ? (baseStats.hp || 0) + enhanceLevel * 2 : 0;
+  const enhancedAgility = (baseStats.agility || 0) > 0 ? (baseStats.agility || 0) + enhanceLevel * 1 : (baseStats.agility || 0);
   const enhancedSpeed = (baseStats.speed || 0) > 0 ? (baseStats.speed || 0) + enhanceLevel * 0.1 : 0;
   const enhancedDodge = (baseStats.dodge || 0) > 0 ? (baseStats.dodge || 0) + enhanceLevel * 5 : 0;
   const enhancedHit = (baseStats.hit || 0) > 0 ? (baseStats.hit || 0) + enhanceLevel * 5 : 0;
@@ -159,6 +165,7 @@ export function calculateSublimationStatsPreview(
     attack: enhancedAttack > 0 ? Math.floor(enhancedAttack * sublimationMultiplier) : 0,
     defense: enhancedDefense > 0 ? Math.floor(enhancedDefense * sublimationMultiplier) : 0,
     hp: enhancedHp > 0 ? Math.floor(enhancedHp * sublimationMultiplier) : 0,
+    agility: enhancedAgility,
     speed: enhancedSpeed,
     dodge: enhancedDodge,
     hit: enhancedHit,

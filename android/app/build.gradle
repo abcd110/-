@@ -3,6 +3,12 @@ apply plugin: 'com.android.application'
 android {
     namespace = "com.trainsurvival.game"
     compileSdk = rootProject.ext.compileSdkVersion
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
     defaultConfig {
         applicationId "com.trainsurvival.game"
         minSdkVersion rootProject.ext.minSdkVersion
@@ -22,6 +28,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    buildToolsVersion '36.0.0'
 }
 
 repositories {

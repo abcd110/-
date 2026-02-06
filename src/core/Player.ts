@@ -51,6 +51,7 @@ export class Player {
   // 战斗属性（基础值）
   baseAttack: number;
   baseDefense: number;
+  baseAgility: number; // 敏捷
   baseAttackSpeed: number;
   baseHit: number;
   baseDodge: number;
@@ -91,6 +92,7 @@ export class Player {
 
     this.baseAttack = data?.attack || attrs.baseAttack;
     this.baseDefense = data?.defense || attrs.baseDefense;
+    this.baseAgility = attrs.baseAgility || 10;
     this.baseAttackSpeed = data?.attackSpeed || 1.0;
     this.baseHit = attrs.baseHit;
     this.baseDodge = attrs.baseDodge;
@@ -143,6 +145,7 @@ export class Player {
       maxSpirit: 100 + (this.level - 1) * 10, // 每级固定+10
       baseAttack: Math.floor(this.calculateAttribute(10, this.level)),
       baseDefense: Math.floor(this.calculateAttribute(5, this.level)),
+      baseAgility: Math.floor(10 * (1 + this.level * 0.1)), // 敏捷：10*(1+等级*0.1)
       baseHit: Math.floor(this.calculateAttribute(50, this.level)),
       baseDodge: 5, // 固定5%，不随等级提升
       baseCrit: 5, // 会心，固定5，不随等级提升
@@ -175,6 +178,11 @@ export class Player {
   get totalDefense(): number {
     const equipmentDefense = this.equipmentStats.defense;
     return this.baseDefense + equipmentDefense;
+  }
+
+  // 获取总敏捷
+  get totalAgility(): number {
+    return this.baseAgility + this.equipmentStats.agility;
   }
 
   // 获取总攻速

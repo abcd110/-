@@ -868,11 +868,11 @@ export default function TestScreen({ onBack }: TestScreenProps) {
                 </div>
                 <div style={{ backgroundColor: '#374151', padding: '10px', borderRadius: '6px' }}>
                   <span style={{ color: '#9ca3af', fontSize: '11px' }}>攻击力</span>
-                  <div style={{ color: '#f97316', fontWeight: 'bold' }}>{gameManager.player.attack}</div>
+                  <div style={{ color: '#f97316', fontWeight: 'bold' }}>{gameManager.player.totalAttack}</div>
                 </div>
                 <div style={{ backgroundColor: '#374151', padding: '10px', borderRadius: '6px' }}>
                   <span style={{ color: '#9ca3af', fontSize: '11px' }}>防御力</span>
-                  <div style={{ color: '#3b82f6', fontWeight: 'bold' }}>{gameManager.player.defense}</div>
+                  <div style={{ color: '#3b82f6', fontWeight: 'bold' }}>{gameManager.player.totalDefense}</div>
                 </div>
                 <div style={{ backgroundColor: '#374151', padding: '10px', borderRadius: '6px' }}>
                   <span style={{ color: '#9ca3af', fontSize: '11px' }}>体力</span>
@@ -997,7 +997,7 @@ export default function TestScreen({ onBack }: TestScreenProps) {
                 <div>当前时间: {gameManager.time}:00</div>
                 <div>背包物品: {gameManager.inventory.items.length} 种</div>
                 <div>装备数量: {gameManager.inventory.equipment.length} 件</div>
-                <div>已解锁站台: {gameManager.unlockedLocations.length} 个</div>
+                <div>已解锁站台: {gameManager.locationProgress.size} 个</div>
               </div>
             </div>
           </div>

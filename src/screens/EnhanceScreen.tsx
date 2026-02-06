@@ -581,22 +581,22 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
               }}>
                 <p style={{ color: '#9ca3af', fontSize: '12px', marginBottom: '8px' }}>获得属性提升</p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px' }}>
-                  {result.attributeGains.attack > 0 && (
+                  {result.attributeGains?.attack && result.attributeGains.attack > 0 && (
                     <span style={{ color: '#f87171', fontSize: '13px' }}>攻击 +{Math.floor(result.attributeGains.attack)}</span>
                   )}
-                  {result.attributeGains.defense > 0 && (
+                  {result.attributeGains?.defense && result.attributeGains.defense > 0 && (
                     <span style={{ color: '#60a5fa', fontSize: '13px' }}>防御 +{Math.floor(result.attributeGains.defense)}</span>
                   )}
-                  {result.attributeGains.speed > 0 && (
+                  {result.attributeGains?.speed && result.attributeGains.speed > 0 && (
                     <span style={{ color: '#fbbf24', fontSize: '13px' }}>攻速 +{result.attributeGains.speed.toFixed(1)}</span>
                   )}
-                  {result.attributeGains.maxHp > 0 && (
+                  {result.attributeGains?.maxHp && result.attributeGains.maxHp > 0 && (
                     <span style={{ color: '#ef4444', fontSize: '13px' }}>生命 +{Math.floor(result.attributeGains.maxHp)}</span>
                   )}
-                  {result.attributeGains.dodge > 0 && (
+                  {result.attributeGains?.dodge && result.attributeGains.dodge > 0 && (
                     <span style={{ color: '#a78bfa', fontSize: '13px' }}>闪避 +{Math.floor(result.attributeGains.dodge)}</span>
                   )}
-                  {result.attributeGains.hit > 0 && (
+                  {result.attributeGains?.hit && result.attributeGains.hit > 0 && (
                     <span style={{ color: '#34d399', fontSize: '13px' }}>命中 +{Math.floor(result.attributeGains.hit)}</span>
                   )}
                 </div>

@@ -444,7 +444,7 @@ export default function ExplorationScreen({ onBack, onStartBattle, initialLocati
                       {Object.entries(qualityRates)
                         .filter(([_, rate]) => rate > 0)
                         .map(([quality, rate]) => {
-                          const qualityNum = parseInt(quality);
+                          const qualityNum = parseInt(quality) as MaterialQuality;
                           const qualityName = MATERIAL_QUALITY_NAMES[qualityNum];
                           return (
                             <span
