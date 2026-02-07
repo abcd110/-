@@ -7,6 +7,7 @@ import type { EquipmentInstance } from './EquipmentSystem';
 import { LOCATIONS, getRandomLoot, ALL_MATERIAL_BASE_IDS, rollMaterialQuality, calculateEnemyStats } from '../data/locations';
 import { getItemTemplate } from '../data/items';
 import { ENEMIES, createEnemyInstance, getRandomEnemyByLocation } from '../data/enemies';
+import { getRandomEnemyForPlanet, getBossEnemyForPlanet, getEliteEnemyForPlanet, EXTENDED_ENEMIES } from '../data/enemyAdapter';
 import { generateMaterialId, MATERIAL_QUALITY_NAMES } from '../data/craftingMaterials';
 import { Quest, QuestConditionType, QuestStatus, QuestType, DEFAULT_QUESTS } from './QuestSystem';
 import { Skill, SkillType, SKILL_TEMPLATES, SKILL_UNLOCK_CHAINS } from './SkillSystem';
@@ -27,6 +28,8 @@ import {
   getUpgradeMaterials,
   FACILITY_NAMES,
 } from '../data/trainUpgrades';
+import { AutoCollectSystem } from './AutoCollectSystem';
+import { AutoCollectMode, CollectReward, getCollectLocation } from '../data/autoCollectTypes';
 
 export interface GameState {
   player: PlayerData;
@@ -52,6 +55,7 @@ export interface GameState {
     lastBossDefeatDay: number;
     lastBossChallengeDate: string | null;
   }]>;
+  autoCollectSystem?: any; // 自动采集系统数据
 }
 
 export class GameManager {
@@ -90,6 +94,9 @@ export class GameManager {
 
   // 精神值现实时间回复
   lastSpiritRecoveryTime: number = Date.now(); // 上次精神值回复时间戳
+
+  // 自动采集系统
+  autoCollectSystem: AutoCollectSystem = new AutoCollectSystem();
 
   constructor() {
     this.player = new Player();
@@ -1215,6 +1222,7 @@ export class GameManager {
       lastShopRefreshDay: this.lastShopRefreshDay,
       playerName: this.playerName,
       locationProgress: Array.from(this.locationProgress.entries()),
+      autoCollectSystem: this.autoCollectSystem.serialize(),
     };
   }
 
@@ -1279,6 +1287,11 @@ export class GameManager {
     state.locationProgress?.forEach(([locationId, progress]) => {
       this.locationProgress.set(locationId, progress);
     });
+
+    // 加载自动采集系统
+    if (state.autoCollectSystem) {
+      this.autoCollectSystem.load(state.autoCollectSystem);
+    }
   }
 
   // 重置游戏
@@ -1307,12 +1320,101 @@ export class GameManager {
     this.initSkills();
     this.initShop();
     this.initTestItems();
+
+    // 重置自动采集系统
+    this.autoCollectSystem.reset();
+  }
+
+  // ========== 自动采集系统 ==========
+
+  // 开始自动采集
+  startAutoCollect(locationId: string, mode: AutoCollectMode): { success: boolean; message: string } {
+    const result = this.autoCollectSystem.startCollect(locationId, mode);
+    if (result.success) {
+      const location = getCollectLocation(locationId);
+      this.addLog('自动采集', `开始在${location?.name || '未知地点'}进行自动资源采集`);
+    }
+    return result;
+  }
+
+  // 停止自动采集
+  stopAutoCollect(): { success: boolean; message: string; rewards?: CollectReward } {
+    const result = this.autoCollectSystem.stopCollect();
+    if (result.success && result.rewards) {
+      this.applyCollectRewards(result.rewards);
+      this.addLog('自动采集', `停止采集，获得 ${result.rewards.gold} 信用点、${result.rewards.exp} 经验值`);
+    }
+    return result;
+  }
+
+  // 领取采集收益（不停止）
+  claimAutoCollectRewards(): { success: boolean; message: string; rewards?: CollectReward } {
+    const result = this.autoCollectSystem.claimRewards();
+    if (result.success && result.rewards) {
+      this.applyCollectRewards(result.rewards);
+      this.addLog('自动采集', `领取收益：${result.rewards.gold} 信用点、${result.rewards.exp} 经验值`);
+    }
+    return result;
+  }
+
+  // 应用采集收益
+  private applyCollectRewards(rewards: CollectReward): void {
+    // 添加信用点
+    this.trainCoins += rewards.gold;
+
+    // 添加经验
+    this.player.addExp(rewards.exp);
+
+    // 添加材料到背包
+    rewards.materials.forEach(mat => {
+      this.inventory.addItem(mat.itemId, mat.quantity);
+    });
+
+    // 添加装备到背包
+    rewards.equipments.forEach(equip => {
+      this.inventory.addItem(equip.itemId, 1);
+    });
+  }
+
+  // 获取自动采集系统状态
+  getAutoCollectState() {
+    return this.autoCollectSystem.state;
+  }
+
+  // 获取自动采集配置
+  getAutoCollectConfig() {
+    return this.autoCollectSystem.config;
+  }
+
+  // 更新自动采集配置
+  updateAutoCollectConfig(config: Partial<AutoCollectSystem['config']>): void {
+    this.autoCollectSystem.updateConfig(config);
+  }
+
+  // 获取格式化的采集时长
+  getAutoCollectDuration(): string {
+    return this.autoCollectSystem.getFormattedDuration();
+  }
+
+  // 获取预计每小时收益
+  getEstimatedHourlyRewards() {
+    return this.autoCollectSystem.getEstimatedHourlyRewards();
+  }
+
+  // 获取可用的采集地点
+  getAvailableCollectLocations() {
+    return this.autoCollectSystem.getAvailableLocations(this.player.level);
   }
 
   // ========== 战斗系统 ==========
 
   // 开始战斗
   startBattle(locationId: string, isBoss: boolean = false, isElite: boolean = false): { success: boolean; message: string; enemy?: Enemy } {
+    // 检查是否是新的星球ID格式（以 planet_ 开头）
+    if (locationId.startsWith('planet_')) {
+      return this.startPlanetBattle(locationId, isBoss, isElite);
+    }
+
     // 检查是否是神话站台
     const mythLocation = MYTHOLOGY_LOCATIONS.find((l: any) => l.id === locationId);
 
@@ -1321,7 +1423,7 @@ export class GameManager {
       return this.startMythologyBattle(mythLocation, isBoss, isElite);
     }
 
-    // 普通站台战斗
+    // 普通站台战斗（旧系统）
     const location = LOCATIONS.find(l => l.id === locationId);
     if (!location) {
       return { success: false, message: '地点不存在' };
@@ -1355,7 +1457,7 @@ export class GameManager {
       return { success: true, message: `遭遇了精英 ${enemyInstance.name}！`, enemy: enemyInstance };
     }
 
-    // 根据地点获取随机普通敌人（膨胀版新系统）
+    // 根据地点获取随机普通敌人
     const enemy = getRandomEnemyByLocation(locationId, 'normal');
     if (!enemy) {
       return { success: false, message: '这个区域没有敌人' };
@@ -1368,6 +1470,53 @@ export class GameManager {
 
     this.addLog('战斗', `遭遇了 ${enemyInstance.name}！`);
     return { success: true, message: `遭遇了 ${enemyInstance.name}！`, enemy: enemyInstance };
+  }
+
+  // 新星球战斗系统
+  private startPlanetBattle(planetId: string, isBoss: boolean, isElite: boolean): { success: boolean; message: string; enemy?: Enemy } {
+    // 使用新的虚空怪物系统
+    let enemy: Enemy | null = null;
+
+    if (isBoss) {
+      enemy = getBossEnemyForPlanet(planetId);
+      if (!enemy) {
+        // 如果新系统没有BOSS，尝试使用旧系统
+        return { success: false, message: '该星球没有首领' };
+      }
+      const enemyInstance = createEnemyInstance(enemy.id);
+      if (!enemyInstance) {
+        return { success: false, message: '创建首领失败' };
+      }
+      this.addLog('战斗', `💀 挑战虚空首领 ${enemyInstance.name}！`);
+      return { success: true, message: `💀 挑战虚空首领 ${enemyInstance.name}！`, enemy: enemyInstance };
+    }
+
+    if (isElite) {
+      enemy = getEliteEnemyForPlanet(planetId);
+      if (!enemy) {
+        return { success: false, message: '该星球没有精英虚空生物' };
+      }
+      const enemyInstance = createEnemyInstance(enemy.id);
+      if (!enemyInstance) {
+        return { success: false, message: '创建精英虚空生物失败' };
+      }
+      this.addLog('战斗', `👾 遭遇了精英 ${enemyInstance.name}！`);
+      return { success: true, message: `👾 遭遇了精英 ${enemyInstance.name}！`, enemy: enemyInstance };
+    }
+
+    // 普通虚空生物
+    enemy = getRandomEnemyForPlanet(planetId, 'normal');
+    if (!enemy) {
+      return { success: false, message: '该星球没有虚空生物' };
+    }
+
+    const enemyInstance = createEnemyInstance(enemy.id);
+    if (!enemyInstance) {
+      return { success: false, message: '创建虚空生物失败' };
+    }
+
+    this.addLog('战斗', `👾 遭遇了 ${enemyInstance.name}！`);
+    return { success: true, message: `👾 遭遇了 ${enemyInstance.name}！`, enemy: enemyInstance };
   }
 
   // 神话站台战斗
@@ -1595,12 +1744,9 @@ export class GameManager {
       }
     });
 
-    // 掉落制造材料
+    // 掉落制造材料 - 使用 mat_001~mat_010
     // 根据敌人类型决定掉落数量：普通3种，精英6种，BOSS6种3份
-    const enemyType = (enemy as any).enemyType || 'normal';
-    const locationId = this.currentLocation;
-    const locationIndex = LOCATIONS.findIndex(l => l.id === locationId);
-    const stationNumber = locationIndex >= 0 ? locationIndex + 1 : 1;
+    const enemyType = (enemy as any).creatureType || (enemy as any).enemyType || 'normal';
 
     let materialDropCount = 3; // 默认普通敌人3种
     let materialDropMultiplier = 1; // 默认1份
@@ -1613,28 +1759,31 @@ export class GameManager {
       materialDropMultiplier = 3; // 3份
     }
 
+    // 新的材料ID列表 (mat_001~mat_010)
+    const NEW_MATERIAL_IDS = [
+      { id: 'mat_001', name: '铁矿碎片' },
+      { id: 'mat_002', name: '铜矿碎片' },
+      { id: 'mat_003', name: '钛合金碎片' },
+      { id: 'mat_004', name: '能量晶体' },
+      { id: 'mat_005', name: '稀土元素' },
+      { id: 'mat_006', name: '虚空核心' },
+      { id: 'mat_007', name: '星际燃料' },
+      { id: 'mat_008', name: '纳米纤维' },
+      { id: 'mat_009', name: '陨石碎片' },
+      { id: 'mat_010', name: '量子螺丝' },
+    ];
+
     // 随机选择材料类型
-    const shuffledMaterials = [...ALL_MATERIAL_BASE_IDS].sort(() => Math.random() - 0.5);
+    const shuffledMaterials = [...NEW_MATERIAL_IDS].sort(() => Math.random() - 0.5);
     const selectedMaterials = shuffledMaterials.slice(0, materialDropCount);
 
     // 掉落材料
     selectedMaterials.forEach(material => {
       for (let i = 0; i < materialDropMultiplier; i++) {
-        // 根据站台决定材料品质
-        const rolledQuality = rollMaterialQuality(stationNumber);
-        const qualityName = MATERIAL_QUALITY_NAMES[rolledQuality];
-
-        // 生成带品质的材料ID
-        const materialType = material.id.replace('craft_', '') as any;
-        const itemIdToAdd = generateMaterialId(materialType, rolledQuality);
-        const itemName = rolledQuality === 1
-          ? material.name
-          : `${qualityName}${material.name}`;
-
         // 添加到背包
-        if (this.inventory.addItem(itemIdToAdd, 1)) {
-          loot.push({ itemId: itemIdToAdd, name: itemName, quantity: 1 });
-          logs.push(`获得 ${itemName}`);
+        if (this.inventory.addItem(material.id, 1)) {
+          loot.push({ itemId: material.id, name: material.name, quantity: 1 });
+          logs.push(`获得 ${material.name}`);
         }
       }
     });

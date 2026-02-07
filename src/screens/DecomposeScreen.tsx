@@ -152,14 +152,14 @@ export default function DecomposeScreen({ onBack }: DecomposeScreenProps) {
   return (
     <div style={{
       height: '100vh',
-      backgroundColor: '#1a1a1a',
+      backgroundColor: '#0a0e27',
       display: 'flex',
       flexDirection: 'column'
       // 修复：缺失闭合大括号
     }}>
       <header style={{
         padding: '12px 16px',
-        borderBottom: '1px solid #4b5563',
+        borderBottom: '1px solid #2a3050',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <button
@@ -168,7 +168,7 @@ export default function DecomposeScreen({ onBack }: DecomposeScreenProps) {
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
-              color: '#9ca3af',
+              color: '#a1a1aa',
               background: 'none',
               border: 'none',
               cursor: 'pointer',
@@ -205,7 +205,7 @@ export default function DecomposeScreen({ onBack }: DecomposeScreenProps) {
             <h2 style={{ color: '#e5e7eb', fontSize: '14px', fontWeight: 600 }}>
               可分解装备 ({decomposableItems.length})
             </h2>
-            <p style={{ color: '#9ca3af', fontSize: '12px', marginTop: '4px' }}>
+            <p style={{ color: '#a1a1aa', fontSize: '12px', marginTop: '4px' }}>
               选择装备进行分解，获得精炼碎片或神话碎片
             </p>
           </div>
@@ -236,7 +236,7 @@ export default function DecomposeScreen({ onBack }: DecomposeScreenProps) {
                       gap: '12px',
                       padding: '12px',
                       backgroundColor: selectedItem?.id === item.id ? '#374151' : '#262626',
-                      border: `1px solid ${selectedItem?.id === item.id ? '#4b5563' : 'transparent'}`,
+                      border: `1px solid ${selectedItem?.id === item.id ? '#2a3050' : 'transparent'}`,
                       borderRadius: '8px',
                       cursor: 'pointer',
                       textAlign: 'left',
@@ -253,7 +253,7 @@ export default function DecomposeScreen({ onBack }: DecomposeScreenProps) {
                         {item.name}
                       </div>
                       <div style={{
-                        color: '#9ca3af',
+                        color: '#a1a1aa',
                         fontSize: '12px',
                         marginTop: '2px'
                       }}>
@@ -330,7 +330,7 @@ export default function DecomposeScreen({ onBack }: DecomposeScreenProps) {
                       }}>
                         {selectedItem.name}
                       </div>
-                      <div style={{ color: '#9ca3af', fontSize: '12px' }}>
+                      <div style={{ color: '#a1a1aa', fontSize: '12px' }}>
                         {preview.rarity} · {TYPE_NAMES[selectedItem.type]}
                       </div>
                     </div>
@@ -378,7 +378,7 @@ export default function DecomposeScreen({ onBack }: DecomposeScreenProps) {
                     backgroundColor: '#1f1f1f',
                     borderRadius: '8px'
                   }}>
-                    <p style={{ color: '#9ca3af', fontSize: '12px' }}>
+                    <p style={{ color: '#a1a1aa', fontSize: '12px' }}>
                       {preview.isMythic ? (
                         <>
                           🔴 <strong>神话装备分解</strong><br />

@@ -408,7 +408,7 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
     }, 100);
   };
 
-  // 返回收集物资
+  // 返回采集资源
   const handleReturnCollect = async () => {
     // 更新狩猎进度
     const progress = gameManager.getLocationProgress(locationId);
@@ -445,15 +445,15 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
   return (
     <div style={{
       height: '100vh',
-      backgroundColor: '#1a1a1a',
+      backgroundColor: '#0a0e27',
       display: 'flex',
       flexDirection: 'column'
     }}>
       {/* 顶部标题栏 */}
       <header style={{
         flexShrink: 0,
-        backgroundColor: '#2d2d2d',
-        borderBottom: '1px solid #4b5563',
+        backgroundColor: '#1a1f3a',
+        borderBottom: '1px solid #2a3050',
         padding: '12px 16px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -477,7 +477,7 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
         {/* 敌人信息 - 胜利/失败时隐藏 */}
         {enemy && battleState === 'fighting' && (
           <div style={{
-            backgroundColor: '#2d2d2d',
+            backgroundColor: '#1a1f3a',
             borderRadius: '12px',
             padding: '16px',
             border: '1px solid #374151',
@@ -498,14 +498,14 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
               </div>
               <div style={{ flex: 1 }}>
                 <h3 style={{ color: 'white', fontWeight: 'bold', margin: '0 0 4px 0' }}>{enemy.name}</h3>
-                <p style={{ color: '#9ca3af', fontSize: '12px', margin: 0 }}>{enemy.description}</p>
+                <p style={{ color: '#a1a1aa', fontSize: '12px', margin: 0 }}>{enemy.description}</p>
               </div>
             </div>
 
             {/* 敌人生命值 */}
             <div style={{ marginBottom: '8px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <span style={{ color: '#9ca3af', fontSize: '12px' }}>生命值</span>
+                <span style={{ color: '#a1a1aa', fontSize: '12px' }}>生命值</span>
                 <span style={{ color: 'white', fontSize: '12px' }}>{enemy.hp}/{enemy.maxHp}</span>
               </div>
               <div style={{
@@ -532,15 +532,15 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
             }}>
               <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#1f2937', borderRadius: '6px' }}>
                 <div style={{ color: '#ef4444', fontWeight: 'bold' }}>{enemy.attack}</div>
-                <div style={{ color: '#9ca3af' }}>攻击</div>
+                <div style={{ color: '#a1a1aa' }}>攻击</div>
               </div>
               <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#1f2937', borderRadius: '6px' }}>
                 <div style={{ color: '#3b82f6', fontWeight: 'bold' }}>{enemy.defense}</div>
-                <div style={{ color: '#9ca3af' }}>防御</div>
+                <div style={{ color: '#a1a1aa' }}>防御</div>
               </div>
               <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#1f2937', borderRadius: '6px' }}>
                 <div style={{ color: '#22c55e', fontWeight: 'bold' }}>{enemy.speed}</div>
-                <div style={{ color: '#9ca3af' }}>速度</div>
+                <div style={{ color: '#a1a1aa' }}>跃迁速度</div>
               </div>
             </div>
           </div>
@@ -550,7 +550,7 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
         {battleState === 'fighting' && (
           <div style={{
             textAlign: 'center',
-            color: '#d97706',
+            color: '#0099cc',
             fontSize: '24px',
             fontWeight: 'bold',
             marginBottom: '16px'
@@ -561,7 +561,7 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
 
         {/* 玩家信息 - 胜利时简化显示 */}
         <div style={{
-          backgroundColor: '#2d2d2d',
+          backgroundColor: '#1a1f3a',
           borderRadius: '12px',
           padding: battleState === 'victory' ? '12px' : '16px',
           border: '1px solid #374151',
@@ -582,14 +582,14 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
             </div>
             <div style={{ flex: 1 }}>
               <h3 style={{ color: 'white', fontWeight: 'bold', margin: '0 0 4px 0', fontSize: battleState === 'victory' ? '14px' : '16px' }}>{gameManager.playerName}</h3>
-              <p style={{ color: '#9ca3af', fontSize: '12px', margin: 0 }}>Lv.{player.level}</p>
+              <p style={{ color: '#a1a1aa', fontSize: '12px', margin: 0 }}>Lv.{player.level}</p>
             </div>
           </div>
 
           {/* 玩家生命值 */}
           <div style={{ marginBottom: '8px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-              <span style={{ color: '#9ca3af', fontSize: '12px' }}>生命值</span>
+              <span style={{ color: '#a1a1aa', fontSize: '12px' }}>生命值</span>
               <span style={{ color: 'white', fontSize: '12px' }}>{player.hp}/{player.totalMaxHp}</span>
             </div>
             <div style={{
@@ -610,7 +610,7 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
           {/* 玩家体力 */}
           <div style={{ marginBottom: battleState === 'victory' ? '0' : '12px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-              <span style={{ color: '#9ca3af', fontSize: '12px' }}>体力</span>
+              <span style={{ color: '#a1a1aa', fontSize: '12px' }}>体力</span>
               <span style={{ color: 'white', fontSize: '12px' }}>{player.stamina}/{player.maxStamina}</span>
             </div>
             <div style={{
@@ -638,19 +638,19 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
             }}>
               <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#1f2937', borderRadius: '6px' }}>
                 <div style={{ color: '#ef4444', fontWeight: 'bold' }}>{player.totalAttack}</div>
-                <div style={{ color: '#9ca3af' }}>攻击</div>
+                <div style={{ color: '#a1a1aa' }}>攻击</div>
               </div>
               <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#1f2937', borderRadius: '6px' }}>
                 <div style={{ color: '#3b82f6', fontWeight: 'bold' }}>{player.totalDefense}</div>
-                <div style={{ color: '#9ca3af' }}>防御</div>
+                <div style={{ color: '#a1a1aa' }}>防御</div>
               </div>
               <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#1f2937', borderRadius: '6px' }}>
                 <div style={{ color: '#22c55e', fontWeight: 'bold' }}>{player.totalAgility}</div>
-                <div style={{ color: '#9ca3af' }}>敏捷</div>
+                <div style={{ color: '#a1a1aa' }}>敏捷</div>
               </div>
               <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#1f2937', borderRadius: '6px' }}>
-                <div style={{ color: '#fbbf24', fontWeight: 'bold' }}>{player.totalAttackSpeed.toFixed(1)}</div>
-                <div style={{ color: '#9ca3af' }}>攻速</div>
+                <div style={{ color: '#00d4ff', fontWeight: 'bold' }}>{player.totalAttackSpeed.toFixed(1)}</div>
+                <div style={{ color: '#a1a1aa' }}>攻速</div>
               </div>
             </div>
           )}
@@ -658,7 +658,7 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
           {/* 技能CD显示 - 胜利时隐藏 */}
           {battleState !== 'victory' && activeSkills.size > 0 && (
             <div style={{ marginTop: '12px' }}>
-              <h4 style={{ color: '#9ca3af', fontSize: '12px', margin: '0 0 8px 0' }}>技能状态</h4>
+              <h4 style={{ color: '#a1a1aa', fontSize: '12px', margin: '0 0 8px 0' }}>技能状态</h4>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                 {Array.from(activeSkills.entries()).map(([skillId, skill]) => {
                   const cooldown = skillCooldowns.get(skillId);
@@ -695,7 +695,7 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
 
         {/* 战斗记录 - 胜利时减小高度 */}
         <div style={{
-          backgroundColor: '#2d2d2d',
+          backgroundColor: '#1a1f3a',
           borderRadius: '12px',
           padding: battleState === 'victory' ? '10px' : '12px',
           border: '1px solid #374151',
@@ -703,7 +703,7 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
           flex: battleState === 'victory' ? '1' : 'none',
           minHeight: battleState === 'victory' ? '80px' : 'auto'
         }}>
-          <h3 style={{ color: '#9ca3af', fontSize: '12px', margin: '0 0 8px 0' }}>战斗记录</h3>
+          <h3 style={{ color: '#a1a1aa', fontSize: '12px', margin: '0 0 8px 0' }}>战斗记录</h3>
           <div style={{
             display: 'flex',
             flexDirection: 'column',
@@ -714,7 +714,7 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
             height: battleState === 'victory' ? 'calc(100% - 20px)' : 'auto'
           }}>
             {battleLog.map((log, index) => (
-              <div key={index} style={{ color: log.includes('造成') && !log.includes('敌人') ? '#fbbf24' : '#9ca3af' }}>
+              <div key={index} style={{ color: log.includes('造成') && !log.includes('敌人') ? '#00d4ff' : '#9ca3af' }}>
                 {log}
               </div>
             ))}
@@ -736,7 +736,7 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
                 style={{
                   flex: 1,
                   padding: '14px 24px',
-                  backgroundColor: gameManager.player.stamina < 10 ? '#4b5563' : '#d97706',
+                  backgroundColor: gameManager.player.stamina < 10 ? '#2a3050' : '#0099cc',
                   color: 'white',
                   borderRadius: '8px',
                   border: 'none',
@@ -753,7 +753,7 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
                   flex: 1,
                   padding: '14px 24px',
                   backgroundColor: '#374151',
-                  color: '#9ca3af',
+                  color: '#a1a1aa',
                   borderRadius: '8px',
                   border: 'none',
                   cursor: 'pointer',
@@ -777,7 +777,7 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
             marginBottom: '12px'
           }}>
             <h3 style={{ color: '#4ade80', margin: '0 0 4px 0', fontSize: '16px' }}>BOSS击败！</h3>
-            <p style={{ color: '#9ca3af', fontSize: '12px', margin: '0 0 10px 0' }}>
+            <p style={{ color: '#a1a1aa', fontSize: '12px', margin: '0 0 10px 0' }}>
               该地点已解锁扫荡功能
             </p>
             <button
@@ -829,8 +829,8 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
       {battleState === 'fighting' && (
         <footer style={{
           flexShrink: 0,
-          backgroundColor: '#2d2d2d',
-          borderTop: '1px solid #4b5563',
+          backgroundColor: '#1a1f3a',
+          borderTop: '1px solid #2a3050',
           padding: '12px 16px'
         }}>
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -840,7 +840,7 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
                 width: '100%',
                 padding: '14px',
                 backgroundColor: '#374151',
-                color: '#9ca3af',
+                color: '#a1a1aa',
                 borderRadius: '8px',
                 border: 'none',
                 cursor: 'pointer',

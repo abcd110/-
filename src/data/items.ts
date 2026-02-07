@@ -1420,6 +1420,50 @@ export const ITEMS: Record<string, Item> = {
     id: 'mat_mythic_fragment', name: '神话碎片', type: ItemType.MATERIAL, rarity: ItemRarity.MYTHIC,
     description: '分解神话装备获得的神话碎片，用于制造神话装备。数量=品质等级(1-6)', sublimationLevel: 0,
   },
+
+  // ============================================
+  // 基础采集材料 - 太空主题
+  // ============================================
+  'mat_001': {
+    id: 'mat_001', name: '铁矿碎片', type: ItemType.MATERIAL, rarity: ItemRarity.COMMON,
+    description: '从星球表面采集的铁矿碎片，基础制造材料。', sublimationLevel: 0,
+  },
+  'mat_002': {
+    id: 'mat_002', name: '铜矿碎片', type: ItemType.MATERIAL, rarity: ItemRarity.COMMON,
+    description: '从星球表面采集的铜矿碎片，基础制造材料。', sublimationLevel: 0,
+  },
+  'mat_003': {
+    id: 'mat_003', name: '钛合金碎片', type: ItemType.MATERIAL, rarity: ItemRarity.UNCOMMON,
+    description: '稀有的钛合金碎片，高级制造材料。', sublimationLevel: 0,
+  },
+  'mat_004': {
+    id: 'mat_004', name: '能量晶体', type: ItemType.MATERIAL, rarity: ItemRarity.UNCOMMON,
+    description: '蕴含能量的晶体，用于能源相关制造。', sublimationLevel: 0,
+  },
+  'mat_005': {
+    id: 'mat_005', name: '稀土元素', type: ItemType.MATERIAL, rarity: ItemRarity.RARE,
+    description: '珍贵的稀土元素，用于高科技制造。', sublimationLevel: 0,
+  },
+  'mat_006': {
+    id: 'mat_006', name: '虚空核心', type: ItemType.MATERIAL, rarity: ItemRarity.RARE,
+    description: '从虚空生物体内提取的核心，蕴含神秘能量。', sublimationLevel: 0,
+  },
+  'mat_007': {
+    id: 'mat_007', name: '星际燃料', type: ItemType.MATERIAL, rarity: ItemRarity.COMMON,
+    description: '航船和设备的常用燃料。', sublimationLevel: 0,
+  },
+  'mat_008': {
+    id: 'mat_008', name: '纳米纤维', type: ItemType.MATERIAL, rarity: ItemRarity.UNCOMMON,
+    description: '高科技纳米材料，用于制造防护装备。', sublimationLevel: 0,
+  },
+  'mat_009': {
+    id: 'mat_009', name: '陨石碎片', type: ItemType.MATERIAL, rarity: ItemRarity.UNCOMMON,
+    description: '来自外太空的陨石碎片，含有稀有金属。', sublimationLevel: 0,
+  },
+  'mat_010': {
+    id: 'mat_010', name: '量子螺丝', type: ItemType.MATERIAL, rarity: ItemRarity.RARE,
+    description: '精密量子设备专用零件。', sublimationLevel: 0,
+  },
 };
 
 // 获取物品模板

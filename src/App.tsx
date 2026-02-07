@@ -17,7 +17,10 @@ import MythologyMapScreen from './screens/MythologyMapScreen';
 import MythologyExplorationScreen from './screens/MythologyExplorationScreen';
 import TestScreen from './screens/TestScreen';
 import ExplorationSelectScreen from './screens/ExplorationSelectScreen';
+import PlanetExplorationScreen from './screens/PlanetExplorationScreen';
+import SpaceshipModuleScreen from './screens/SpaceshipModuleScreen';
 import BottomNav from './components/BottomNav';
+import { ToastContainer } from './components/Toast';
 import { useGameStore } from './stores/gameStore';
 
 // 占位页面组件
@@ -38,7 +41,7 @@ function PlaceholderScreen({ title, onBack }: { title: string; onBack: () => voi
         </div>
       </header>
       <main className="px-4 py-8 text-center">
-        <div className="text-6xl mb-4">🚧</div>
+        <div className="text-6xl mb-4">🚀</div>
         <h2 className="text-xl text-white font-bold mb-2">功能开发中</h2>
         <p className="text-gray-400">{title}功能即将上线，敬请期待！</p>
       </main>
@@ -79,7 +82,8 @@ function App() {
   const [mythologyLocationId, setMythologyLocationId] = useState<string | null>(null);
   const [mythologyBattlePending, setMythologyBattlePending] = useState(false);
   const [returnToActionSelect, setReturnToActionSelect] = useState(false);
-  const { saveGame } = useGameStore();
+  const [planetTypeFilter, setPlanetTypeFilter] = useState<string | null>(null);
+  const { saveGame, toasts, removeToast } = useGameStore();
 
   const handleStartGame = () => {
     setCurrentScreen('home');
@@ -90,11 +94,17 @@ function App() {
       setBattleParams({ locationId: params.locationId });
     }
 
+    // 处理星球类型筛选
+    if (screen === 'normal-stations' && params?.planetType) {
+      setPlanetTypeFilter(params.planetType);
+    }
+
     // 如果点击主页，清除所有探索状态（返回列车）
     if (screen === 'home') {
       setMythologyLocationId(null);
       setMythologyBattlePending(false);
       setBattleParams(null);
+      setPlanetTypeFilter(null);
     }
 
     setCurrentScreen(screen as ScreenType);
@@ -155,15 +165,16 @@ function App() {
         return <ExplorationSelectScreen onBack={handleBack} onNavigate={handleNavigate} />;
       case 'normal-stations':
         return (
-          <ExplorationScreen
+          <PlanetExplorationScreen
             onBack={() => {
               setReturnToActionSelect(false);
               setCurrentScreen('exploration');
             }}
             onStartBattle={handleStartBattle}
-            initialLocationId={battleParams?.locationId}
+            initialPlanetId={battleParams?.locationId}
             returnToActionSelect={returnToActionSelect}
             onActionSelectHandled={() => setReturnToActionSelect(false)}
+            planetTypeFilter={planetTypeFilter}
           />
         );
       case 'battle':
@@ -179,7 +190,7 @@ function App() {
           <HomeScreen onNavigate={handleNavigate} />
         );
       case 'train':
-        return <TrainScreen onBack={handleBack} />;
+        return <SpaceshipModuleScreen onBack={handleBack} />;
       case 'quests':
         return <QuestScreen onBack={handleBack} />;
       case 'shop':
@@ -231,12 +242,14 @@ function App() {
   const showBottomNav = currentScreen !== 'start' && currentScreen !== 'battle';
 
   return (
-    <div style={{
+    <div className="space-theme" style={{
       minHeight: '100vh',
-      backgroundColor: '#1a1a1a',
       position: 'relative',
       paddingBottom: showBottomNav ? '64px' : '0'
     }}>
+      {/* Toast 提示容器 */}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
+
       {/* 主内容区域 */}
       <div style={{ maxWidth: '430px', margin: '0 auto' }}>
         {renderScreen()}

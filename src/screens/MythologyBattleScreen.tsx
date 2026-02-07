@@ -65,7 +65,7 @@ export default function MythologyBattleScreen({ locationId, onBack, onVictory, o
 
     setLocation(loc);
 
-    // 根据站台危险等级生成敌人属性
+    // 根据星球危险等级生成敌人属性
     const dangerLevel = loc.dangerLevel;
     const hp = 30 + dangerLevel * 10;
 
@@ -298,7 +298,7 @@ export default function MythologyBattleScreen({ locationId, onBack, onVictory, o
     damage = Math.max(1, damage - currentPlayer.totalDefense);
 
     useGameStore.getState().gameManager.player.takeDamage(damage);
-    addLog(`👹 ${location.stationMonster.name} 造成 ${damage} 点伤害`);
+    addLog(`👾 ${location.stationMonster.name} 造成 ${damage} 点伤害`);
 
     // 检查失败
     if (useGameStore.getState().gameManager.player.isDead) {
@@ -314,7 +314,7 @@ export default function MythologyBattleScreen({ locationId, onBack, onVictory, o
     const currentPlayer = useGameStore.getState().getPlayer();
     const attackSpeed = currentPlayer.totalAttackSpeed || 1;
     const playerInterval = Math.max(500, 2000 / attackSpeed);
-    const enemyInterval = Math.max(800, 2500 / 1.5); // 敌人固定速度
+    const enemyInterval = Math.max(800, 2500 / 1.5); // 敌人固定跃迁速度
 
     // 玩家攻击计时器
     playerAttackTimer.current = window.setInterval(() => {
@@ -349,8 +349,8 @@ export default function MythologyBattleScreen({ locationId, onBack, onVictory, o
 
   if (!location) {
     return (
-      <div style={{ height: '100vh', backgroundColor: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ color: '#9ca3af' }}>加载中...</p>
+      <div style={{ height: '100vh', backgroundColor: '#0a0e27', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: '#a1a1aa' }}>加载中...</p>
       </div>
     );
   }
@@ -358,15 +358,15 @@ export default function MythologyBattleScreen({ locationId, onBack, onVictory, o
   return (
     <div style={{
       height: '100vh',
-      backgroundColor: '#1a1a1a',
+      backgroundColor: '#0a0e27',
       display: 'flex',
       flexDirection: 'column'
     }}>
       {/* 顶部标题栏 */}
       <header style={{
         flexShrink: 0,
-        backgroundColor: '#2d2d2d',
-        borderBottom: '1px solid #4b5563',
+        backgroundColor: '#1a1f3a',
+        borderBottom: '1px solid #2a3050',
         padding: '12px 16px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -376,7 +376,7 @@ export default function MythologyBattleScreen({ locationId, onBack, onVictory, o
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
-              color: '#9ca3af',
+              color: '#a1a1aa',
               background: 'none',
               border: 'none',
               cursor: 'pointer',
@@ -407,7 +407,7 @@ export default function MythologyBattleScreen({ locationId, onBack, onVictory, o
         {/* 敌人信息 */}
         {battleState === 'fighting' && (
           <div style={{
-            backgroundColor: '#2d2d2d',
+            backgroundColor: '#1a1f3a',
             borderRadius: '12px',
             padding: '16px',
             border: '1px solid #374151',
@@ -424,18 +424,18 @@ export default function MythologyBattleScreen({ locationId, onBack, onVictory, o
                 justifyContent: 'center',
                 fontSize: '24px'
               }}>
-                👹
+                👾
               </div>
               <div style={{ flex: 1 }}>
                 <h3 style={{ color: 'white', fontWeight: 'bold', margin: '0 0 4px 0' }}>{location.stationMonster.name}</h3>
-                <p style={{ color: '#9ca3af', fontSize: '12px', margin: 0 }}>{location.stationMonster.description}</p>
+                <p style={{ color: '#a1a1aa', fontSize: '12px', margin: 0 }}>{location.stationMonster.description}</p>
               </div>
             </div>
 
             {/* 敌人生命值 */}
             <div style={{ marginBottom: '8px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <span style={{ color: '#9ca3af', fontSize: '12px' }}>生命值</span>
+                <span style={{ color: '#a1a1aa', fontSize: '12px' }}>生命值</span>
                 <span style={{ color: 'white', fontSize: '12px' }}>{enemyHp}/{enemyMaxHp}</span>
               </div>
               <div style={{
@@ -462,15 +462,15 @@ export default function MythologyBattleScreen({ locationId, onBack, onVictory, o
             }}>
               <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#1f2937', borderRadius: '6px' }}>
                 <div style={{ color: '#ef4444', fontWeight: 'bold' }}>{5 + location.dangerLevel * 2}</div>
-                <div style={{ color: '#9ca3af' }}>攻击</div>
+                <div style={{ color: '#a1a1aa' }}>攻击</div>
               </div>
               <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#1f2937', borderRadius: '6px' }}>
                 <div style={{ color: '#3b82f6', fontWeight: 'bold' }}>{location.dangerLevel * 2}</div>
-                <div style={{ color: '#9ca3af' }}>防御</div>
+                <div style={{ color: '#a1a1aa' }}>防御</div>
               </div>
               <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#1f2937', borderRadius: '6px' }}>
                 <div style={{ color: '#22c55e', fontWeight: 'bold' }}>1.5</div>
-                <div style={{ color: '#9ca3af' }}>速度</div>
+                <div style={{ color: '#a1a1aa' }}>跃迁速度</div>
               </div>
             </div>
           </div>
@@ -480,7 +480,7 @@ export default function MythologyBattleScreen({ locationId, onBack, onVictory, o
         {battleState === 'fighting' && (
           <div style={{
             textAlign: 'center',
-            color: '#d97706',
+            color: '#0099cc',
             fontSize: '24px',
             fontWeight: 'bold',
             marginBottom: '16px'
@@ -491,7 +491,7 @@ export default function MythologyBattleScreen({ locationId, onBack, onVictory, o
 
         {/* 玩家信息 */}
         <div style={{
-          backgroundColor: '#2d2d2d',
+          backgroundColor: '#1a1f3a',
           borderRadius: '12px',
           padding: '16px',
           border: '1px solid #374151',
@@ -512,14 +512,14 @@ export default function MythologyBattleScreen({ locationId, onBack, onVictory, o
             </div>
             <div style={{ flex: 1 }}>
               <h3 style={{ color: 'white', fontWeight: 'bold', margin: '0 0 4px 0' }}>{gameManager.playerName}</h3>
-              <p style={{ color: '#9ca3af', fontSize: '12px', margin: 0 }}>Lv.{player.level}</p>
+              <p style={{ color: '#a1a1aa', fontSize: '12px', margin: 0 }}>Lv.{player.level}</p>
             </div>
           </div>
 
           {/* 玩家生命值 */}
           <div style={{ marginBottom: '8px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-              <span style={{ color: '#9ca3af', fontSize: '12px' }}>生命值</span>
+              <span style={{ color: '#a1a1aa', fontSize: '12px' }}>生命值</span>
               <span style={{ color: 'white', fontSize: '12px' }}>{player.hp}/{player.totalMaxHp}</span>
             </div>
             <div style={{
@@ -546,26 +546,26 @@ export default function MythologyBattleScreen({ locationId, onBack, onVictory, o
           }}>
             <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#1f2937', borderRadius: '6px' }}>
               <div style={{ color: '#ef4444', fontWeight: 'bold' }}>{player.totalAttack}</div>
-              <div style={{ color: '#9ca3af' }}>攻击</div>
+              <div style={{ color: '#a1a1aa' }}>攻击</div>
             </div>
             <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#1f2937', borderRadius: '6px' }}>
               <div style={{ color: '#3b82f6', fontWeight: 'bold' }}>{player.totalDefense}</div>
-              <div style={{ color: '#9ca3af' }}>防御</div>
+              <div style={{ color: '#a1a1aa' }}>防御</div>
             </div>
             <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#1f2937', borderRadius: '6px' }}>
               <div style={{ color: '#22c55e', fontWeight: 'bold' }}>{player.totalAgility}</div>
-              <div style={{ color: '#9ca3af' }}>敏捷</div>
+              <div style={{ color: '#a1a1aa' }}>敏捷</div>
             </div>
             <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#1f2937', borderRadius: '6px' }}>
-              <div style={{ color: '#fbbf24', fontWeight: 'bold' }}>{player.totalAttackSpeed.toFixed(1)}</div>
-              <div style={{ color: '#9ca3af' }}>攻速</div>
+              <div style={{ color: '#00d4ff', fontWeight: 'bold' }}>{player.totalAttackSpeed.toFixed(1)}</div>
+              <div style={{ color: '#a1a1aa' }}>攻速</div>
             </div>
           </div>
 
           {/* 技能CD显示 */}
           {battleState === 'fighting' && activeSkills.size > 0 && (
             <div style={{ marginTop: '12px' }}>
-              <h4 style={{ color: '#9ca3af', fontSize: '12px', margin: '0 0 8px 0' }}>技能状态</h4>
+              <h4 style={{ color: '#a1a1aa', fontSize: '12px', margin: '0 0 8px 0' }}>技能状态</h4>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                 {Array.from(activeSkills.entries()).map(([skillId, skill]) => {
                   const cooldown = skillCooldowns.get(skillId);
@@ -607,7 +607,7 @@ export default function MythologyBattleScreen({ locationId, onBack, onVictory, o
           padding: '12px',
           marginBottom: '16px'
         }}>
-          <h4 style={{ color: '#9ca3af', fontSize: '12px', margin: '0 0 8px 0' }}>战斗记录</h4>
+          <h4 style={{ color: '#a1a1aa', fontSize: '12px', margin: '0 0 8px 0' }}>战斗记录</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             {battleLog.map((log, index) => (
               <p
@@ -615,7 +615,7 @@ export default function MythologyBattleScreen({ locationId, onBack, onVictory, o
                 style={{
                   color: log.includes('💥') || log.includes('🎉') ? '#4ade80' :
                     log.includes('💀') ? '#ef4444' :
-                      log.includes('👹') ? '#fbbf24' :
+                      log.includes('👾') ? '#00d4ff' :
                         log.includes('💚') ? '#22c55e' :
                           log.includes('✨') ? '#60a5fa' :
                             '#d1d5db',
@@ -633,8 +633,8 @@ export default function MythologyBattleScreen({ locationId, onBack, onVictory, o
       {/* 底部按钮 */}
       <div style={{
         flexShrink: 0,
-        backgroundColor: '#2d2d2d',
-        borderTop: '1px solid #4b5563',
+        backgroundColor: '#1a1f3a',
+        borderTop: '1px solid #2a3050',
         padding: '12px 16px'
       }}>
         {battleState === 'fighting' ? (

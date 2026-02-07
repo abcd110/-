@@ -51,12 +51,12 @@ function QuantityModal({ isOpen, onClose, onConfirm, itemName, price, maxQuantit
       zIndex: 100
     }}>
       <div style={{
-        backgroundColor: '#2d2d2d',
+        backgroundColor: '#1a1f3a',
         borderRadius: '16px',
         padding: '24px',
         width: '90%',
         maxWidth: '320px',
-        border: '1px solid #4b5563'
+        border: '1px solid #2a3050'
       }}>
         <h3 style={{ color: 'white', fontWeight: 'bold', fontSize: '18px', margin: '0 0 16px 0', textAlign: 'center' }}>
           购买 {itemName}
@@ -64,12 +64,12 @@ function QuantityModal({ isOpen, onClose, onConfirm, itemName, price, maxQuantit
 
         <div style={{ marginBottom: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ color: '#9ca3af', fontSize: '14px' }}>单价</span>
-            <span style={{ color: '#fbbf24', fontSize: '14px' }}>💰 {price}</span>
+            <span style={{ color: '#a1a1aa', fontSize: '14px' }}>单价</span>
+            <span style={{ color: '#00d4ff', fontSize: '14px' }}>💰 {price}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-            <span style={{ color: '#9ca3af', fontSize: '14px' }}>总价</span>
-            <span style={{ color: '#fbbf24', fontSize: '14px', fontWeight: 'bold' }}>💰 {totalPrice}</span>
+            <span style={{ color: '#a1a1aa', fontSize: '14px' }}>总价</span>
+            <span style={{ color: '#00d4ff', fontSize: '14px', fontWeight: 'bold' }}>💰 {totalPrice}</span>
           </div>
 
           {/* 数量选择 */}
@@ -104,7 +104,7 @@ function QuantityModal({ isOpen, onClose, onConfirm, itemName, price, maxQuantit
                 fontWeight: 'bold',
                 color: 'white',
                 backgroundColor: '#1f2937',
-                border: '1px solid #4b5563',
+                border: '1px solid #2a3050',
                 borderRadius: '8px'
               }}
             />
@@ -130,7 +130,7 @@ function QuantityModal({ isOpen, onClose, onConfirm, itemName, price, maxQuantit
               onClick={() => setQuantity(actualMax)}
               style={{
                 fontSize: '12px',
-                color: '#9ca3af',
+                color: '#a1a1aa',
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
@@ -149,7 +149,7 @@ function QuantityModal({ isOpen, onClose, onConfirm, itemName, price, maxQuantit
               flex: 1,
               padding: '12px',
               backgroundColor: '#374151',
-              color: '#9ca3af',
+              color: '#a1a1aa',
               border: 'none',
               borderRadius: '8px',
               cursor: 'pointer',
@@ -164,7 +164,7 @@ function QuantityModal({ isOpen, onClose, onConfirm, itemName, price, maxQuantit
             style={{
               flex: 1,
               padding: '12px',
-              backgroundColor: quantity < 1 || quantity > actualMax ? '#4b5563' : '#d97706',
+              backgroundColor: quantity < 1 || quantity > actualMax ? '#2a3050' : '#0099cc',
               color: 'white',
               border: 'none',
               borderRadius: '8px',
@@ -196,7 +196,7 @@ export default function ShopScreen({ onBack }: ShopScreenProps) {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#1a1a1a', paddingBottom: '96px' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#0a0e27', paddingBottom: '96px' }}>
       <header style={{
         position: 'sticky',
         top: 0,
@@ -209,13 +209,13 @@ export default function ShopScreen({ onBack }: ShopScreenProps) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <button
             onClick={onBack}
-            style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#a1a1aa', background: 'none', border: 'none', cursor: 'pointer' }}
           >
             <span style={{ fontSize: '18px' }}>←</span>
             <span style={{ fontSize: '14px' }}>返回</span>
           </button>
           <h1 style={{ color: 'white', fontWeight: 'bold', fontSize: '18px' }}>商店</h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#fbbf24' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#00d4ff' }}>
             <span>💰</span>
             <span style={{ fontWeight: 'bold' }}>{gameManager.trainCoins}</span>
           </div>
@@ -239,7 +239,7 @@ export default function ShopScreen({ onBack }: ShopScreenProps) {
               <div
                 key={shopItem.itemId}
                 style={{
-                  backgroundColor: '#2d2d2d',
+                  backgroundColor: '#1a1f3a',
                   borderRadius: '12px',
                   padding: '12px',
                   border: '1px solid #374151'
@@ -258,7 +258,7 @@ export default function ShopScreen({ onBack }: ShopScreenProps) {
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontWeight: 'bold', color: canAfford ? '#fbbf24' : '#ef4444' }}>
+                  <span style={{ fontWeight: 'bold', color: canAfford ? '#00d4ff' : '#ef4444' }}>
                     💰 {shopItem.price}
                   </span>
                   <button
@@ -266,7 +266,7 @@ export default function ShopScreen({ onBack }: ShopScreenProps) {
                     disabled={!canBuyAny}
                     style={{
                       padding: '6px 12px',
-                      backgroundColor: !canBuyAny ? '#374151' : '#d97706',
+                      backgroundColor: !canBuyAny ? '#374151' : '#0099cc',
                       color: !canBuyAny ? '#6b7280' : 'white',
                       border: 'none',
                       borderRadius: '8px',
@@ -287,7 +287,7 @@ export default function ShopScreen({ onBack }: ShopScreenProps) {
         <div style={{
           marginTop: '16px',
           padding: '12px',
-          backgroundColor: '#2d2d2d',
+          backgroundColor: '#1a1f3a',
           borderRadius: '8px',
           border: '1px solid #374151'
         }}>

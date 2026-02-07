@@ -32,8 +32,8 @@ const MATERIAL_TYPE_NAMES: Record<CraftingMaterialType, string> = {
   [CraftingMaterialType.IRON]: '铁矿',
   [CraftingMaterialType.LEATHER]: '皮革',
   [CraftingMaterialType.FABRIC]: '纤维',
-  [CraftingMaterialType.WOOD]: '木材',
-  [CraftingMaterialType.CRYSTAL]: '水晶',
+  [CraftingMaterialType.WOOD]: '基础合金',
+  [CraftingMaterialType.CRYSTAL]: '冷却液晶',
   [CraftingMaterialType.ESSENCE]: '精华',
 };
 
@@ -123,7 +123,7 @@ export default function CraftingScreen({ onBack }: CraftingScreenProps) {
 
     return (
       <div style={{ marginBottom: '16px' }}>
-        <div style={{ fontSize: '13px', color: '#9ca3af', marginBottom: '8px' }}>
+        <div style={{ fontSize: '13px', color: '#a1a1aa', marginBottom: '8px' }}>
           {label} (需{cost}个)
         </div>
         <button
@@ -195,7 +195,7 @@ export default function CraftingScreen({ onBack }: CraftingScreenProps) {
         zIndex: 100,
       }}>
         <div style={{
-          backgroundColor: '#2d2d2d',
+          backgroundColor: '#1a1f3a',
           borderRadius: '12px',
           padding: '20px',
           width: '90%',
@@ -217,7 +217,7 @@ export default function CraftingScreen({ onBack }: CraftingScreenProps) {
               style={{
                 background: 'none',
                 border: 'none',
-                color: '#9ca3af',
+                color: '#a1a1aa',
                 fontSize: '20px',
                 cursor: 'pointer',
               }}
@@ -260,7 +260,7 @@ export default function CraftingScreen({ onBack }: CraftingScreenProps) {
                     }}>
                       {material.name}
                     </span>
-                    <span style={{ color: '#9ca3af', fontSize: '13px' }}>
+                    <span style={{ color: '#a1a1aa', fontSize: '13px' }}>
                       x{quantity}
                     </span>
                   </button>
@@ -276,11 +276,11 @@ export default function CraftingScreen({ onBack }: CraftingScreenProps) {
   if (!recipe) return null;
 
   return (
-    <div style={{ height: '100vh', backgroundColor: '#1a1a1a', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: '100vh', backgroundColor: '#0a0e27', display: 'flex', flexDirection: 'column' }}>
       {/* 顶部栏 */}
-      <header style={{ flexShrink: 0, backgroundColor: '#2d2d2d', borderBottom: '1px solid #4b5563', padding: '12px 16px' }}>
+      <header style={{ flexShrink: 0, backgroundColor: '#1a1f3a', borderBottom: '1px solid #2a3050', padding: '12px 16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }}>
+          <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#a1a1aa', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }}>
             <span>&larr;</span><span>返回</span>
           </button>
           <h1 style={{ color: 'white', fontWeight: 'bold', fontSize: '18px' }}>装备制造</h1>
@@ -327,7 +327,7 @@ export default function CraftingScreen({ onBack }: CraftingScreenProps) {
         </div>
 
         {/* 材料选择 */}
-        <div style={{ backgroundColor: '#2d2d2d', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+        <div style={{ backgroundColor: '#1a1f3a', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
           <div style={{ fontSize: '15px', color: 'white', fontWeight: 'bold', marginBottom: '16px' }}>
             投入材料
           </div>
@@ -350,7 +350,7 @@ export default function CraftingScreen({ onBack }: CraftingScreenProps) {
         </div>
 
         {/* 品质概率 - 紧凑显示 */}
-        <div style={{ backgroundColor: '#2d2d2d', borderRadius: '12px', padding: '12px', marginBottom: '16px' }}>
+        <div style={{ backgroundColor: '#1a1f3a', borderRadius: '12px', padding: '12px', marginBottom: '16px' }}>
           <div style={{ fontSize: '14px', color: 'white', fontWeight: 'bold', marginBottom: '8px' }}>
             制造概率
           </div>
@@ -383,7 +383,7 @@ export default function CraftingScreen({ onBack }: CraftingScreenProps) {
           style={{
             width: '100%',
             padding: '16px',
-            backgroundColor: canCraft ? '#d97706' : '#374151',
+            backgroundColor: canCraft ? '#0099cc' : '#374151',
             color: canCraft ? 'white' : '#6b7280',
             fontWeight: 'bold',
             borderRadius: '12px',

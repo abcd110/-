@@ -23,7 +23,7 @@ const RARITY_COLORS: Record<ItemRarity, string> = {
   [EquipmentRarity.UNCOMMON]: '#4ade80',
   [EquipmentRarity.RARE]: '#60a5fa',
   [EquipmentRarity.EPIC]: '#c084fc',
-  [EquipmentRarity.LEGENDARY]: '#fbbf24',
+  [EquipmentRarity.LEGENDARY]: '#00d4ff',
   [EquipmentRarity.MYTHIC]: '#f87171',
 };
 
@@ -82,14 +82,14 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
     } else {
       setResult({
         success: false,
-        message: '精神值不足'
+        message: '神能值不足'
       });
     }
 
     setIsProcessing(false);
   };
 
-  // 根据装备品质获取升华所需精神值
+  // 根据装备品质获取升华所需神能值
   const getSpiritCostByRarity = (rarity: ItemRarity): number => {
     switch (rarity) {
       case ItemRarity.COMMON:
@@ -117,7 +117,7 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
   // 获取成功率颜色
   const getSuccessRateColor = (rate: number): string => {
     if (rate >= 0.8) return '#4ade80';
-    if (rate >= 0.6) return '#fbbf24';
+    if (rate >= 0.6) return '#00d4ff';
     if (rate >= 0.4) return '#fb923c';
     return '#ef4444';
   };
@@ -125,15 +125,15 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
   return (
     <div style={{
       height: '100vh',
-      backgroundColor: '#1a1a1a',
+      backgroundColor: '#0a0e27',
       display: 'flex',
       flexDirection: 'column'
     }}>
       {/* 顶部标题栏 */}
       <header style={{
         flexShrink: 0,
-        backgroundColor: '#2d2d2d',
-        borderBottom: '1px solid #4b5563',
+        backgroundColor: '#1a1f3a',
+        borderBottom: '1px solid #2a3050',
         padding: '12px 16px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -143,7 +143,7 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
-              color: '#9ca3af',
+              color: '#a1a1aa',
               background: 'none',
               border: 'none',
               cursor: 'pointer',
@@ -164,9 +164,9 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
         overflowY: 'auto',
         padding: '16px'
       }}>
-        {/* 精神值显示 */}
+        {/* 神能值显示 */}
         <div style={{
-          backgroundColor: '#2d2d2d',
+          backgroundColor: '#1a1f3a',
           borderRadius: '12px',
           padding: '12px 16px',
           marginBottom: '16px',
@@ -174,7 +174,7 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
           alignItems: 'center',
           justifyContent: 'space-between'
         }}>
-          <span style={{ color: '#9ca3af', fontSize: '14px' }}>当前精神值</span>
+          <span style={{ color: '#a1a1aa', fontSize: '14px' }}>当前神能值</span>
           <span style={{ color: '#c084fc', fontWeight: 'bold', fontSize: '16px' }}>
             🔮 {player.spirit}/{player.maxSpirit}
           </span>
@@ -182,7 +182,7 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
 
         {/* 装备选择 */}
         <div style={{
-          backgroundColor: '#2d2d2d',
+          backgroundColor: '#1a1f3a',
           borderRadius: '12px',
           padding: '16px',
           border: '1px solid #374151',
@@ -203,7 +203,7 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
                   style={{
                     aspectRatio: '1',
                     backgroundColor: isSelected ? '#1f2937' : '#374151',
-                    border: `2px solid ${isSelected ? '#9333ea' : (equippedItem ? RARITY_COLORS[equippedItem.rarity] : '#4b5563')}`,
+                    border: `2px solid ${isSelected ? '#9333ea' : (equippedItem ? RARITY_COLORS[equippedItem.rarity] : '#2a3050')}`,
                     borderRadius: '8px',
                     padding: '8px',
                     display: 'flex',
@@ -213,7 +213,7 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
                     cursor: 'pointer'
                   }}
                 >
-                  <span style={{ fontSize: '14px', color: '#9ca3af', fontWeight: 'bold' }}>{SLOT_NAMES[slot]}</span>
+                  <span style={{ fontSize: '14px', color: '#a1a1aa', fontWeight: 'bold' }}>{SLOT_NAMES[slot]}</span>
                   {equippedItem ? (
                     <>
                       <span style={{
@@ -242,7 +242,7 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
         {/* 选中装备详情 */}
         {selectedEquipment && (
           <div style={{
-            backgroundColor: '#2d2d2d',
+            backgroundColor: '#1a1f3a',
             borderRadius: '12px',
             padding: '16px',
             border: `2px solid ${RARITY_COLORS[selectedEquipment.rarity]}`,
@@ -258,7 +258,7 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: '12px',
-                color: '#9ca3af',
+                color: '#a1a1aa',
                 fontWeight: 'bold',
                 border: `2px solid ${RARITY_COLORS[selectedEquipment.rarity]}`
               }}>
@@ -273,11 +273,11 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
                 }}>
                   {selectedEquipment.name}
                 </h3>
-                <p style={{ color: '#9ca3af', fontSize: '12px', margin: 0 }}>
-                  {RARITY_NAMES[selectedEquipment.rarity]} · 站台{selectedEquipment.stationNumber}
+                <p style={{ color: '#a1a1aa', fontSize: '12px', margin: 0 }}>
+                  {RARITY_NAMES[selectedEquipment.rarity]} · 星球{selectedEquipment.stationNumber}
                 </p>
                 <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-                  <span style={{ color: '#fbbf24', fontSize: '12px' }}>
+                  <span style={{ color: '#00d4ff', fontSize: '12px' }}>
                     强化 +{selectedEquipment.enhanceLevel}
                   </span>
                   <span style={{ color: '#c084fc', fontSize: '12px' }}>
@@ -294,7 +294,7 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
               padding: '12px',
               marginBottom: '12px'
             }}>
-              <h4 style={{ color: '#9ca3af', fontSize: '12px', marginBottom: '8px' }}>当前属性</h4>
+              <h4 style={{ color: '#a1a1aa', fontSize: '12px', marginBottom: '8px' }}>当前属性</h4>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px', fontSize: '13px' }}>
                 {(() => {
                   const stats = calculateEquipmentStats(selectedEquipment);
@@ -302,7 +302,7 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
                   if (stats.attack > 0) {
                     items.push(
                       <div key="attack" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#9ca3af' }}>攻击</span>
+                        <span style={{ color: '#a1a1aa' }}>攻击</span>
                         <span style={{ color: '#f87171' }}>{stats.attack}</span>
                       </div>
                     );
@@ -310,7 +310,7 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
                   if (stats.defense > 0) {
                     items.push(
                       <div key="defense" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#9ca3af' }}>防御</span>
+                        <span style={{ color: '#a1a1aa' }}>防御</span>
                         <span style={{ color: '#60a5fa' }}>{stats.defense}</span>
                       </div>
                     );
@@ -318,7 +318,7 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
                   if (stats.hp > 0) {
                     items.push(
                       <div key="hp" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#9ca3af' }}>生命</span>
+                        <span style={{ color: '#a1a1aa' }}>生命</span>
                         <span style={{ color: '#ef4444' }}>{stats.hp}</span>
                       </div>
                     );
@@ -326,15 +326,15 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
                   if (stats.speed > 0) {
                     items.push(
                       <div key="speed" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#9ca3af' }}>攻速</span>
-                        <span style={{ color: '#fbbf24' }}>{stats.speed.toFixed(1)}</span>
+                        <span style={{ color: '#a1a1aa' }}>攻速</span>
+                        <span style={{ color: '#00d4ff' }}>{stats.speed.toFixed(1)}</span>
                       </div>
                     );
                   }
                   if (stats.dodge > 0) {
                     items.push(
                       <div key="dodge" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#9ca3af' }}>闪避</span>
+                        <span style={{ color: '#a1a1aa' }}>闪避</span>
                         <span style={{ color: '#a78bfa' }}>{stats.dodge}</span>
                       </div>
                     );
@@ -342,7 +342,7 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
                   if (stats.hit > 0) {
                     items.push(
                       <div key="hit" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#9ca3af' }}>命中</span>
+                        <span style={{ color: '#a1a1aa' }}>命中</span>
                         <span style={{ color: '#34d399' }}>{stats.hit}</span>
                       </div>
                     );
@@ -350,7 +350,7 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
                   if (stats.penetration > 0) {
                     items.push(
                       <div key="penetration" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#9ca3af' }}>穿透</span>
+                        <span style={{ color: '#a1a1aa' }}>穿透</span>
                         <span style={{ color: '#fb923c' }}>{stats.penetration}</span>
                       </div>
                     );
@@ -368,7 +368,7 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
               marginBottom: '12px'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ color: '#9ca3af', fontSize: '14px' }}>升华成功率</span>
+                <span style={{ color: '#a1a1aa', fontSize: '14px' }}>升华成功率</span>
                 <span style={{
                   color: getSuccessRateColor(getSublimationRate(selectedEquipment.sublimationLevel)),
                   fontWeight: 'bold',
@@ -398,9 +398,9 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
               marginBottom: '12px'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#9ca3af', fontSize: '14px' }}>升华费用</span>
+                <span style={{ color: '#a1a1aa', fontSize: '14px' }}>升华费用</span>
                 <span style={{ color: '#c084fc', fontWeight: 'bold' }}>
-                  {calculateSublimationCost(selectedEquipment.rarity)} 精神
+                  {calculateSublimationCost(selectedEquipment.rarity)} 神能
                 </span>
               </div>
             </div>
@@ -447,7 +447,7 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
         {/* 未选择装备提示 */}
         {!selectedEquipment && selectedSlot && (
           <div style={{
-            backgroundColor: '#2d2d2d',
+            backgroundColor: '#1a1f3a',
             borderRadius: '12px',
             padding: '24px',
             textAlign: 'center'
@@ -472,7 +472,7 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
           padding: '16px'
         }}>
           <div style={{
-            backgroundColor: '#2d2d2d',
+            backgroundColor: '#1a1f3a',
             borderRadius: '16px',
             width: '100%',
             maxWidth: '300px',

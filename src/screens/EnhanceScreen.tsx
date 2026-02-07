@@ -184,7 +184,7 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
 
   const getSuccessRateColor = (rate: number) => {
     if (rate >= 0.8) return '#4ade80';
-    if (rate >= 0.6) return '#fbbf24';
+    if (rate >= 0.6) return '#00d4ff';
     if (rate >= 0.4) return '#fb923c';
     return '#ef4444';
   };
@@ -214,15 +214,15 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
   return (
     <div style={{
       height: '100vh',
-      backgroundColor: '#1a1a1a',
+      backgroundColor: '#0a0e27',
       display: 'flex',
       flexDirection: 'column'
     }}>
       {/* 顶部标题栏 */}
       <header style={{
         flexShrink: 0,
-        backgroundColor: '#2d2d2d',
-        borderBottom: '1px solid #4b5563',
+        backgroundColor: '#1a1f3a',
+        borderBottom: '1px solid #2a3050',
         padding: '12px 16px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -232,7 +232,7 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
-              color: '#9ca3af',
+              color: '#a1a1aa',
               background: 'none',
               border: 'none',
               cursor: 'pointer',
@@ -255,7 +255,7 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
       }}>
         {/* 装备槽位选择 */}
         <div style={{
-          backgroundColor: '#2d2d2d',
+          backgroundColor: '#1a1f3a',
           borderRadius: '12px',
           padding: '16px',
           border: '1px solid #374151',
@@ -274,7 +274,7 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
                   style={{
                     aspectRatio: '1',
                     backgroundColor: isSelected ? '#1f2937' : '#374151',
-                    border: `2px solid ${isSelected ? '#d97706' : (hasEquipment ? RARITY_COLORS[equipment.rarity] : '#4b5563')}`,
+                    border: `2px solid ${isSelected ? '#0099cc' : (hasEquipment ? RARITY_COLORS[equipment.rarity] : '#2a3050')}`,
                     borderRadius: '8px',
                     padding: '8px',
                     display: 'flex',
@@ -284,7 +284,7 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
                     cursor: 'pointer'
                   }}
                 >
-                  <span style={{ fontSize: '14px', color: '#9ca3af', fontWeight: 'bold', marginBottom: '4px' }}>{SLOT_NAMES[slot]}</span>
+                  <span style={{ fontSize: '14px', color: '#a1a1aa', fontWeight: 'bold', marginBottom: '4px' }}>{SLOT_NAMES[slot]}</span>
                   {equipment ? (
                     <>
                       <span style={{
@@ -295,7 +295,7 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
                       }}>
                         {equipment.name || '未知装备'}
                       </span>
-                      <span style={{ fontSize: '9px', color: '#fbbf24', marginTop: '2px' }}>
+                      <span style={{ fontSize: '9px', color: '#00d4ff', marginTop: '2px' }}>
                         +{equipment.enhanceLevel || 0}
                       </span>
                     </>
@@ -313,7 +313,7 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
         {/* 选中装备详情 */}
         {selectedEquipment && preview && (
           <div style={{
-            backgroundColor: '#2d2d2d',
+            backgroundColor: '#1a1f3a',
             borderRadius: '12px',
             padding: '16px',
             border: `2px solid ${RARITY_COLORS[selectedEquipment.rarity]}`,
@@ -329,7 +329,7 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: '12px',
-                color: '#9ca3af',
+                color: '#a1a1aa',
                 fontWeight: 'bold',
                 border: `2px solid ${RARITY_COLORS[selectedEquipment.rarity]}`
               }}>
@@ -344,11 +344,11 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
                 }}>
                   {selectedEquipment.name || '未知装备'}
                 </h3>
-                <p style={{ color: '#9ca3af', fontSize: '12px', margin: 0 }}>
-                  {(selectedEquipment as any).rarity || '普通'} · 站台{(selectedEquipment as any).stationNumber || 0}
+                <p style={{ color: '#a1a1aa', fontSize: '12px', margin: 0 }}>
+                  {(selectedEquipment as any).rarity || '普通'} · 星球{(selectedEquipment as any).stationNumber || 0}
                 </p>
                 <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-                  <span style={{ color: '#fbbf24', fontSize: '12px' }}>
+                  <span style={{ color: '#00d4ff', fontSize: '12px' }}>
                     强化 +{selectedEquipment.enhanceLevel || 0}
                   </span>
                 </div>
@@ -363,7 +363,7 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
               marginBottom: '12px'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ color: '#9ca3af', fontSize: '14px' }}>强化成功率</span>
+                <span style={{ color: '#a1a1aa', fontSize: '14px' }}>强化成功率</span>
                 <span style={{
                   color: getSuccessRateColor(preview.successRate),
                   fontWeight: 'bold',
@@ -393,11 +393,11 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
               padding: '12px',
               marginBottom: '12px'
             }}>
-              <h4 style={{ color: '#9ca3af', fontSize: '12px', marginBottom: '8px' }}>当前属性 → 强化后</h4>
+              <h4 style={{ color: '#a1a1aa', fontSize: '12px', marginBottom: '8px' }}>当前属性 → 强化后</h4>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px', fontSize: '13px' }}>
                 {(preview.attributePreview.attack.current > 0 || preview.attributePreview.attack.after > 0) ? (
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#9ca3af' }}>攻击</span>
+                    <span style={{ color: '#a1a1aa' }}>攻击</span>
                     <span style={{ color: '#f87171' }}>
                       {preview.attributePreview.attack.current} → {preview.attributePreview.attack.after}
                     </span>
@@ -405,7 +405,7 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
                 ) : null}
                 {(preview.attributePreview.defense.current > 0 || preview.attributePreview.defense.after > 0) ? (
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#9ca3af' }}>防御</span>
+                    <span style={{ color: '#a1a1aa' }}>防御</span>
                     <span style={{ color: '#60a5fa' }}>
                       {preview.attributePreview.defense.current} → {preview.attributePreview.defense.after}
                     </span>
@@ -413,7 +413,7 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
                 ) : null}
                 {(preview.attributePreview.maxHp.current > 0 || preview.attributePreview.maxHp.after > 0) ? (
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#9ca3af' }}>生命</span>
+                    <span style={{ color: '#a1a1aa' }}>生命</span>
                     <span style={{ color: '#ef4444' }}>
                       {preview.attributePreview.maxHp.current} → {preview.attributePreview.maxHp.after}
                     </span>
@@ -421,15 +421,15 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
                 ) : null}
                 {(preview.attributePreview.speed.current > 0 || preview.attributePreview.speed.after > 0) ? (
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#9ca3af' }}>攻速</span>
-                    <span style={{ color: '#fbbf24' }}>
+                    <span style={{ color: '#a1a1aa' }}>攻速</span>
+                    <span style={{ color: '#00d4ff' }}>
                       {preview.attributePreview.speed.current} → {preview.attributePreview.speed.after}
                     </span>
                   </div>
                 ) : null}
                 {(preview.attributePreview.dodge.current > 0 || preview.attributePreview.dodge.after > 0) ? (
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#9ca3af' }}>闪避</span>
+                    <span style={{ color: '#a1a1aa' }}>闪避</span>
                     <span style={{ color: '#a78bfa' }}>
                       {preview.attributePreview.dodge.current} → {preview.attributePreview.dodge.after}
                     </span>
@@ -437,7 +437,7 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
                 ) : null}
                 {(preview.attributePreview.hit.current > 0 || preview.attributePreview.hit.after > 0) ? (
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#9ca3af' }}>命中</span>
+                    <span style={{ color: '#a1a1aa' }}>命中</span>
                     <span style={{ color: '#34d399' }}>
                       {preview.attributePreview.hit.current} → {preview.attributePreview.hit.after}
                     </span>
@@ -454,9 +454,9 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
               marginBottom: '12px'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#9ca3af', fontSize: '14px' }}>强化石消耗</span>
+                <span style={{ color: '#a1a1aa', fontSize: '14px' }}>强化石消耗</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ color: '#9ca3af', fontSize: '12px' }}>
+                  <span style={{ color: '#a1a1aa', fontSize: '12px' }}>
                     拥有: {gameManager.inventory.getItem('mat_enhance_stone')?.quantity || 0}
                   </span>
                   <span style={{
@@ -478,7 +478,7 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
                 style={{
                   width: '100%',
                   padding: '14px',
-                  backgroundColor: isEnhancing || !preview.hasEnoughStones ? '#374151' : '#d97706',
+                  backgroundColor: isEnhancing || !preview.hasEnoughStones ? '#374151' : '#0099cc',
                   color: isEnhancing || !preview.hasEnoughStones ? '#6b7280' : 'white',
                   fontWeight: 'bold',
                   borderRadius: '10px',
@@ -521,7 +521,7 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
         {/* 未选择装备提示 */}
         {selectedSlot && !selectedEquipment && (
           <div style={{
-            backgroundColor: '#2d2d2d',
+            backgroundColor: '#1a1f3a',
             borderRadius: '12px',
             padding: '24px',
             textAlign: 'center'
@@ -546,7 +546,7 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
           padding: '16px'
         }}>
           <div style={{
-            backgroundColor: '#2d2d2d',
+            backgroundColor: '#1a1f3a',
             borderRadius: '16px',
             width: '100%',
             maxWidth: '300px',
@@ -579,7 +579,7 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
                 padding: '12px',
                 marginBottom: '16px'
               }}>
-                <p style={{ color: '#9ca3af', fontSize: '12px', marginBottom: '8px' }}>获得属性提升</p>
+                <p style={{ color: '#a1a1aa', fontSize: '12px', marginBottom: '8px' }}>获得属性提升</p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px' }}>
                   {result.attributeGains?.attack && result.attributeGains.attack > 0 && (
                     <span style={{ color: '#f87171', fontSize: '13px' }}>攻击 +{Math.floor(result.attributeGains.attack)}</span>
@@ -588,7 +588,7 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
                     <span style={{ color: '#60a5fa', fontSize: '13px' }}>防御 +{Math.floor(result.attributeGains.defense)}</span>
                   )}
                   {result.attributeGains?.speed && result.attributeGains.speed > 0 && (
-                    <span style={{ color: '#fbbf24', fontSize: '13px' }}>攻速 +{result.attributeGains.speed.toFixed(1)}</span>
+                    <span style={{ color: '#00d4ff', fontSize: '13px' }}>攻速 +{result.attributeGains.speed.toFixed(1)}</span>
                   )}
                   {result.attributeGains?.maxHp && result.attributeGains.maxHp > 0 && (
                     <span style={{ color: '#ef4444', fontSize: '13px' }}>生命 +{Math.floor(result.attributeGains.maxHp)}</span>

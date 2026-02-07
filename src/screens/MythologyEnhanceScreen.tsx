@@ -22,7 +22,7 @@ const RARITY_COLORS: Record<ItemRarity, string> = {
   [EquipmentRarity.UNCOMMON]: '#4ade80',
   [EquipmentRarity.RARE]: '#60a5fa',
   [EquipmentRarity.EPIC]: '#c084fc',
-  [EquipmentRarity.LEGENDARY]: '#fbbf24',
+  [EquipmentRarity.LEGENDARY]: '#00d4ff',
   [EquipmentRarity.MYTHIC]: '#f87171',
 };
 
@@ -88,7 +88,7 @@ export default function MythologyEnhanceScreen({ onBack }: MythologyEnhanceScree
     } else {
       setResult({
         success: false,
-        message: '列车币不足'
+        message: '航船币不足'
       });
     }
 
@@ -122,7 +122,7 @@ export default function MythologyEnhanceScreen({ onBack }: MythologyEnhanceScree
     } else {
       setResult({
         success: false,
-        message: '列车币不足'
+        message: '航船币不足'
       });
     }
 
@@ -142,15 +142,15 @@ export default function MythologyEnhanceScreen({ onBack }: MythologyEnhanceScree
   return (
     <div style={{
       height: '100vh',
-      backgroundColor: '#1a1a1a',
+      backgroundColor: '#0a0e27',
       display: 'flex',
       flexDirection: 'column'
     }}>
       {/* 顶部标题栏 */}
       <header style={{
         flexShrink: 0,
-        backgroundColor: '#2d2d2d',
-        borderBottom: '1px solid #4b5563',
+        backgroundColor: '#1a1f3a',
+        borderBottom: '1px solid #2a3050',
         padding: '12px 16px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -160,7 +160,7 @@ export default function MythologyEnhanceScreen({ onBack }: MythologyEnhanceScree
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
-              color: '#9ca3af',
+              color: '#a1a1aa',
               background: 'none',
               border: 'none',
               cursor: 'pointer',
@@ -179,7 +179,7 @@ export default function MythologyEnhanceScreen({ onBack }: MythologyEnhanceScree
       <div style={{
         flexShrink: 0,
         display: 'flex',
-        backgroundColor: '#2d2d2d',
+        backgroundColor: '#1a1f3a',
         borderBottom: '1px solid #374151'
       }}>
         <button
@@ -187,7 +187,7 @@ export default function MythologyEnhanceScreen({ onBack }: MythologyEnhanceScree
           style={{
             flex: 1,
             padding: '12px',
-            backgroundColor: activeTab === 'enhance' ? '#d97706' : 'transparent',
+            backgroundColor: activeTab === 'enhance' ? '#0099cc' : 'transparent',
             color: activeTab === 'enhance' ? 'white' : '#9ca3af',
             border: 'none',
             cursor: 'pointer',
@@ -220,7 +220,7 @@ export default function MythologyEnhanceScreen({ onBack }: MythologyEnhanceScree
       }}>
         {/* 金币显示 */}
         <div style={{
-          backgroundColor: '#2d2d2d',
+          backgroundColor: '#1a1f3a',
           borderRadius: '12px',
           padding: '12px 16px',
           marginBottom: '16px',
@@ -228,15 +228,15 @@ export default function MythologyEnhanceScreen({ onBack }: MythologyEnhanceScree
           alignItems: 'center',
           justifyContent: 'space-between'
         }}>
-          <span style={{ color: '#9ca3af', fontSize: '14px' }}>持有列车币</span>
-          <span style={{ color: '#fbbf24', fontWeight: 'bold', fontSize: '16px' }}>
+          <span style={{ color: '#a1a1aa', fontSize: '14px' }}>持有航船币</span>
+          <span style={{ color: '#00d4ff', fontWeight: 'bold', fontSize: '16px' }}>
             💰 {gameManager.trainCoins.toLocaleString()}
           </span>
         </div>
 
         {/* 装备选择 */}
         <div style={{
-          backgroundColor: '#2d2d2d',
+          backgroundColor: '#1a1f3a',
           borderRadius: '12px',
           padding: '16px',
           border: '1px solid #374151',
@@ -257,7 +257,7 @@ export default function MythologyEnhanceScreen({ onBack }: MythologyEnhanceScree
                   style={{
                     aspectRatio: '1',
                     backgroundColor: isSelected ? '#1f2937' : '#374151',
-                    border: `2px solid ${isSelected ? '#d97706' : (equippedItem ? RARITY_COLORS[equippedItem.rarity] : '#4b5563')}`,
+                    border: `2px solid ${isSelected ? '#0099cc' : (equippedItem ? RARITY_COLORS[equippedItem.rarity] : '#2a3050')}`,
                     borderRadius: '8px',
                     padding: '8px',
                     display: 'flex',
@@ -278,7 +278,7 @@ export default function MythologyEnhanceScreen({ onBack }: MythologyEnhanceScree
                       }}>
                         {equippedItem.name}
                       </span>
-                      <span style={{ fontSize: '8px', color: '#fbbf24' }}>
+                      <span style={{ fontSize: '8px', color: '#00d4ff' }}>
                         +{equippedItem.enhanceLevel}
                       </span>
                     </>
@@ -296,7 +296,7 @@ export default function MythologyEnhanceScreen({ onBack }: MythologyEnhanceScree
         {/* 选中装备详情 */}
         {selectedEquipment && (
           <div style={{
-            backgroundColor: '#2d2d2d',
+            backgroundColor: '#1a1f3a',
             borderRadius: '12px',
             padding: '16px',
             border: `2px solid ${RARITY_COLORS[selectedEquipment.rarity]}`,
@@ -324,11 +324,11 @@ export default function MythologyEnhanceScreen({ onBack }: MythologyEnhanceScree
                 }}>
                   {selectedEquipment.name}
                 </h3>
-                <p style={{ color: '#9ca3af', fontSize: '12px', margin: 0 }}>
-                  {RARITY_NAMES[selectedEquipment.rarity]} · 站台{selectedEquipment.stationNumber}
+                <p style={{ color: '#a1a1aa', fontSize: '12px', margin: 0 }}>
+                  {RARITY_NAMES[selectedEquipment.rarity]} · 星球{selectedEquipment.stationNumber}
                 </p>
                 <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-                  <span style={{ color: '#fbbf24', fontSize: '12px' }}>
+                  <span style={{ color: '#00d4ff', fontSize: '12px' }}>
                     强化 +{selectedEquipment.enhanceLevel}
                   </span>
                   <span style={{ color: '#c084fc', fontSize: '12px' }}>
@@ -345,11 +345,11 @@ export default function MythologyEnhanceScreen({ onBack }: MythologyEnhanceScree
               padding: '12px',
               marginBottom: '12px'
             }}>
-              <h4 style={{ color: '#9ca3af', fontSize: '12px', marginBottom: '8px' }}>当前属性</h4>
+              <h4 style={{ color: '#a1a1aa', fontSize: '12px', marginBottom: '8px' }}>当前属性</h4>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px', fontSize: '13px' }}>
                 {selectedEquipment.stats.attack !== undefined && selectedEquipment.stats.attack > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#9ca3af' }}>攻击</span>
+                    <span style={{ color: '#a1a1aa' }}>攻击</span>
                     <span style={{ color: '#f87171' }}>
                       {Math.floor(selectedEquipment.stats.attack * (1 + selectedEquipment.enhanceLevel * 0.1) * (1 + selectedEquipment.sublimationLevel * 0.05))}
                     </span>
@@ -357,7 +357,7 @@ export default function MythologyEnhanceScreen({ onBack }: MythologyEnhanceScree
                 )}
                 {selectedEquipment.stats.defense !== undefined && selectedEquipment.stats.defense > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#9ca3af' }}>防御</span>
+                    <span style={{ color: '#a1a1aa' }}>防御</span>
                     <span style={{ color: '#60a5fa' }}>
                       {Math.floor(selectedEquipment.stats.defense * (1 + selectedEquipment.enhanceLevel * 0.1) * (1 + selectedEquipment.sublimationLevel * 0.05))}
                     </span>
@@ -365,7 +365,7 @@ export default function MythologyEnhanceScreen({ onBack }: MythologyEnhanceScree
                 )}
                 {selectedEquipment.stats.hp !== undefined && selectedEquipment.stats.hp > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#9ca3af' }}>生命</span>
+                    <span style={{ color: '#a1a1aa' }}>生命</span>
                     <span style={{ color: '#ef4444' }}>
                       {Math.floor(selectedEquipment.stats.hp * (1 + selectedEquipment.enhanceLevel * 0.1) * (1 + selectedEquipment.sublimationLevel * 0.05))}
                     </span>
@@ -373,7 +373,7 @@ export default function MythologyEnhanceScreen({ onBack }: MythologyEnhanceScree
                 )}
                 {selectedEquipment.stats.penetration !== undefined && selectedEquipment.stats.penetration > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#9ca3af' }}>穿透</span>
+                    <span style={{ color: '#a1a1aa' }}>穿透</span>
                     <span style={{ color: '#fb923c' }}>
                       {Math.floor(selectedEquipment.stats.penetration * (1 + selectedEquipment.enhanceLevel * 0.1) * (1 + selectedEquipment.sublimationLevel * 0.05))}
                     </span>
@@ -392,7 +392,7 @@ export default function MythologyEnhanceScreen({ onBack }: MythologyEnhanceScree
                   marginBottom: '12px'
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <span style={{ color: '#9ca3af', fontSize: '14px' }}>强化成功率</span>
+                    <span style={{ color: '#a1a1aa', fontSize: '14px' }}>强化成功率</span>
                     <span style={{
                       color: getSuccessRateColor(getEnhanceRate(selectedEquipment.enhanceLevel)),
                       fontWeight: 'bold',
@@ -427,9 +427,9 @@ export default function MythologyEnhanceScreen({ onBack }: MythologyEnhanceScree
                   marginBottom: '12px'
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#9ca3af', fontSize: '14px' }}>强化费用</span>
-                    <span style={{ color: '#fbbf24', fontWeight: 'bold' }}>
-                      {calculateEnhanceCost(selectedEquipment.enhanceLevel).toLocaleString()} 列车币
+                    <span style={{ color: '#a1a1aa', fontSize: '14px' }}>强化费用</span>
+                    <span style={{ color: '#00d4ff', fontWeight: 'bold' }}>
+                      {calculateEnhanceCost(selectedEquipment.enhanceLevel).toLocaleString()} 航船币
                     </span>
                   </div>
                 </div>
@@ -440,7 +440,7 @@ export default function MythologyEnhanceScreen({ onBack }: MythologyEnhanceScree
                   style={{
                     width: '100%',
                     padding: '16px',
-                    backgroundColor: isProcessing ? '#374151' : (selectedEquipment.enhanceLevel >= 15 ? '#374151' : '#d97706'),
+                    backgroundColor: isProcessing ? '#374151' : (selectedEquipment.enhanceLevel >= 15 ? '#374151' : '#0099cc'),
                     color: isProcessing ? '#6b7280' : (selectedEquipment.enhanceLevel >= 15 ? '#6b7280' : 'white'),
                     fontWeight: 'bold',
                     borderRadius: '12px',
@@ -480,7 +480,7 @@ export default function MythologyEnhanceScreen({ onBack }: MythologyEnhanceScree
                   marginBottom: '12px'
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <span style={{ color: '#9ca3af', fontSize: '14px' }}>升华成功率</span>
+                    <span style={{ color: '#a1a1aa', fontSize: '14px' }}>升华成功率</span>
                     <span style={{
                       color: getSuccessRateColor(getSublimationRate(selectedEquipment.sublimationLevel)),
                       fontWeight: 'bold',
@@ -510,9 +510,9 @@ export default function MythologyEnhanceScreen({ onBack }: MythologyEnhanceScree
                   marginBottom: '12px'
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#9ca3af', fontSize: '14px' }}>升华费用</span>
-                    <span style={{ color: '#fbbf24', fontWeight: 'bold' }}>
-                      {calculateSublimationCost(selectedEquipment.sublimationLevel).toLocaleString()} 列车币
+                    <span style={{ color: '#a1a1aa', fontSize: '14px' }}>升华费用</span>
+                    <span style={{ color: '#00d4ff', fontWeight: 'bold' }}>
+                      {calculateSublimationCost(selectedEquipment.sublimationLevel).toLocaleString()} 航船币
                     </span>
                   </div>
                 </div>
@@ -561,7 +561,7 @@ export default function MythologyEnhanceScreen({ onBack }: MythologyEnhanceScree
         {/* 未选择装备提示 */}
         {!selectedEquipment && selectedSlot && (
           <div style={{
-            backgroundColor: '#2d2d2d',
+            backgroundColor: '#1a1f3a',
             borderRadius: '12px',
             padding: '24px',
             textAlign: 'center'
@@ -586,7 +586,7 @@ export default function MythologyEnhanceScreen({ onBack }: MythologyEnhanceScree
           padding: '16px'
         }}>
           <div style={{
-            backgroundColor: '#2d2d2d',
+            backgroundColor: '#1a1f3a',
             borderRadius: '16px',
             width: '100%',
             maxWidth: '300px',
@@ -637,7 +637,7 @@ export default function MythologyEnhanceScreen({ onBack }: MythologyEnhanceScree
 // 获取成功率颜色
 function getSuccessRateColor(rate: number): string {
   if (rate >= 0.8) return '#4ade80';
-  if (rate >= 0.6) return '#fbbf24';
+  if (rate >= 0.6) return '#00d4ff';
   if (rate >= 0.4) return '#fb923c';
   return '#ef4444';
 }

@@ -16,7 +16,7 @@ const RARITY_COLORS: Record<ItemRarity, string> = {
   [EquipmentRarity.UNCOMMON]: '#4ade80',
   [EquipmentRarity.RARE]: '#60a5fa',
   [EquipmentRarity.EPIC]: '#c084fc',
-  [EquipmentRarity.LEGENDARY]: '#fbbf24',
+  [EquipmentRarity.LEGENDARY]: '#00d4ff',
   [EquipmentRarity.MYTHIC]: '#f87171',
 };
 
@@ -41,7 +41,7 @@ export default function TestScreen({ onBack }: TestScreenProps) {
     setRefreshKey(prev => prev + 1);
   };
 
-  // 获取所有装备按站台分组
+  // 获取所有装备按星球分组
   const equipmentByStation: Record<number, MythologyEquipment[]> = {};
   for (let i = 1; i <= 32; i++) {
     equipmentByStation[i] = getEquipmentByStation(i);
@@ -52,8 +52,8 @@ export default function TestScreen({ onBack }: TestScreenProps) {
 
   // 按材料类型分组
   const materialsByType: Record<string, typeof allCraftingMaterials> = {
-    '基础材料（站台1-4）': [],
-    '高级材料（站台5-8）': [],
+    '基础材料（星球1-4）': [],
+    '高级材料（星球5-8）': [],
     '优质品质材料': [],
     '精良品质材料': [],
     '稀有品质材料': [],
@@ -61,17 +61,17 @@ export default function TestScreen({ onBack }: TestScreenProps) {
   };
 
   allCraftingMaterials.forEach(mat => {
-    // 基础材料：铁矿、皮革、布料、木材（站台1-4）
+    // 基础材料：铁矿、皮革、布料、基础合金（星球1-4）
     if (mat.type === CraftingMaterialType.IRON ||
       mat.type === CraftingMaterialType.LEATHER ||
       mat.type === CraftingMaterialType.FABRIC ||
       mat.type === CraftingMaterialType.WOOD) {
-      materialsByType['基础材料（站台1-4）'].push(mat);
+      materialsByType['基础材料（星球1-4）'].push(mat);
     }
-    // 高级材料：水晶、精华（站台5-8）
+    // 高级材料：冷却液晶、精华（星球5-8）
     else if (mat.type === CraftingMaterialType.CRYSTAL ||
       mat.type === CraftingMaterialType.ESSENCE) {
-      materialsByType['高级材料（站台5-8）'].push(mat);
+      materialsByType['高级材料（星球5-8）'].push(mat);
     }
 
     // 按品质分组
@@ -125,7 +125,7 @@ export default function TestScreen({ onBack }: TestScreenProps) {
   const addCoins = (amount: number) => {
     gameManager.trainCoins += amount;
     forceRefresh();
-    showMessage(`已获得 ${amount.toLocaleString()} 列车币`);
+    showMessage(`已获得 ${amount.toLocaleString()} 航船币`);
   };
 
   // 添加强化石
@@ -204,7 +204,7 @@ export default function TestScreen({ onBack }: TestScreenProps) {
     }
   };
 
-  // 获得站台全套装备
+  // 获得星球全套装备
   const addStationEquipment = (stationNum: number) => {
     const equipment = getEquipmentByStation(stationNum);
     equipment.forEach(equip => {
@@ -215,7 +215,7 @@ export default function TestScreen({ onBack }: TestScreenProps) {
       }
     });
     forceRefresh();
-    showMessage(`已获得站台${stationNum}全套装备`);
+    showMessage(`已获得星球${stationNum}全套装备`);
   };
 
   // 获得所有武器
@@ -259,15 +259,15 @@ export default function TestScreen({ onBack }: TestScreenProps) {
   return (
     <div style={{
       height: '100vh',
-      backgroundColor: '#1a1a1a',
+      backgroundColor: '#0a0e27',
       display: 'flex',
       flexDirection: 'column'
     }}>
       {/* 顶部标题栏 */}
       <header style={{
         flexShrink: 0,
-        backgroundColor: '#2d2d2d',
-        borderBottom: '1px solid #4b5563',
+        backgroundColor: '#1a1f3a',
+        borderBottom: '1px solid #2a3050',
         padding: '12px 16px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -277,7 +277,7 @@ export default function TestScreen({ onBack }: TestScreenProps) {
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
-              color: '#9ca3af',
+              color: '#a1a1aa',
               background: 'none',
               border: 'none',
               cursor: 'pointer',
@@ -296,7 +296,7 @@ export default function TestScreen({ onBack }: TestScreenProps) {
       <div style={{
         flexShrink: 0,
         display: 'flex',
-        backgroundColor: '#2d2d2d',
+        backgroundColor: '#1a1f3a',
         borderBottom: '1px solid #374151'
       }}>
         {[
@@ -336,7 +336,7 @@ export default function TestScreen({ onBack }: TestScreenProps) {
           <div>
             {/* 快速操作 */}
             <div style={{
-              backgroundColor: '#2d2d2d',
+              backgroundColor: '#1a1f3a',
               borderRadius: '12px',
               padding: '16px',
               marginBottom: '16px'
@@ -365,7 +365,7 @@ export default function TestScreen({ onBack }: TestScreenProps) {
                     for (let i = 1; i <= 8; i++) {
                       addStationEquipment(i);
                     }
-                    showMessage('已获得站台1-8全套');
+                    showMessage('已获得星球1-8全套');
                   }}
                   style={{
                     padding: '12px',
@@ -378,20 +378,20 @@ export default function TestScreen({ onBack }: TestScreenProps) {
                     fontSize: '13px'
                   }}
                 >
-                  获得1-8站台全套
+                  获得1-8星球全套
                 </button>
               </div>
 
               {/* 品质筛选 */}
               <div style={{ marginBottom: '12px' }}>
-                <span style={{ color: '#9ca3af', fontSize: '12px', marginRight: '8px' }}>按品质获取:</span>
+                <span style={{ color: '#a1a1aa', fontSize: '12px', marginRight: '8px' }}>按品质获取:</span>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
                   {[
-                    { id: ItemRarity.COMMON, name: '普通', color: '#9ca3af' },
+                    { id: ItemRarity.COMMON, name: '普通', color: '#a1a1aa' },
                     { id: ItemRarity.UNCOMMON, name: '优秀', color: '#4ade80' },
                     { id: ItemRarity.RARE, name: '稀有', color: '#60a5fa' },
                     { id: ItemRarity.EPIC, name: '史诗', color: '#c084fc' },
-                    { id: ItemRarity.LEGENDARY, name: '传说', color: '#fbbf24' },
+                    { id: ItemRarity.LEGENDARY, name: '传说', color: '#00d4ff' },
                     { id: ItemRarity.MYTHIC, name: '神话', color: '#f87171' },
                   ].map(rarity => (
                     <button
@@ -416,7 +416,7 @@ export default function TestScreen({ onBack }: TestScreenProps) {
 
               {/* 品质过滤器 */}
               <div>
-                <span style={{ color: '#9ca3af', fontSize: '12px', marginRight: '8px' }}>筛选显示:</span>
+                <span style={{ color: '#a1a1aa', fontSize: '12px', marginRight: '8px' }}>筛选显示:</span>
                 <select
                   value={selectedRarity}
                   onChange={(e) => setSelectedRarity(e.target.value as any)}
@@ -440,7 +440,7 @@ export default function TestScreen({ onBack }: TestScreenProps) {
               </div>
             </div>
 
-            {/* 站台列表 */}
+            {/* 星球列表 */}
             {Object.entries(equipmentByStation).map(([stationNum, equipment]) => {
               const filteredEquipment = getFilteredEquipment(parseInt(stationNum));
               if (filteredEquipment.length === 0) return null;
@@ -449,7 +449,7 @@ export default function TestScreen({ onBack }: TestScreenProps) {
                 <div
                   key={stationNum}
                   style={{
-                    backgroundColor: '#2d2d2d',
+                    backgroundColor: '#1a1f3a',
                     borderRadius: '12px',
                     padding: '12px',
                     marginBottom: '12px'
@@ -461,8 +461,8 @@ export default function TestScreen({ onBack }: TestScreenProps) {
                     alignItems: 'center',
                     marginBottom: '8px'
                   }}>
-                    <h4 style={{ color: '#fbbf24', fontSize: '14px', margin: 0 }}>
-                      站台 {stationNum}
+                    <h4 style={{ color: '#00d4ff', fontSize: '14px', margin: 0 }}>
+                      星球 {stationNum}
                     </h4>
                     <button
                       onClick={() => addStationEquipment(parseInt(stationNum))}
@@ -509,7 +509,7 @@ export default function TestScreen({ onBack }: TestScreenProps) {
           <div>
             {/* 消耗品 */}
             <div style={{
-              backgroundColor: '#2d2d2d',
+              backgroundColor: '#1a1f3a',
               borderRadius: '12px',
               padding: '16px',
               marginBottom: '16px'
@@ -537,7 +537,7 @@ export default function TestScreen({ onBack }: TestScreenProps) {
 
             {/* 技能 */}
             <div style={{
-              backgroundColor: '#2d2d2d',
+              backgroundColor: '#1a1f3a',
               borderRadius: '12px',
               padding: '16px',
               marginBottom: '16px'
@@ -582,20 +582,20 @@ export default function TestScreen({ onBack }: TestScreenProps) {
 
             {/* 金币 */}
             <div style={{
-              backgroundColor: '#2d2d2d',
+              backgroundColor: '#1a1f3a',
               borderRadius: '12px',
               padding: '16px',
               marginBottom: '16px'
             }}>
               <h3 style={{ color: 'white', fontSize: '14px', marginBottom: '12px' }}>
-                当前列车币: {gameManager.trainCoins.toLocaleString()}
+                当前航船币: {gameManager.trainCoins.toLocaleString()}
               </h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
                 <button
                   onClick={() => addCoins(1000)}
                   style={{
                     padding: '16px',
-                    backgroundColor: '#fbbf24',
+                    backgroundColor: '#00d4ff',
                     color: 'black',
                     border: 'none',
                     borderRadius: '8px',
@@ -623,7 +623,7 @@ export default function TestScreen({ onBack }: TestScreenProps) {
                   onClick={() => addCoins(100000)}
                   style={{
                     padding: '16px',
-                    backgroundColor: '#d97706',
+                    backgroundColor: '#0099cc',
                     color: 'white',
                     border: 'none',
                     borderRadius: '8px',
@@ -657,7 +657,7 @@ export default function TestScreen({ onBack }: TestScreenProps) {
           <div>
             {/* 强化石快速获取 */}
             <div style={{
-              backgroundColor: '#2d2d2d',
+              backgroundColor: '#1a1f3a',
               borderRadius: '12px',
               padding: '16px',
               marginBottom: '16px'
@@ -716,7 +716,7 @@ export default function TestScreen({ onBack }: TestScreenProps) {
 
             {/* 全部材料 */}
             <div style={{
-              backgroundColor: '#2d2d2d',
+              backgroundColor: '#1a1f3a',
               borderRadius: '12px',
               padding: '16px',
               marginBottom: '16px'
@@ -729,7 +729,7 @@ export default function TestScreen({ onBack }: TestScreenProps) {
                   onClick={() => addAllMaterials(99)}
                   style={{
                     padding: '16px',
-                    backgroundColor: '#d97706',
+                    backgroundColor: '#0099cc',
                     color: 'white',
                     border: 'none',
                     borderRadius: '8px',
@@ -763,7 +763,7 @@ export default function TestScreen({ onBack }: TestScreenProps) {
               <div
                 key={groupName}
                 style={{
-                  backgroundColor: '#2d2d2d',
+                  backgroundColor: '#1a1f3a',
                   borderRadius: '12px',
                   padding: '12px',
                   marginBottom: '12px'
@@ -775,7 +775,7 @@ export default function TestScreen({ onBack }: TestScreenProps) {
                   alignItems: 'center',
                   marginBottom: '8px'
                 }}>
-                  <h4 style={{ color: '#fbbf24', fontSize: '14px', margin: 0 }}>
+                  <h4 style={{ color: '#00d4ff', fontSize: '14px', margin: 0 }}>
                     {groupName} ({materials.length}种)
                   </h4>
                 </div>
@@ -821,7 +821,7 @@ export default function TestScreen({ onBack }: TestScreenProps) {
           <div>
             {/* 等级设置 */}
             <div style={{
-              backgroundColor: '#2d2d2d',
+              backgroundColor: '#1a1f3a',
               borderRadius: '12px',
               padding: '16px',
               marginBottom: '16px'
@@ -836,7 +836,7 @@ export default function TestScreen({ onBack }: TestScreenProps) {
                     onClick={() => setPlayerLevel(level)}
                     style={{
                       padding: '10px',
-                      backgroundColor: gameManager.player.level === level ? '#dc2626' : '#4b5563',
+                      backgroundColor: gameManager.player.level === level ? '#dc2626' : '#2a3050',
                       color: 'white',
                       border: 'none',
                       borderRadius: '6px',
@@ -853,7 +853,7 @@ export default function TestScreen({ onBack }: TestScreenProps) {
 
             {/* 当前属性 */}
             <div style={{
-              backgroundColor: '#2d2d2d',
+              backgroundColor: '#1a1f3a',
               borderRadius: '12px',
               padding: '16px',
               marginBottom: '16px'
@@ -863,27 +863,27 @@ export default function TestScreen({ onBack }: TestScreenProps) {
               </h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
                 <div style={{ backgroundColor: '#374151', padding: '10px', borderRadius: '6px' }}>
-                  <span style={{ color: '#9ca3af', fontSize: '11px' }}>生命值</span>
+                  <span style={{ color: '#a1a1aa', fontSize: '11px' }}>生命值</span>
                   <div style={{ color: '#ef4444', fontWeight: 'bold' }}>{gameManager.player.hp}/{gameManager.player.maxHp}</div>
                 </div>
                 <div style={{ backgroundColor: '#374151', padding: '10px', borderRadius: '6px' }}>
-                  <span style={{ color: '#9ca3af', fontSize: '11px' }}>攻击力</span>
+                  <span style={{ color: '#a1a1aa', fontSize: '11px' }}>攻击力</span>
                   <div style={{ color: '#f97316', fontWeight: 'bold' }}>{gameManager.player.totalAttack}</div>
                 </div>
                 <div style={{ backgroundColor: '#374151', padding: '10px', borderRadius: '6px' }}>
-                  <span style={{ color: '#9ca3af', fontSize: '11px' }}>防御力</span>
+                  <span style={{ color: '#a1a1aa', fontSize: '11px' }}>防御力</span>
                   <div style={{ color: '#3b82f6', fontWeight: 'bold' }}>{gameManager.player.totalDefense}</div>
                 </div>
                 <div style={{ backgroundColor: '#374151', padding: '10px', borderRadius: '6px' }}>
-                  <span style={{ color: '#9ca3af', fontSize: '11px' }}>体力</span>
+                  <span style={{ color: '#a1a1aa', fontSize: '11px' }}>体力</span>
                   <div style={{ color: '#22c55e', fontWeight: 'bold' }}>{gameManager.player.stamina}/{gameManager.player.maxStamina}</div>
                 </div>
                 <div style={{ backgroundColor: '#374151', padding: '10px', borderRadius: '6px' }}>
-                  <span style={{ color: '#9ca3af', fontSize: '11px' }}>饥饿值</span>
+                  <span style={{ color: '#a1a1aa', fontSize: '11px' }}>能量储备值</span>
                   <div style={{ color: '#eab308', fontWeight: 'bold' }}>{gameManager.player.hunger}/100</div>
                 </div>
                 <div style={{ backgroundColor: '#374151', padding: '10px', borderRadius: '6px' }}>
-                  <span style={{ color: '#9ca3af', fontSize: '11px' }}>口渴值</span>
+                  <span style={{ color: '#a1a1aa', fontSize: '11px' }}>冷却液水平值</span>
                   <div style={{ color: '#06b6d4', fontWeight: 'bold' }}>{gameManager.player.thirst}/100</div>
                 </div>
               </div>
@@ -891,7 +891,7 @@ export default function TestScreen({ onBack }: TestScreenProps) {
 
             {/* 状态恢复 */}
             <div style={{
-              backgroundColor: '#2d2d2d',
+              backgroundColor: '#1a1f3a',
               borderRadius: '12px',
               padding: '16px',
               marginBottom: '16px'
@@ -924,7 +924,7 @@ export default function TestScreen({ onBack }: TestScreenProps) {
           <div>
             {/* 存档操作 */}
             <div style={{
-              backgroundColor: '#2d2d2d',
+              backgroundColor: '#1a1f3a',
               borderRadius: '12px',
               padding: '16px',
               marginBottom: '16px'
@@ -953,7 +953,7 @@ export default function TestScreen({ onBack }: TestScreenProps) {
 
             {/* 危险操作 */}
             <div style={{
-              backgroundColor: '#2d2d2d',
+              backgroundColor: '#1a1f3a',
               borderRadius: '12px',
               padding: '16px',
               marginBottom: '16px'
@@ -977,14 +977,14 @@ export default function TestScreen({ onBack }: TestScreenProps) {
               >
                 重置游戏
               </button>
-              <p style={{ color: '#9ca3af', fontSize: '11px', marginTop: '8px' }}>
+              <p style={{ color: '#a1a1aa', fontSize: '11px', marginTop: '8px' }}>
                 警告：重置游戏将清空所有数据，无法恢复！
               </p>
             </div>
 
             {/* 游戏信息 */}
             <div style={{
-              backgroundColor: '#2d2d2d',
+              backgroundColor: '#1a1f3a',
               borderRadius: '12px',
               padding: '16px',
               marginBottom: '16px'
@@ -992,12 +992,12 @@ export default function TestScreen({ onBack }: TestScreenProps) {
               <h3 style={{ color: 'white', fontSize: '14px', marginBottom: '12px' }}>
                 游戏信息
               </h3>
-              <div style={{ color: '#9ca3af', fontSize: '12px', lineHeight: '1.8' }}>
+              <div style={{ color: '#a1a1aa', fontSize: '12px', lineHeight: '1.8' }}>
                 <div>游戏天数: {gameManager.day}</div>
                 <div>当前时间: {gameManager.time}:00</div>
                 <div>背包物品: {gameManager.inventory.items.length} 种</div>
                 <div>装备数量: {gameManager.inventory.equipment.length} 件</div>
-                <div>已解锁站台: {gameManager.locationProgress.size} 个</div>
+                <div>已解锁星球: {gameManager.locationProgress.size} 个</div>
               </div>
             </div>
           </div>

@@ -2,7 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 基础样式 */
+/* 导入星航荒宇主题 */
+@import './styles/theme.css';
+
+/* ==================== 基础样式 ==================== */
 * {
   box-sizing: border-box;
 }
@@ -17,12 +20,14 @@ body {
   padding: 0;
   height: 100%;
   overflow: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #1a1a1a;
+  /* 新主题：深空背景 */
+  background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+  background-color: #0a0e27;
   color: #ffffff;
 }
 
@@ -32,56 +37,61 @@ body {
   position: relative;
 }
 
-/* 滚动条样式 */
+/* ==================== 滚动条样式（新主题）==================== */
 ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #2d2d2d;
+  background: #1a1f3a;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #4d4d4d;
-  border-radius: 2px;
+  background: #0099cc;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #5d5d5d;
+  background: #00d4ff;
 }
 
-/* 安全区域适配 */
+/* ==================== 安全区域适配 ==================== */
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
-/* 禁用文本选择（移动端体验更好） */
+/* ==================== 禁用文本选择 ==================== */
 .no-select {
   -webkit-user-select: none;
   user-select: none;
 }
 
-/* 点击效果 */
+/* ==================== 点击效果 ==================== */
 button:active {
   transform: scale(0.97);
 }
 
-/* 输入框样式 */
+/* ==================== 输入框样式（新主题）==================== */
 input,
 textarea {
-  background-color: #2d2d2d;
-  border: 1px solid #4d4d4d;
+  background-color: rgba(10, 14, 39, 0.8);
+  border: 1px solid rgba(0, 212, 255, 0.3);
   color: #ffffff;
   padding: 0.5rem;
-  border-radius: 0.375rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
 }
 
 input:focus,
 textarea:focus {
   outline: none;
-  border-color: #d97706;
+  border-color: #00d4ff;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
 }
+
+/* ==================== 动画效果 ==================== */
 
 /* 淡入动画 */
 @keyframes fadeIn {
@@ -89,7 +99,6 @@ textarea:focus {
     opacity: 0;
     transform: translateY(-5px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -102,12 +111,9 @@ textarea:focus {
 
 /* 脉冲动画 - 用于警告 */
 @keyframes pulse-red {
-
-  0%,
-  100% {
+  0%, 100% {
     opacity: 1;
   }
-
   50% {
     opacity: 0.5;
   }
@@ -119,12 +125,9 @@ textarea:focus {
 
 /* 闪光效果 - 用于升级 */
 @keyframes flash {
-
-  0%,
-  100% {
+  0%, 100% {
     opacity: 1;
   }
-
   50% {
     opacity: 0.3;
     filter: brightness(1.5);
@@ -135,26 +138,158 @@ textarea:focus {
   animation: flash 0.5s ease-in-out;
 }
 
-/* 金属边框效果 */
+/* 新主题：科技发光脉冲 */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(0, 212, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* 新主题：扫描线效果 */
+@keyframes scan-line {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+/* ==================== 边框效果（新主题）==================== */
+.tech-border {
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.1);
+}
+
+.tech-border:hover {
+  border-color: #00d4ff;
+  box-shadow: 0 0 25px rgba(0, 212, 255, 0.3);
+}
+
+/* ==================== 卡片样式（新主题）==================== */
+.space-card {
+  background: rgba(26, 31, 58, 0.8);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 0 20px rgba(0, 212, 255, 0.1);
+}
+
+.space-card:hover {
+  border-color: #00d4ff;
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 0 30px rgba(0, 212, 255, 0.2);
+}
+
+/* ==================== 按钮样式（新主题）==================== */
+.tech-button {
+  background: linear-gradient(135deg, #0099cc 0%, #00d4ff 100%);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  padding: 12px 24px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+}
+
+.tech-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 25px rgba(0, 212, 255, 0.5);
+}
+
+.tech-button:active {
+  transform: translateY(0);
+}
+
+.tech-button:disabled {
+  background: #2a3050;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* 次要按钮 */
+.tech-button-secondary {
+  background: transparent;
+  border: 1px solid #00d4ff;
+  color: #00d4ff;
+}
+
+.tech-button-secondary:hover {
+  background: rgba(0, 212, 255, 0.1);
+}
+
+/* 危险按钮 */
+.tech-button-danger {
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+}
+
+.tech-button-danger:hover {
+  box-shadow: 0 0 25px rgba(239, 68, 68, 0.5);
+}
+
+/* ==================== 进度条样式（新主题）==================== */
+.tech-progress {
+  background: #1a1f3a;
+  border-radius: 4px;
+  overflow: hidden;
+  height: 8px;
+}
+
+.tech-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #0099cc 0%, #00d4ff 100%);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+}
+
+/* 能量进度条 */
+.tech-progress-energy .tech-progress-bar {
+  background: linear-gradient(90deg, #6d28d9 0%, #8b5cf6 100%);
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
+}
+
+/* 警告进度条 */
+.tech-progress-warning .tech-progress-bar {
+  background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+}
+
+/* ==================== 旧样式兼容（保留但标记为废弃）==================== */
+
+/* 金属边框效果 - 兼容旧代码 */
 .metal-border {
   border: 1px solid;
   border-image: linear-gradient(135deg,
-      rgba(217, 119, 6, 0.5) 0%,
-      rgba(75, 75, 75, 0.5) 50%,
-      rgba(217, 119, 6, 0.5) 100%) 1;
+      rgba(0, 212, 255, 0.5) 0%,
+      rgba(42, 48, 80, 0.5) 50%,
+      rgba(0, 212, 255, 0.5) 100%) 1;
 }
 
-/* 废土风格卡片 */
+/* 废土风格卡片 - 兼容旧代码 */
 .wasteland-card {
-  background: linear-gradient(145deg, #2d2d2d 0%, #252525 100%);
-  border: 1px solid #3d3d3d;
+  background: linear-gradient(145deg, #1a1f3a 0%, #0a0e27 100%);
+  border: 1px solid rgba(0, 212, 255, 0.2);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-/* 按钮金属光泽 */
+/* 按钮金属光泽 - 兼容旧代码 */
 .metal-button {
-  background: linear-gradient(145deg, #3d3d3d 0%, #2d2d2d 100%);
-  border: 1px solid #4d4d4d;
+  background: linear-gradient(145deg, #2a3050 0%, #1a1f3a 100%);
+  border: 1px solid rgba(0, 212, 255, 0.3);
   position: relative;
   overflow: hidden;
 }
@@ -168,7 +303,7 @@ textarea:focus {
   height: 100%;
   background: linear-gradient(90deg,
       transparent,
-      rgba(255, 255, 255, 0.1),
+      rgba(0, 212, 255, 0.1),
       transparent);
   transition: left 0.5s;
 }
@@ -177,14 +312,14 @@ textarea:focus {
   left: 100%;
 }
 
-/* iPhone 16 Pro Max 适配 */
+/* ==================== 响应式布局 ==================== */
 @media (max-width: 430px) {
   html {
     font-size: 15px;
   }
 }
 
-/* 隐藏滚动条但保留功能 */
+/* ==================== 隐藏滚动条 ==================== */
 .hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -194,9 +329,37 @@ textarea:focus {
   display: none;
 }
 
-/* 玻璃拟态效果 */
+/* ==================== 玻璃拟态效果（新主题）==================== */
 .glass {
-  background: rgba(45, 45, 45, 0.8);
+  background: rgba(26, 31, 58, 0.8);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+/* ==================== 全息投影效果 ==================== */
+.hologram {
+  position: relative;
+  background: rgba(0, 212, 255, 0.05);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  box-shadow: 
+    0 0 20px rgba(0, 212, 255, 0.1),
+    inset 0 0 20px rgba(0, 212, 255, 0.05);
+}
+
+.hologram::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 212, 255, 0.03) 2px,
+    rgba(0, 212, 255, 0.03) 4px
+  );
+  pointer-events: none;
 }

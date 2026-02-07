@@ -1,0 +1,395 @@
+/* 《星航荒宇》科幻主题样式
+ * 替代原有的末日废土风格
+ */
+
+/* ==================== 主题色彩 ==================== */
+:root {
+  /* 主色调 - 深蓝/星空 */
+  --space-primary: #0a0e27;
+  --space-secondary: #1a1f3a;
+  --space-tertiary: #2a3050;
+  
+  /* 强调色 - 科技蓝 */
+  --tech-primary: #00d4ff;
+  --tech-secondary: #0099cc;
+  --tech-glow: rgba(0, 212, 255, 0.3);
+  
+  /* 辅助色 - 能量紫 */
+  --energy-primary: #8b5cf6;
+  --energy-secondary: #6d28d9;
+  --energy-glow: rgba(139, 92, 246, 0.3);
+  
+  /* 警告色 - 虚空红 */
+  --void-primary: #ef4444;
+  --void-secondary: #dc2626;
+  --void-glow: rgba(239, 68, 68, 0.3);
+  
+  /* 成功色 - 星际绿 */
+  --success-primary: #10b981;
+  --success-secondary: #059669;
+  
+  /* 文字色 */
+  --text-primary: #ffffff;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  
+  /* 边框色 */
+  --border-primary: rgba(0, 212, 255, 0.3);
+  --border-secondary: rgba(255, 255, 255, 0.1);
+  
+  /* 背景渐变 */
+  --bg-gradient: linear-gradient(180deg, #0a0e27 0%, #1a1f3a 100%);
+  --bg-stars: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+}
+
+/* ==================== 全局样式 ==================== */
+.space-theme {
+  background: var(--bg-stars);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ==================== 卡片样式 ==================== */
+.space-card {
+  background: rgba(26, 31, 58, 0.8);
+  border: 1px solid var(--border-primary);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 0 20px var(--tech-glow);
+}
+
+.space-card:hover {
+  border-color: var(--tech-primary);
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 0 30px var(--tech-glow);
+}
+
+/* ==================== 按钮样式 ==================== */
+.space-btn {
+  background: linear-gradient(135deg, var(--tech-secondary) 0%, var(--tech-primary) 100%);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  padding: 12px 24px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px var(--tech-glow);
+}
+
+.space-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 25px var(--tech-glow);
+}
+
+.space-btn:active {
+  transform: translateY(0);
+}
+
+.space-btn:disabled {
+  background: var(--space-tertiary);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* 次要按钮 */
+.space-btn-secondary {
+  background: transparent;
+  border: 1px solid var(--tech-primary);
+  color: var(--tech-primary);
+}
+
+.space-btn-secondary:hover {
+  background: var(--tech-glow);
+}
+
+/* 危险按钮 */
+.space-btn-danger {
+  background: linear-gradient(135deg, var(--void-secondary) 0%, var(--void-primary) 100%);
+  box-shadow: 0 0 15px var(--void-glow);
+}
+
+.space-btn-danger:hover {
+  box-shadow: 0 0 25px var(--void-glow);
+}
+
+/* ==================== 输入框样式 ==================== */
+.space-input {
+  background: rgba(10, 14, 39, 0.8);
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  color: var(--text-primary);
+  padding: 10px 16px;
+  transition: all 0.3s ease;
+}
+
+.space-input:focus {
+  outline: none;
+  border-color: var(--tech-primary);
+  box-shadow: 0 0 10px var(--tech-glow);
+}
+
+/* ==================== 进度条样式 ==================== */
+.space-progress {
+  background: var(--space-secondary);
+  border-radius: 4px;
+  overflow: hidden;
+  height: 8px;
+}
+
+.space-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--tech-secondary) 0%, var(--tech-primary) 100%);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 10px var(--tech-glow);
+}
+
+/* 能量进度条 */
+.space-progress-energy .space-progress-bar {
+  background: linear-gradient(90deg, var(--energy-secondary) 0%, var(--energy-primary) 100%);
+  box-shadow: 0 0 10px var(--energy-glow);
+}
+
+/* 警告进度条 */
+.space-progress-warning .space-progress-bar {
+  background: linear-gradient(90deg, var(--void-secondary) 0%, var(--void-primary) 100%);
+  box-shadow: 0 0 10px var(--void-glow);
+}
+
+/* ==================== 标签样式 ==================== */
+.space-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.space-badge-tech {
+  background: rgba(0, 212, 255, 0.2);
+  color: var(--tech-primary);
+  border: 1px solid var(--tech-primary);
+}
+
+.space-badge-energy {
+  background: rgba(139, 92, 246, 0.2);
+  color: var(--energy-primary);
+  border: 1px solid var(--energy-primary);
+}
+
+.space-badge-void {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--void-primary);
+  border: 1px solid var(--void-primary);
+}
+
+/* ==================== 列表样式 ==================== */
+.space-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.space-list-item {
+  background: rgba(26, 31, 58, 0.5);
+  border: 1px solid var(--border-secondary);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  transition: all 0.3s ease;
+}
+
+.space-list-item:hover {
+  background: rgba(26, 31, 58, 0.8);
+  border-color: var(--border-primary);
+}
+
+/* ==================== 分隔线样式 ==================== */
+.space-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--tech-primary) 50%, transparent 100%);
+  margin: 16px 0;
+}
+
+/* ==================== 滚动条样式 ==================== */
+.space-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.space-scrollbar::-webkit-scrollbar-track {
+  background: var(--space-secondary);
+  border-radius: 3px;
+}
+
+.space-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--tech-secondary);
+  border-radius: 3px;
+}
+
+.space-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--tech-primary);
+}
+
+/* ==================== 动画效果 ==================== */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px var(--tech-glow);
+  }
+  50% {
+    box-shadow: 0 0 20px var(--tech-glow);
+  }
+}
+
+@keyframes scan-line {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+.space-pulse {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* 扫描线效果 */
+.space-scan-line::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--tech-primary) 50%, transparent 100%);
+  animation: scan-line 3s linear infinite;
+  opacity: 0.5;
+}
+
+/* ==================== 响应式布局 ==================== */
+@media (max-width: 640px) {
+  .space-card {
+    border-radius: 8px;
+  }
+  
+  .space-btn {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+}
+
+/* ==================== 特殊组件样式 ==================== */
+
+/* 航船状态面板 */
+.spaceship-panel {
+  background: linear-gradient(135deg, rgba(26, 31, 58, 0.9) 0%, rgba(10, 14, 39, 0.9) 100%);
+  border: 1px solid var(--border-primary);
+  border-radius: 16px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.spaceship-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--tech-primary) 50%, transparent 100%);
+}
+
+/* 星球卡片 */
+.planet-card {
+  background: rgba(26, 31, 58, 0.6);
+  border: 1px solid var(--border-secondary);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.planet-card:hover {
+  border-color: var(--energy-primary);
+  box-shadow: 0 0 20px var(--energy-glow);
+}
+
+.planet-card.tech-star {
+  border-color: var(--tech-primary);
+}
+
+.planet-card.god-domain {
+  border-color: var(--energy-primary);
+}
+
+.planet-card.wasteland {
+  border-color: var(--void-primary);
+}
+
+/* 势力声望条 */
+.faction-reputation-bar {
+  height: 6px;
+  background: var(--space-secondary);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.faction-reputation-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.faction-reputation-fill.allied {
+  background: linear-gradient(90deg, var(--success-secondary) 0%, var(--success-primary) 100%);
+}
+
+.faction-reputation-fill.friendly {
+  background: linear-gradient(90deg, var(--tech-secondary) 0%, var(--tech-primary) 100%);
+}
+
+.faction-reputation-fill.neutral {
+  background: linear-gradient(90deg, #6b7280 0%, #9ca3af 100%);
+}
+
+.faction-reputation-fill.unfriendly {
+  background: linear-gradient(90deg, #d97706 0%, #fbbf24 100%);
+}
+
+.faction-reputation-fill.hostile {
+  background: linear-gradient(90deg, var(--void-secondary) 0%, var(--void-primary) 100%);
+}
+
+/* 全息投影效果 */
+.hologram {
+  position: relative;
+  background: rgba(0, 212, 255, 0.1);
+  border: 1px solid var(--tech-primary);
+  box-shadow: 
+    0 0 20px var(--tech-glow),
+    inset 0 0 20px var(--tech-glow);
+}
+
+.hologram::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 212, 255, 0.03) 2px,
+    rgba(0, 212, 255, 0.03) 4px
+  );
+  pointer-events: none;
+}

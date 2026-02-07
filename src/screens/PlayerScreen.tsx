@@ -41,7 +41,7 @@ const RARITY_COLORS = {
   uncommon: '#4ade80',
   rare: '#60a5fa',
   epic: '#c084fc',
-  legendary: '#fbbf24',
+  legendary: '#00d4ff',
   mythic: '#f87171',
 };
 
@@ -138,15 +138,15 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
   return (
     <div style={{
       height: '100vh',
-      backgroundColor: '#1a1a1a',
+      backgroundColor: '#0a0e27',
       display: 'flex',
       flexDirection: 'column'
     }}>
       {/* 顶部标题栏 */}
       <header style={{
         flexShrink: 0,
-        backgroundColor: '#2d2d2d',
-        borderBottom: '1px solid #4b5563',
+        backgroundColor: '#1a1f3a',
+        borderBottom: '1px solid #2a3050',
         padding: '12px 16px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -156,7 +156,7 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
-              color: '#9ca3af',
+              color: '#a1a1aa',
               background: 'none',
               border: 'none',
               cursor: 'pointer',
@@ -179,7 +179,7 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
       }}>
         {/* 基础信息 - 精简版 */}
         <div style={{
-          backgroundColor: '#2d2d2d',
+          backgroundColor: '#1a1f3a',
           borderRadius: '12px',
           padding: '12px 16px',
           border: '1px solid #374151',
@@ -187,12 +187,12 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span style={{ color: '#fbbf24', fontSize: '14px', fontWeight: 'bold' }}>Lv.{player.level}</span>
-              <span style={{ color: '#9ca3af', fontSize: '12px' }}>EXP: {player.exp}/{player.expToNext}</span>
+              <span style={{ color: '#00d4ff', fontSize: '14px', fontWeight: 'bold' }}>Lv.{player.level}</span>
+              <span style={{ color: '#a1a1aa', fontSize: '12px' }}>EXP: {player.exp}/{player.expToNext}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ color: '#9ca3af', fontSize: '12px' }}>战力</span>
-              <span style={{ color: '#fbbf24', fontSize: '16px', fontWeight: 'bold' }}>
+              <span style={{ color: '#a1a1aa', fontSize: '12px' }}>战力</span>
+              <span style={{ color: '#00d4ff', fontSize: '16px', fontWeight: 'bold' }}>
                 {player.power.toLocaleString()}
               </span>
             </div>
@@ -201,7 +201,7 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
 
         {/* 装备栏 - 6槽位横向排列 */}
         <div style={{
-          backgroundColor: '#2d2d2d',
+          backgroundColor: '#1a1f3a',
           borderRadius: '12px',
           padding: '12px 16px',
           border: '1px solid #374151',
@@ -263,7 +263,7 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
         {/* 套装效果 */}
         {setBonuses.length > 0 && (
           <div style={{
-            backgroundColor: '#2d2d2d',
+            backgroundColor: '#1a1f3a',
             borderRadius: '12px',
             padding: '16px',
             border: '1px solid #374151',
@@ -288,13 +288,13 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
 
         {/* 战斗属性 */}
         <div style={{
-          backgroundColor: '#2d2d2d',
+          backgroundColor: '#1a1f3a',
           borderRadius: '12px',
           padding: '16px',
           border: '1px solid #374151',
           marginBottom: '16px'
         }}>
-          <h3 style={{ color: '#d97706', fontSize: '14px', fontWeight: 'bold', margin: '0 0 12px 0' }}>
+          <h3 style={{ color: '#0099cc', fontSize: '14px', fontWeight: 'bold', margin: '0 0 12px 0' }}>
             ⚔️ 战斗属性
           </h3>
 
@@ -330,7 +330,7 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
             paddingBottom: '10px',
             borderBottom: '1px solid #374151'
           }}>
-            <StatItem label="命中" value={Math.floor(player.totalHit)} color="#fbbf24" flex={1} />
+            <StatItem label="命中" value={Math.floor(player.totalHit)} color="#00d4ff" flex={1} />
             <StatItem label="闪避" value={Math.floor(player.totalDodge)} color="#4ade80" flex={1} />
             <StatItem label="攻速" value={player.totalAttackSpeed.toFixed(1)} color="#c084fc" flex={1} />
             <StatItem label="真伤" value={`${Math.floor(player.totalTrueDamage)}%`} color="#ec4899" flex={1} />
@@ -344,14 +344,14 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
             <StatItem label="会心" value={`${Math.floor(player.totalCrit)}`} color="#ef4444" flex={1} />
             <StatItem label="护心" value={Math.floor(player.totalGuard)} color="#22d3ee" flex={1} />
             <StatItem label="暴伤" value={`${Math.floor(player.totalCritDamage)}%`} color="#f472b6" flex={1} />
-            <StatItem label="幸运" value={Math.floor(player.totalLuck)} color="#fbbf24" flex={1} />
+            <StatItem label="幸运" value={Math.floor(player.totalLuck)} color="#00d4ff" flex={1} />
           </div>
         </div>
 
         {/* 装备属性加成详情 */}
         {equippedItems.length > 0 && (
           <div style={{
-            backgroundColor: '#2d2d2d',
+            backgroundColor: '#1a1f3a',
             borderRadius: '12px',
             padding: '16px',
             border: '1px solid #374151',
@@ -364,7 +364,7 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
               <EquipmentBonusItem label="攻击" value={player.equipmentStats.attack} color="#f87171" />
               <EquipmentBonusItem label="防御" value={player.equipmentStats.defense} color="#60a5fa" />
               <EquipmentBonusItem label="生命" value={player.equipmentStats.hp} color="#ef4444" />
-              <EquipmentBonusItem label="命中" value={player.equipmentStats.hit} color="#fbbf24" />
+              <EquipmentBonusItem label="命中" value={player.equipmentStats.hit} color="#00d4ff" />
               <EquipmentBonusItem label="闪避" value={player.equipmentStats.dodge} color="#4ade80" />
               <EquipmentBonusItem label="攻速" value={parseFloat(player.equipmentStats.speed.toFixed(1))} color="#c084fc" />
               <EquipmentBonusItem label="暴击" value={player.equipmentStats.crit} color="#ef4444" />
@@ -387,7 +387,7 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
           padding: '16px'
         }}>
           <div style={{
-            backgroundColor: '#2d2d2d',
+            backgroundColor: '#1a1f3a',
             borderRadius: '16px',
             width: '100%',
             maxWidth: '360px',
@@ -419,11 +419,11 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
               }}>
                 {selectedItem.name}
               </h2>
-              <p style={{ color: '#9ca3af', fontSize: '12px', margin: 0 }}>
-                {SLOT_NAMES[selectedItem.slot]} · 站台{selectedItem.stationNumber}
+              <p style={{ color: '#a1a1aa', fontSize: '12px', margin: 0 }}>
+                {SLOT_NAMES[selectedItem.slot]} · 星球{selectedItem.stationNumber}
               </p>
               <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '8px' }}>
-                <span style={{ color: '#fbbf24', fontSize: '12px' }}>强化 +{selectedItem.enhanceLevel}</span>
+                <span style={{ color: '#00d4ff', fontSize: '12px' }}>强化 +{selectedItem.enhanceLevel}</span>
                 <span style={{ color: '#c084fc', fontSize: '12px' }}>升华 +{selectedItem.sublimationLevel}</span>
               </div>
             </div>
@@ -435,7 +435,7 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
               padding: '12px',
               marginBottom: '12px'
             }}>
-              <h4 style={{ color: '#9ca3af', fontSize: '12px', marginBottom: '8px' }}>基础属性</h4>
+              <h4 style={{ color: '#a1a1aa', fontSize: '12px', marginBottom: '8px' }}>基础属性</h4>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px', fontSize: '13px' }}>
                 {(() => {
                   // 使用新的装备属性计算器（实时根据强化等级计算）
@@ -446,7 +446,7 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
                   if (calculatedStats.attack > 0) {
                     stats.push(
                       <div key="attack" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#9ca3af' }}>攻击</span>
+                        <span style={{ color: '#a1a1aa' }}>攻击</span>
                         <span style={{ color: '#f87171' }}>{calculatedStats.attack}</span>
                       </div>
                     );
@@ -455,7 +455,7 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
                   if (calculatedStats.defense > 0) {
                     stats.push(
                       <div key="defense" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#9ca3af' }}>防御</span>
+                        <span style={{ color: '#a1a1aa' }}>防御</span>
                         <span style={{ color: '#60a5fa' }}>{calculatedStats.defense}</span>
                       </div>
                     );
@@ -464,7 +464,7 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
                   if (calculatedStats.hp > 0) {
                     stats.push(
                       <div key="hp" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#9ca3af' }}>生命</span>
+                        <span style={{ color: '#a1a1aa' }}>生命</span>
                         <span style={{ color: '#ef4444' }}>{calculatedStats.hp}</span>
                       </div>
                     );
@@ -473,8 +473,8 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
                   if (calculatedStats.hit > 0) {
                     stats.push(
                       <div key="hit" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#9ca3af' }}>命中</span>
-                        <span style={{ color: '#fbbf24' }}>{calculatedStats.hit}</span>
+                        <span style={{ color: '#a1a1aa' }}>命中</span>
+                        <span style={{ color: '#00d4ff' }}>{calculatedStats.hit}</span>
                       </div>
                     );
                   }
@@ -482,7 +482,7 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
                   if (calculatedStats.dodge > 0) {
                     stats.push(
                       <div key="dodge" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#9ca3af' }}>闪避</span>
+                        <span style={{ color: '#a1a1aa' }}>闪避</span>
                         <span style={{ color: '#4ade80' }}>{calculatedStats.dodge}</span>
                       </div>
                     );
@@ -491,7 +491,7 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
                   if (calculatedStats.speed > 0) {
                     stats.push(
                       <div key="speed" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#9ca3af' }}>攻速</span>
+                        <span style={{ color: '#a1a1aa' }}>攻速</span>
                         <span style={{ color: '#c084fc' }}>{calculatedStats.speed.toFixed(1)}</span>
                       </div>
                     );
@@ -500,7 +500,7 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
                   if (calculatedStats.crit > 0) {
                     stats.push(
                       <div key="crit" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#9ca3af' }}>暴击</span>
+                        <span style={{ color: '#a1a1aa' }}>暴击</span>
                         <span style={{ color: '#ef4444' }}>{calculatedStats.crit}</span>
                       </div>
                     );
@@ -509,7 +509,7 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
                   if (calculatedStats.penetration > 0) {
                     stats.push(
                       <div key="penetration" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#9ca3af' }}>穿透</span>
+                        <span style={{ color: '#a1a1aa' }}>穿透</span>
                         <span style={{ color: '#fb923c' }}>{calculatedStats.penetration}</span>
                       </div>
                     );
@@ -528,11 +528,11 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
                 padding: '12px',
                 marginBottom: '12px'
               }}>
-                <h4 style={{ color: '#9ca3af', fontSize: '12px', marginBottom: '8px' }}>特殊效果</h4>
+                <h4 style={{ color: '#a1a1aa', fontSize: '12px', marginBottom: '8px' }}>特殊效果</h4>
                 {selectedItem.effects.map((effect, index) => (
                   <div key={index} style={{ marginBottom: '6px', fontSize: '12px' }}>
                     <span style={{ color: '#d1d5db' }}>{effect.description}</span>
-                    <span style={{ color: '#9ca3af', marginLeft: '8px' }}>
+                    <span style={{ color: '#a1a1aa', marginLeft: '8px' }}>
                       ({effect.chance * 100}%)
                     </span>
                   </div>
@@ -590,13 +590,13 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
           padding: '16px'
         }}>
           <div style={{
-            backgroundColor: '#2d2d2d',
+            backgroundColor: '#1a1f3a',
             borderRadius: '16px',
             width: '100%',
             maxWidth: '360px',
             maxHeight: '80vh',
             overflowY: 'auto',
-            border: '1px solid #4b5563',
+            border: '1px solid #2a3050',
             padding: '20px'
           }}>
             <h3 style={{ color: 'white', fontSize: '16px', marginBottom: '16px', textAlign: 'center' }}>
@@ -622,7 +622,7 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
 
               if (mythEquipments.length === 0 && craftedItems.length === 0) {
                 return (
-                  <p style={{ color: '#9ca3af', textAlign: 'center', padding: '20px' }}>
+                  <p style={{ color: '#a1a1aa', textAlign: 'center', padding: '20px' }}>
                     背包中没有{SLOT_NAMES[selectedSlot!]}
                   </p>
                 );
@@ -657,7 +657,7 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
                         }}>
                           {equipment.name}
                         </p>
-                        <p style={{ color: '#9ca3af', margin: 0, fontSize: '11px' }}>
+                        <p style={{ color: '#a1a1aa', margin: 0, fontSize: '11px' }}>
                           神话 · 强化+{equipment.enhanceLevel}
                           {equipment.sublimationLevel > 0 && ` 升华+${equipment.sublimationLevel}`}
                         </p>
@@ -698,7 +698,7 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
                         }}>
                           {item.name}
                         </p>
-                        <p style={{ color: '#9ca3af', margin: 0, fontSize: '11px' }}>
+                        <p style={{ color: '#a1a1aa', margin: 0, fontSize: '11px' }}>
                           制造 · 强化+{item.enhanceLevel || 0}
                           {(item.sublimationLevel || 0) > 0 && ` 升华+${item.sublimationLevel}`}
                         </p>
@@ -821,7 +821,7 @@ function EquipmentSlotItem({ slot, item, onClick }: { slot: EquipmentSlot; item:
         </span>
       )}
       {item && (item.enhanceLevel > 0 || item.sublimationLevel > 0) && (
-        <span style={{ fontSize: '8px', color: '#fbbf24', marginTop: '1px' }}>
+        <span style={{ fontSize: '8px', color: '#00d4ff', marginTop: '1px' }}>
           +{item.enhanceLevel}{item.sublimationLevel > 0 && `·${item.sublimationLevel}`}
         </span>
       )}
@@ -840,7 +840,7 @@ function StatItem({ label, value, color, flex = 1 }: { label: string; value: str
       flex: flex,
       minWidth: 0
     }}>
-      <p style={{ color: '#9ca3af', fontSize: '10px', margin: '0 0 2px 0', whiteSpace: 'nowrap' }}>{label}</p>
+      <p style={{ color: '#a1a1aa', fontSize: '10px', margin: '0 0 2px 0', whiteSpace: 'nowrap' }}>{label}</p>
       <p style={{ color, fontSize: '14px', fontWeight: 'bold', margin: 0, whiteSpace: 'nowrap' }}>
         {value}
       </p>
@@ -860,7 +860,7 @@ function EquipmentBonusItem({ label, value, color }: { label: string; value: num
       justifyContent: 'space-between',
       alignItems: 'center'
     }}>
-      <span style={{ color: '#9ca3af', fontSize: '12px' }}>{label}</span>
+      <span style={{ color: '#a1a1aa', fontSize: '12px' }}>{label}</span>
       <span style={{ color, fontSize: '13px', fontWeight: 'bold' }}>+{value}</span>
     </div>
   );
@@ -873,7 +873,7 @@ function StatBar({ label, current, max, color }: { label: string; current: numbe
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
-        <span style={{ color: '#9ca3af' }}>{label}</span>
+        <span style={{ color: '#a1a1aa' }}>{label}</span>
         <span style={{ color: 'white' }}>{Math.floor(current)}/{max}</span>
       </div>
       <div style={{ backgroundColor: '#1f2937', borderRadius: '9999px', height: '8px', overflow: 'hidden' }}>

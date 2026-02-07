@@ -4,6 +4,7 @@
 // ============================================
 
 import type { Enemy, EnemyTier } from './types';
+import { ALL_VOID_CREATURES } from './voidCreatures';
 
 export interface ExpandedEnemy extends Enemy {
   tier: EnemyTier;
@@ -54,7 +55,7 @@ const RUST_WASTELAND_NORMAL: ExpandedEnemy[] = [
     enemyType: 'normal',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'iron_worm',
     name: '铁屑蠕虫',
@@ -81,7 +82,7 @@ const RUST_WASTELAND_NORMAL: ExpandedEnemy[] = [
     enemyType: 'normal',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'rust_beetle',
     name: '锈蚀甲虫',
@@ -139,7 +140,7 @@ const RUST_WASTELAND_ELITE: ExpandedEnemy[] = [
     enemyType: 'elite',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'iron_giant_worm',
     name: '铁屑巨蠕虫',
@@ -230,7 +231,7 @@ const REPAIR_STATION_NORMAL: ExpandedEnemy[] = [
     enemyType: 'normal',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'maintenance_puppet',
     name: '维修傀儡',
@@ -257,7 +258,7 @@ const REPAIR_STATION_NORMAL: ExpandedEnemy[] = [
     enemyType: 'normal',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'oil_beetle',
     name: '机油甲虫',
@@ -315,7 +316,7 @@ const REPAIR_STATION_ELITE: ExpandedEnemy[] = [
     enemyType: 'elite',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'enhanced_puppet',
     name: '强化维修傀儡',
@@ -406,7 +407,7 @@ const SAND_STORM_NORMAL: ExpandedEnemy[] = [
     enemyType: 'normal',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'sand_worm',
     name: '沙虫',
@@ -433,7 +434,7 @@ const SAND_STORM_NORMAL: ExpandedEnemy[] = [
     enemyType: 'normal',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'sand_ant',
     name: '风沙蚁',
@@ -491,7 +492,7 @@ const SAND_STORM_ELITE: ExpandedEnemy[] = [
     enemyType: 'elite',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'sand_worm_leader',
     name: '沙虫首领',
@@ -582,7 +583,7 @@ const GRANARY_NORMAL: ExpandedEnemy[] = [
     enemyType: 'normal',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'mold_worm',
     name: '发霉蠕虫',
@@ -609,7 +610,7 @@ const GRANARY_NORMAL: ExpandedEnemy[] = [
     enemyType: 'normal',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'grain_bag_rat',
     name: '粮袋巨鼠',
@@ -667,7 +668,7 @@ const GRANARY_ELITE: ExpandedEnemy[] = [
     enemyType: 'elite',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'mold_giant_worm',
     name: '发霉巨蠕虫',
@@ -758,7 +759,7 @@ const ROCKY_CLIFF_NORMAL: ExpandedEnemy[] = [
     enemyType: 'normal',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'cliff_worm',
     name: '峭壁蠕虫',
@@ -785,7 +786,7 @@ const ROCKY_CLIFF_NORMAL: ExpandedEnemy[] = [
     enemyType: 'normal',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'rock_beetle',
     name: '岩石甲虫',
@@ -843,7 +844,7 @@ const ROCKY_CLIFF_ELITE: ExpandedEnemy[] = [
     enemyType: 'elite',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'cliff_giant_worm',
     name: '峭壁巨蠕虫',
@@ -934,7 +935,7 @@ const WATER_SOURCE_NORMAL: ExpandedEnemy[] = [
     enemyType: 'normal',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'sewage_rat',
     name: '污水鼠',
@@ -961,7 +962,7 @@ const WATER_SOURCE_NORMAL: ExpandedEnemy[] = [
     enemyType: 'normal',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'water_beetle',
     name: '水生甲虫',
@@ -1019,7 +1020,7 @@ const WATER_SOURCE_ELITE: ExpandedEnemy[] = [
     enemyType: 'elite',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'sewage_giant_rat',
     name: '污水巨鼠',
@@ -1110,7 +1111,7 @@ const ABANDONED_STATION_NORMAL: ExpandedEnemy[] = [
     enemyType: 'normal',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'abandoned_puppet',
     name: '废弃傀儡',
@@ -1137,7 +1138,7 @@ const ABANDONED_STATION_NORMAL: ExpandedEnemy[] = [
     enemyType: 'normal',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'wasteland_dog',
     name: '荒原野狗',
@@ -1195,7 +1196,7 @@ const ABANDONED_STATION_ELITE: ExpandedEnemy[] = [
     enemyType: 'elite',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'enhanced_abandoned_puppet',
     name: '强化废弃傀儡',
@@ -1286,7 +1287,7 @@ const METAL_SCRAP_NORMAL: ExpandedEnemy[] = [
     enemyType: 'normal',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'metal_worm',
     name: '金属蠕虫',
@@ -1313,7 +1314,7 @@ const METAL_SCRAP_NORMAL: ExpandedEnemy[] = [
     enemyType: 'normal',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'metal_beetle',
     name: '金属甲虫',
@@ -1371,7 +1372,7 @@ const METAL_SCRAP_ELITE: ExpandedEnemy[] = [
     enemyType: 'elite',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'metal_giant_worm',
     name: '金属巨蠕虫',
@@ -1462,7 +1463,7 @@ const COLD_SHELTER_NORMAL: ExpandedEnemy[] = [
     enemyType: 'normal',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'ice_worm',
     name: '冰屑蠕虫',
@@ -1489,7 +1490,7 @@ const COLD_SHELTER_NORMAL: ExpandedEnemy[] = [
     enemyType: 'normal',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'cold_beetle',
     name: '低温甲虫',
@@ -1547,7 +1548,7 @@ const COLD_SHELTER_ELITE: ExpandedEnemy[] = [
     enemyType: 'elite',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'ice_giant_worm',
     name: '冰屑巨蠕虫',
@@ -1638,7 +1639,7 @@ const BORDER_OUTPOST_NORMAL: ExpandedEnemy[] = [
     enemyType: 'normal',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'abandoned_sentinel',
     name: '废弃哨兵',
@@ -1665,7 +1666,7 @@ const BORDER_OUTPOST_NORMAL: ExpandedEnemy[] = [
     enemyType: 'normal',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'wasteland_wandering_dog',
     name: '荒原游荡犬',
@@ -1723,7 +1724,7 @@ const BORDER_OUTPOST_ELITE: ExpandedEnemy[] = [
     enemyType: 'elite',
     description: '',
     icon: '',
-  }, 
+  },
   {
     id: 'enhanced_abandoned_sentinel',
     name: '强化废弃哨兵',
@@ -1817,6 +1818,34 @@ export const ENEMIES: ExpandedEnemy[] = [
   ...BORDER_OUTPOST_NORMAL,
   ...BORDER_OUTPOST_ELITE,
   BORDER_OUTPOST_BOSS,
+  // 虚空怪物（新系统）
+  ...ALL_VOID_CREATURES.map(vc => ({
+    id: vc.id,
+    name: vc.name,
+    hp: vc.hp,
+    maxHp: vc.maxHp,
+    attack: vc.attack,
+    defense: vc.defense,
+    speed: vc.speed,
+    expReward: vc.expReward,
+    lootTable: vc.lootTable,
+    description: vc.description,
+    icon: vc.icon,
+    tier: vc.tier,
+    hitRate: vc.hitRate,
+    dodgeRate: vc.dodgeRate,
+    attackSpeed: vc.attackSpeed,
+    critRate: vc.critRate,
+    critDamage: vc.critDamage,
+    guardRate: vc.guardRate,
+    penetration: vc.penetration,
+    skillCoefficient: vc.skillCoefficient,
+    physicalReduction: vc.physicalReduction,
+    power: vc.power,
+    specialMechanics: vc.specialMechanics,
+    locationId: vc.planetId,
+    enemyType: vc.creatureType,
+  })),
 ];
 
 export const STATION_ENEMIES = {
@@ -1824,47 +1853,47 @@ export const STATION_ENEMIES = {
     normal: RUST_WASTELAND_NORMAL,
     elite: RUST_WASTELAND_ELITE,
     boss: RUST_WASTELAND_BOSS,
-  }, 
+  },
   2: {
     normal: REPAIR_STATION_NORMAL,
     elite: REPAIR_STATION_ELITE,
     boss: REPAIR_STATION_BOSS,
-  }, 
+  },
   3: {
     normal: SAND_STORM_NORMAL,
     elite: SAND_STORM_ELITE,
     boss: SAND_STORM_BOSS,
-  }, 
+  },
   4: {
     normal: GRANARY_NORMAL,
     elite: GRANARY_ELITE,
     boss: GRANARY_BOSS,
-  }, 
+  },
   5: {
     normal: ROCKY_CLIFF_NORMAL,
     elite: ROCKY_CLIFF_ELITE,
     boss: ROCKY_CLIFF_BOSS,
-  }, 
+  },
   6: {
     normal: WATER_SOURCE_NORMAL,
     elite: WATER_SOURCE_ELITE,
     boss: WATER_SOURCE_BOSS,
-  }, 
+  },
   7: {
     normal: ABANDONED_STATION_NORMAL,
     elite: ABANDONED_STATION_ELITE,
     boss: ABANDONED_STATION_BOSS,
-  }, 
+  },
   8: {
     normal: METAL_SCRAP_NORMAL,
     elite: METAL_SCRAP_ELITE,
     boss: METAL_SCRAP_BOSS,
-  }, 
+  },
   9: {
     normal: COLD_SHELTER_NORMAL,
     elite: COLD_SHELTER_ELITE,
     boss: COLD_SHELTER_BOSS,
-  }, 
+  },
   10: {
     normal: BORDER_OUTPOST_NORMAL,
     elite: BORDER_OUTPOST_ELITE,
@@ -1897,7 +1926,7 @@ export function getRandomEnemyByLocation(locationId: string, type?: 'normal' | '
 export function createEnemyInstance(enemyId: string): ExpandedEnemy | null {
   const template = getEnemyById(enemyId);
   if (!template) return null;
-  
+
   return {
     ...template,
     hp: template.maxHp,

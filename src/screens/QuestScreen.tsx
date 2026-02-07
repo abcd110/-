@@ -45,7 +45,7 @@ export default function QuestScreen({ onBack }: QuestScreenProps) {
       default: {
         padding: '2px 8px',
         backgroundColor: '#374151',
-        color: '#9ca3af',
+        color: '#a1a1aa',
         fontSize: '12px',
         borderRadius: '4px'
       }
@@ -63,15 +63,15 @@ export default function QuestScreen({ onBack }: QuestScreenProps) {
   return (
     <div style={{
       height: '100vh',
-      backgroundColor: '#1a1a1a',
+      backgroundColor: '#0a0e27',
       display: 'flex',
       flexDirection: 'column'
     }}>
       {/* 顶部标题栏 - 固定 */}
       <header style={{
         flexShrink: 0,
-        backgroundColor: '#2d2d2d',
-        borderBottom: '1px solid #4b5563',
+        backgroundColor: '#1a1f3a',
+        borderBottom: '1px solid #2a3050',
         padding: '12px 16px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -81,7 +81,7 @@ export default function QuestScreen({ onBack }: QuestScreenProps) {
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
-              color: '#9ca3af',
+              color: '#a1a1aa',
               background: 'none',
               border: 'none',
               cursor: 'pointer',
@@ -102,7 +102,7 @@ export default function QuestScreen({ onBack }: QuestScreenProps) {
         display: 'flex',
         gap: '8px',
         padding: '12px 16px',
-        backgroundColor: '#1a1a1a',
+        backgroundColor: '#0a0e27',
         borderBottom: '1px solid #374151'
       }}>
         {tabs.map(tab => (
@@ -115,7 +115,7 @@ export default function QuestScreen({ onBack }: QuestScreenProps) {
               borderRadius: '8px',
               fontSize: '14px',
               fontWeight: activeTab === tab.id ? 'bold' : 'normal',
-              backgroundColor: activeTab === tab.id ? '#d97706' : '#374151',
+              backgroundColor: activeTab === tab.id ? '#0099cc' : '#374151',
               color: activeTab === tab.id ? 'white' : '#9ca3af',
               border: 'none',
               cursor: 'pointer'
@@ -144,7 +144,7 @@ export default function QuestScreen({ onBack }: QuestScreenProps) {
               <div
                 key={quest.id}
                 style={{
-                  backgroundColor: '#2d2d2d',
+                  backgroundColor: '#1a1f3a',
                   borderRadius: '12px',
                   padding: '16px',
                   border: '1px solid #374151'
@@ -154,7 +154,7 @@ export default function QuestScreen({ onBack }: QuestScreenProps) {
                   <h3 style={{ fontWeight: 'bold', color: 'white', fontSize: '16px', margin: 0 }}>{quest.title}</h3>
                   {getStatusBadge(quest.status)}
                 </div>
-                <p style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '12px' }}>{quest.description}</p>
+                <p style={{ fontSize: '14px', color: '#a1a1aa', marginBottom: '12px' }}>{quest.description}</p>
 
                 {/* 进度 */}
                 <div style={{ marginBottom: '12px' }}>
@@ -166,7 +166,7 @@ export default function QuestScreen({ onBack }: QuestScreenProps) {
                     <div
                       style={{
                         height: '100%',
-                        backgroundColor: '#d97706',
+                        backgroundColor: '#0099cc',
                         transition: 'width 0.3s',
                         width: `${quest.getProgressPercent()}%`
                       }}
@@ -175,7 +175,7 @@ export default function QuestScreen({ onBack }: QuestScreenProps) {
                 </div>
 
                 {/* 奖励 */}
-                <div style={{ display: 'flex', gap: '12px', fontSize: '12px', color: '#9ca3af', marginBottom: '12px' }}>
+                <div style={{ display: 'flex', gap: '12px', fontSize: '12px', color: '#a1a1aa', marginBottom: '12px' }}>
                   {quest.reward.exp > 0 && <span>🎯 {quest.reward.exp}经验</span>}
                   {quest.reward.trainCoins > 0 && <span>💰 {quest.reward.trainCoins}币</span>}
                   {quest.reward.items.length > 0 && <span>📦 {quest.reward.items.length}物品</span>}

@@ -16,16 +16,16 @@ const RARITY_COLORS_MAP: Record<ItemRarity, string> = {
   [ItemRarity.UNCOMMON]: '#4ade80',
   [ItemRarity.RARE]: '#60a5fa',
   [ItemRarity.EPIC]: '#c084fc',
-  [ItemRarity.LEGENDARY]: '#fbbf24',
+  [ItemRarity.LEGENDARY]: '#00d4ff',
   [ItemRarity.MYTHIC]: '#f87171',
 };
 
 const RARITY_BORDERS: Record<ItemRarity, string> = {
-  [ItemRarity.COMMON]: '#4b5563',
+  [ItemRarity.COMMON]: '#2a3050',
   [ItemRarity.UNCOMMON]: '#16a34a',
   [ItemRarity.RARE]: '#2563eb',
   [ItemRarity.EPIC]: '#9333ea',
-  [ItemRarity.LEGENDARY]: '#d97706',
+  [ItemRarity.LEGENDARY]: '#0099cc',
   [ItemRarity.MYTHIC]: '#dc2626',
 };
 
@@ -124,15 +124,15 @@ export default function InventoryScreen({ onBack, onNavigate }: InventoryScreenP
   return (
     <div style={{
       height: '100vh',
-      backgroundColor: '#1a1a1a',
+      backgroundColor: '#0a0e27',
       display: 'flex',
       flexDirection: 'column'
     }}>
       {/* 顶部标题栏 - 固定 */}
       <header style={{
         flexShrink: 0,
-        backgroundColor: '#2d2d2d',
-        borderBottom: '1px solid #4b5563',
+        backgroundColor: '#1a1f3a',
+        borderBottom: '1px solid #2a3050',
         padding: '12px 16px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -142,7 +142,7 @@ export default function InventoryScreen({ onBack, onNavigate }: InventoryScreenP
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
-              color: '#9ca3af',
+              color: '#a1a1aa',
               background: 'none',
               border: 'none',
               cursor: 'pointer',
@@ -154,7 +154,7 @@ export default function InventoryScreen({ onBack, onNavigate }: InventoryScreenP
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <h1 style={{ color: 'white', fontWeight: 'bold', fontSize: '18px' }}>背包</h1>
-            <span style={{ color: '#9ca3af', fontSize: '14px' }}>({inventory.usedSlots}/{inventory.maxSlots})</span>
+            <span style={{ color: '#a1a1aa', fontSize: '14px' }}>({inventory.usedSlots}/{inventory.maxSlots})</span>
           </div>
           <div style={{ width: '48px' }} />
         </div>
@@ -167,7 +167,7 @@ export default function InventoryScreen({ onBack, onNavigate }: InventoryScreenP
         gap: '8px',
         overflowX: 'auto',
         padding: '12px 16px',
-        backgroundColor: '#1a1a1a',
+        backgroundColor: '#0a0e27',
         borderBottom: '1px solid #374151'
       }}>
         {CATEGORIES.map(cat => (
@@ -179,7 +179,7 @@ export default function InventoryScreen({ onBack, onNavigate }: InventoryScreenP
               borderRadius: '8px',
               fontSize: '14px',
               whiteSpace: 'nowrap',
-              backgroundColor: selectedCategory === cat.id ? '#d97706' : '#374151',
+              backgroundColor: selectedCategory === cat.id ? '#0099cc' : '#374151',
               color: selectedCategory === cat.id ? 'white' : '#9ca3af',
               border: 'none',
               cursor: 'pointer',
@@ -350,7 +350,7 @@ function ItemSlot({ item, onClick }: { item: InventoryItem; onClick: () => void 
           top: '2px',
           right: '2px',
           fontSize: '9px',
-          color: '#fbbf24',
+          color: '#00d4ff',
           fontWeight: 'bold'
         }}>
           +{item.sublimationLevel}
@@ -411,20 +411,20 @@ function EquipmentSlotComponent({ equipment, onClick }: { equipment: EquipmentIn
           top: '2px',
           right: '2px',
           fontSize: '9px',
-          color: '#fbbf24',
+          color: '#00d4ff',
           fontWeight: 'bold'
         }}>
           +{equipment.enhanceLevel}
         </span>
       )}
 
-      {/* 站台标记 */}
+      {/* 星球标记 */}
       <span style={{
         position: 'absolute',
         bottom: '2px',
         left: '2px',
         fontSize: '8px',
-        color: '#9ca3af'
+        color: '#a1a1aa'
       }}>
         {equipment.stationNumber}站
       </span>
@@ -472,11 +472,11 @@ function ItemDetailModal({
       padding: '16px'
     }}>
       <div style={{
-        backgroundColor: '#2d2d2d',
+        backgroundColor: '#1a1f3a',
         borderRadius: '16px',
         width: '100%',
         maxWidth: '320px',
-        border: '1px solid #4b5563',
+        border: '1px solid #2a3050',
         overflow: 'hidden'
       }}>
         {/* 头部 */}
@@ -500,15 +500,15 @@ function ItemDetailModal({
                 <h2 style={{ color: rarityColor, fontWeight: 'bold', fontSize: '16px', margin: 0 }}>
                   {item.name}
                 </h2>
-                <p style={{ color: '#9ca3af', fontSize: '12px', margin: '4px 0 0 0' }}>{TYPE_NAMES[item.type]}</p>
+                <p style={{ color: '#a1a1aa', fontSize: '12px', margin: '4px 0 0 0' }}>{TYPE_NAMES[item.type]}</p>
                 {item.sublimationLevel > 0 && (
-                  <p style={{ color: '#fbbf24', fontSize: '12px', margin: '4px 0 0 0' }}>升华等级: +{item.sublimationLevel}</p>
+                  <p style={{ color: '#00d4ff', fontSize: '12px', margin: '4px 0 0 0' }}>升华等级: +{item.sublimationLevel}</p>
                 )}
               </div>
             </div>
             <button
               onClick={onClose}
-              style={{ color: '#9ca3af', background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}
+              style={{ color: '#a1a1aa', background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}
             >
               ✕
             </button>
@@ -520,66 +520,66 @@ function ItemDetailModal({
           <p style={{ color: '#d1d5db', fontSize: '14px', marginBottom: '16px' }}>{item.description}</p>
 
           <div style={{ backgroundColor: '#1f2937', borderRadius: '8px', padding: '12px', marginBottom: '16px' }}>
-            <h4 style={{ color: '#9ca3af', fontSize: '12px', marginBottom: '8px' }}>物品属性</h4>
+            <h4 style={{ color: '#a1a1aa', fontSize: '12px', marginBottom: '8px' }}>物品属性</h4>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '14px' }}>
               {item.attack !== undefined && item.attack > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#9ca3af' }}>攻击力</span>
+                  <span style={{ color: '#a1a1aa' }}>攻击力</span>
                   <span style={{ color: '#f87171' }}>+{item.attack}</span>
                 </div>
               )}
               {item.defense !== undefined && item.defense > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#9ca3af' }}>防御力</span>
+                  <span style={{ color: '#a1a1aa' }}>防御力</span>
                   <span style={{ color: '#60a5fa' }}>+{item.defense}</span>
                 </div>
               )}
               {item.agility !== undefined && item.agility > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#9ca3af' }}>敏捷</span>
+                  <span style={{ color: '#a1a1aa' }}>敏捷</span>
                   <span style={{ color: '#4ade80' }}>+{item.agility}</span>
                 </div>
               )}
               {item.speed !== undefined && item.speed > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#9ca3af' }}>攻速</span>
-                  <span style={{ color: '#fbbf24' }}>+{item.speed}</span>
+                  <span style={{ color: '#a1a1aa' }}>攻速</span>
+                  <span style={{ color: '#00d4ff' }}>+{item.speed}</span>
                 </div>
               )}
               {item.maxHp !== undefined && item.maxHp > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#9ca3af' }}>生命值</span>
+                  <span style={{ color: '#a1a1aa' }}>生命值</span>
                   <span style={{ color: '#f87171' }}>+{item.maxHp}</span>
                 </div>
               )}
               {item.healHp !== undefined && item.healHp > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#9ca3af' }}>恢复生命</span>
+                  <span style={{ color: '#a1a1aa' }}>恢复生命</span>
                   <span style={{ color: '#4ade80' }}>+{item.healHp}</span>
                 </div>
               )}
               {item.healStamina !== undefined && item.healStamina > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#9ca3af' }}>恢复体力</span>
-                  <span style={{ color: '#fbbf24' }}>+{item.healStamina}</span>
+                  <span style={{ color: '#a1a1aa' }}>恢复体力</span>
+                  <span style={{ color: '#00d4ff' }}>+{item.healStamina}</span>
                 </div>
               )}
               {item.healHunger !== undefined && item.healHunger > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#9ca3af' }}>恢复饥饿</span>
+                  <span style={{ color: '#a1a1aa' }}>恢复能量储备</span>
                   <span style={{ color: '#fb923c' }}>+{item.healHunger}</span>
                 </div>
               )}
               {item.healThirst !== undefined && item.healThirst > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#9ca3af' }}>恢复口渴</span>
+                  <span style={{ color: '#a1a1aa' }}>恢复冷却液水平</span>
                   <span style={{ color: '#60a5fa' }}>+{item.healThirst}</span>
                 </div>
               )}
             </div>
           </div>
 
-          <div style={{ textAlign: 'center', color: '#9ca3af', fontSize: '14px', marginBottom: '16px' }}>
+          <div style={{ textAlign: 'center', color: '#a1a1aa', fontSize: '14px', marginBottom: '16px' }}>
             数量: <span style={{ color: 'white', fontWeight: 'bold' }}>{item.quantity}</span>
           </div>
         </div>
@@ -625,7 +625,7 @@ function ItemDetailModal({
                   onClick={async () => await onAction('equip')}
                   style={{
                     padding: '12px',
-                    backgroundColor: '#d97706',
+                    backgroundColor: '#0099cc',
                     color: 'white',
                     fontWeight: 'bold',
                     borderRadius: '8px',
@@ -736,7 +736,7 @@ function EnhancePreviewModal({
   const rarityColor = RARITY_COLORS_MAP[item.rarity];
   const getSuccessRateColor = (rate: number) => {
     if (rate >= 0.8) return '#4ade80';
-    if (rate >= 0.6) return '#fbbf24';
+    if (rate >= 0.6) return '#00d4ff';
     if (rate >= 0.4) return '#fb923c';
     return '#ef4444';
   };
@@ -753,11 +753,11 @@ function EnhancePreviewModal({
       padding: '16px'
     }}>
       <div style={{
-        backgroundColor: '#2d2d2d',
+        backgroundColor: '#1a1f3a',
         borderRadius: '16px',
         width: '100%',
         maxWidth: '320px',
-        border: '1px solid #4b5563',
+        border: '1px solid #2a3050',
         overflow: 'hidden'
       }}>
         {/* 头部 */}
@@ -768,7 +768,7 @@ function EnhancePreviewModal({
             </h2>
             <button
               onClick={onClose}
-              style={{ color: '#9ca3af', background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}
+              style={{ color: '#a1a1aa', background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}
             >
               ✕
             </button>
@@ -798,7 +798,7 @@ function EnhancePreviewModal({
                   <p style={{ color: rarityColor, fontWeight: 'bold', fontSize: '14px', margin: 0 }}>
                     {item.name}
                   </p>
-                  <p style={{ color: '#fbbf24', fontSize: '13px', margin: '4px 0 0 0' }}>
+                  <p style={{ color: '#00d4ff', fontSize: '13px', margin: '4px 0 0 0' }}>
                     当前 +{preview.currentLevel} → 目标 +{preview.targetLevel}
                   </p>
                 </div>
@@ -812,7 +812,7 @@ function EnhancePreviewModal({
                 marginBottom: '12px'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ color: '#9ca3af', fontSize: '13px' }}>成功率</span>
+                  <span style={{ color: '#a1a1aa', fontSize: '13px' }}>成功率</span>
                   <span style={{
                     color: getSuccessRateColor(preview.successRate),
                     fontWeight: 'bold',
@@ -842,29 +842,29 @@ function EnhancePreviewModal({
                 padding: '12px',
                 marginBottom: '12px'
               }}>
-                <p style={{ color: '#9ca3af', fontSize: '12px', marginBottom: '8px' }}>属性提升</p>
+                <p style={{ color: '#a1a1aa', fontSize: '12px', marginBottom: '8px' }}>属性提升</p>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', fontSize: '12px' }}>
                   {preview.attributePreview.attack.after > preview.attributePreview.attack.current && (
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#9ca3af' }}>攻击</span>
+                      <span style={{ color: '#a1a1aa' }}>攻击</span>
                       <span style={{ color: '#4ade80' }}>+{preview.attributePreview.attack.after - preview.attributePreview.attack.current}</span>
                     </div>
                   )}
                   {preview.attributePreview.defense.after > preview.attributePreview.defense.current && (
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#9ca3af' }}>防御</span>
+                      <span style={{ color: '#a1a1aa' }}>防御</span>
                       <span style={{ color: '#4ade80' }}>+{preview.attributePreview.defense.after - preview.attributePreview.defense.current}</span>
                     </div>
                   )}
                   {preview.attributePreview.speed.after > preview.attributePreview.speed.current && (
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#9ca3af' }}>攻速</span>
+                      <span style={{ color: '#a1a1aa' }}>攻速</span>
                       <span style={{ color: '#4ade80' }}>+{preview.attributePreview.speed.after - preview.attributePreview.speed.current}</span>
                     </div>
                   )}
                   {preview.attributePreview.maxHp.after > preview.attributePreview.maxHp.current && (
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#9ca3af' }}>生命</span>
+                      <span style={{ color: '#a1a1aa' }}>生命</span>
                       <span style={{ color: '#4ade80' }}>+{preview.attributePreview.maxHp.after - preview.attributePreview.maxHp.current}</span>
                     </div>
                   )}
@@ -878,7 +878,7 @@ function EnhancePreviewModal({
                 padding: '12px',
                 marginBottom: '12px'
               }}>
-                <p style={{ color: '#9ca3af', fontSize: '12px', marginBottom: '8px' }}>所需材料</p>
+                <p style={{ color: '#a1a1aa', fontSize: '12px', marginBottom: '8px' }}>所需材料</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: '#d1d5db' }}>强化石</span>
@@ -914,7 +914,7 @@ function EnhancePreviewModal({
             </>
           ) : (
             <div style={{ textAlign: 'center', padding: '24px 0' }}>
-              <p style={{ color: '#9ca3af', fontSize: '14px' }}>{preview.reason || '无法强化'}</p>
+              <p style={{ color: '#a1a1aa', fontSize: '14px' }}>{preview.reason || '无法强化'}</p>
             </div>
           )}
         </div>
@@ -947,7 +947,7 @@ function EquipmentDetailModal({
       padding: '16px'
     }}>
       <div style={{
-        backgroundColor: '#2d2d2d',
+        backgroundColor: '#1a1f3a',
         borderRadius: '16px',
         width: '100%',
         maxWidth: '320px',
@@ -975,14 +975,14 @@ function EquipmentDetailModal({
                 <h2 style={{ color: rarityColor, fontWeight: 'bold', fontSize: '16px', margin: 0 }}>
                   {equipment.name}
                 </h2>
-                <p style={{ color: '#9ca3af', fontSize: '12px', margin: '4px 0 0 0' }}>
-                  站台{equipment.stationNumber} · 强化+{equipment.enhanceLevel}
+                <p style={{ color: '#a1a1aa', fontSize: '12px', margin: '4px 0 0 0' }}>
+                  星球{equipment.stationNumber} · 强化+{equipment.enhanceLevel}
                 </p>
               </div>
             </div>
             <button
               onClick={onClose}
-              style={{ color: '#9ca3af', background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}
+              style={{ color: '#a1a1aa', background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}
             >
               ✕
             </button>
@@ -994,7 +994,7 @@ function EquipmentDetailModal({
           <p style={{ color: '#d1d5db', fontSize: '14px', marginBottom: '16px' }}>{equipment.description}</p>
 
           <div style={{ backgroundColor: '#1f2937', borderRadius: '8px', padding: '12px', marginBottom: '16px' }}>
-            <h4 style={{ color: '#9ca3af', fontSize: '12px', marginBottom: '8px' }}>基础属性</h4>
+            <h4 style={{ color: '#a1a1aa', fontSize: '12px', marginBottom: '8px' }}>基础属性</h4>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '14px' }}>
               {(() => {
                 const stats = calculateEquipmentStats(equipment);
@@ -1002,7 +1002,7 @@ function EquipmentDetailModal({
                 if (stats.attack > 0) {
                   items.push(
                     <div key="attack" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#9ca3af' }}>攻击力</span>
+                      <span style={{ color: '#a1a1aa' }}>攻击力</span>
                       <span style={{ color: '#f87171' }}>{stats.attack}</span>
                     </div>
                   );
@@ -1010,7 +1010,7 @@ function EquipmentDetailModal({
                 if (stats.defense > 0) {
                   items.push(
                     <div key="defense" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#9ca3af' }}>防御力</span>
+                      <span style={{ color: '#a1a1aa' }}>防御力</span>
                       <span style={{ color: '#60a5fa' }}>{stats.defense}</span>
                     </div>
                   );
@@ -1018,7 +1018,7 @@ function EquipmentDetailModal({
                 if (stats.hp > 0) {
                   items.push(
                     <div key="hp" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#9ca3af' }}>生命值</span>
+                      <span style={{ color: '#a1a1aa' }}>生命值</span>
                       <span style={{ color: '#ef4444' }}>{stats.hp}</span>
                     </div>
                   );
@@ -1026,15 +1026,15 @@ function EquipmentDetailModal({
                 if (stats.hit > 0) {
                   items.push(
                     <div key="hit" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#9ca3af' }}>命中</span>
-                      <span style={{ color: '#fbbf24' }}>{stats.hit}</span>
+                      <span style={{ color: '#a1a1aa' }}>命中</span>
+                      <span style={{ color: '#00d4ff' }}>{stats.hit}</span>
                     </div>
                   );
                 }
                 if (stats.dodge > 0) {
                   items.push(
                     <div key="dodge" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#9ca3af' }}>闪避</span>
+                      <span style={{ color: '#a1a1aa' }}>闪避</span>
                       <span style={{ color: '#4ade80' }}>{stats.dodge}</span>
                     </div>
                   );
@@ -1042,7 +1042,7 @@ function EquipmentDetailModal({
                 if (stats.speed > 0) {
                   items.push(
                     <div key="speed" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#9ca3af' }}>攻速</span>
+                      <span style={{ color: '#a1a1aa' }}>攻速</span>
                       <span style={{ color: '#c084fc' }}>{stats.speed.toFixed(1)}</span>
                     </div>
                   );
@@ -1054,11 +1054,11 @@ function EquipmentDetailModal({
 
           {equipment.effects.length > 0 && (
             <div style={{ backgroundColor: '#1f2937', borderRadius: '8px', padding: '12px', marginBottom: '16px' }}>
-              <h4 style={{ color: '#9ca3af', fontSize: '12px', marginBottom: '8px' }}>特殊效果</h4>
+              <h4 style={{ color: '#a1a1aa', fontSize: '12px', marginBottom: '8px' }}>特殊效果</h4>
               {equipment.effects.map((effect, index) => (
                 <div key={index} style={{ marginBottom: '4px', fontSize: '12px' }}>
                   <span style={{ color: '#d1d5db' }}>{effect.description}</span>
-                  <span style={{ color: '#9ca3af', marginLeft: '8px' }}>({effect.chance * 100}%)</span>
+                  <span style={{ color: '#a1a1aa', marginLeft: '8px' }}>({effect.chance * 100}%)</span>
                 </div>
               ))}
             </div>
@@ -1072,7 +1072,7 @@ function EquipmentDetailModal({
             style={{
               flex: 1,
               padding: '12px',
-              backgroundColor: '#d97706',
+              backgroundColor: '#0099cc',
               color: 'white',
               fontWeight: 'bold',
               borderRadius: '8px',

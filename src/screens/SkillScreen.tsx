@@ -53,15 +53,15 @@ export default function SkillScreen({ onBack }: SkillScreenProps) {
   return (
     <div style={{
       height: '100vh',
-      backgroundColor: '#1a1a1a',
+      backgroundColor: '#0a0e27',
       display: 'flex',
       flexDirection: 'column'
     }}>
       {/* 顶部标题栏 */}
       <header style={{
         flexShrink: 0,
-        backgroundColor: '#2d2d2d',
-        borderBottom: '1px solid #4b5563',
+        backgroundColor: '#1a1f3a',
+        borderBottom: '1px solid #2a3050',
         padding: '12px 16px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -71,7 +71,7 @@ export default function SkillScreen({ onBack }: SkillScreenProps) {
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
-              color: '#9ca3af',
+              color: '#a1a1aa',
               background: 'none',
               border: 'none',
               cursor: 'pointer',
@@ -92,7 +92,7 @@ export default function SkillScreen({ onBack }: SkillScreenProps) {
         display: 'flex',
         gap: '8px',
         padding: '12px 16px',
-        backgroundColor: '#1a1a1a',
+        backgroundColor: '#0a0e27',
         borderBottom: '1px solid #374151'
       }}>
         {[
@@ -109,7 +109,7 @@ export default function SkillScreen({ onBack }: SkillScreenProps) {
               borderRadius: '8px',
               fontSize: '14px',
               fontWeight: activeTab === tab.id ? 'bold' : 'normal',
-              backgroundColor: activeTab === tab.id ? '#d97706' : '#374151',
+              backgroundColor: activeTab === tab.id ? '#0099cc' : '#374151',
               color: activeTab === tab.id ? 'white' : '#9ca3af',
               border: 'none',
               cursor: 'pointer'
@@ -164,7 +164,7 @@ export default function SkillScreen({ onBack }: SkillScreenProps) {
         {/* 技能学习 */}
         {activeTab === 'learn' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <p style={{ color: '#9ca3af', fontSize: '12px', margin: '0 0 8px 0' }}>
+            <p style={{ color: '#a1a1aa', fontSize: '12px', margin: '0 0 8px 0' }}>
               拥有技能书后可以学习对应技能
             </p>
             {SKILL_BOOKS.map((book) => {
@@ -175,7 +175,7 @@ export default function SkillScreen({ onBack }: SkillScreenProps) {
                 <div
                   key={book.id}
                   style={{
-                    backgroundColor: '#2d2d2d',
+                    backgroundColor: '#1a1f3a',
                     borderRadius: '12px',
                     padding: '16px',
                     border: '1px solid #374151',
@@ -187,7 +187,7 @@ export default function SkillScreen({ onBack }: SkillScreenProps) {
                       <h3 style={{ color: 'white', fontWeight: 'bold', fontSize: '16px', margin: '0 0 4px 0' }}>
                         {book.name}
                       </h3>
-                      <p style={{ color: '#9ca3af', fontSize: '12px', margin: 0 }}>{book.description}</p>
+                      <p style={{ color: '#a1a1aa', fontSize: '12px', margin: 0 }}>{book.description}</p>
                     </div>
                     <span style={{
                       padding: '2px 8px',
@@ -214,7 +214,7 @@ export default function SkillScreen({ onBack }: SkillScreenProps) {
                       <span style={{
                         padding: '4px 8px',
                         backgroundColor: 'rgba(251, 191, 36, 0.2)',
-                        color: '#fbbf24',
+                        color: '#00d4ff',
                         fontSize: '12px',
                         borderRadius: '4px'
                       }}>
@@ -256,7 +256,7 @@ function SkillCard({ skill }: { skill: any }) {
   return (
     <div
       style={{
-        backgroundColor: '#2d2d2d',
+        backgroundColor: '#1a1f3a',
         borderRadius: '12px',
         padding: '16px',
         border: '1px solid #374151'
@@ -267,10 +267,10 @@ function SkillCard({ skill }: { skill: any }) {
           <h3 style={{ color: 'white', fontWeight: 'bold', fontSize: '16px', margin: '0 0 4px 0' }}>
             {skill.name || '未知技能'}
           </h3>
-          <span style={{ color: '#fbbf24', fontSize: '14px' }}>Lv.{skill.level || 1}</span>
+          <span style={{ color: '#00d4ff', fontSize: '14px' }}>Lv.{skill.level || 1}</span>
         </div>
       </div>
-      <p style={{ color: '#9ca3af', fontSize: '14px', margin: 0 }}>
+      <p style={{ color: '#a1a1aa', fontSize: '14px', margin: 0 }}>
         {skill.description || '暂无描述'}
       </p>
     </div>

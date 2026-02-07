@@ -1,17 +1,17 @@
 // 物品中文名称映射
 export const ITEM_NAME_MAP: Record<string, string> = {
-  // 基础材料
-  'mat_001': '废铁碎片',
-  'mat_002': '铜线',
-  'mat_003': '齿轮',
-  'mat_004': '弹簧',
-  'mat_005': '橡胶垫',
-  'mat_006': '电子元件',
-  'mat_007': '燃料罐',
-  'mat_008': '布料',
-  'mat_009': '木板',
-  'mat_010': '螺丝钉',
-  
+  // 基础材料 - 太空主题
+  'mat_001': '铁矿碎片',
+  'mat_002': '铜矿碎片',
+  'mat_003': '钛合金碎片',
+  'mat_004': '能量晶体',
+  'mat_005': '稀土元素',
+  'mat_006': '虚空核心',
+  'mat_007': '星际燃料',
+  'mat_008': '纳米纤维',
+  'mat_009': '陨石碎片',
+  'mat_010': '量子螺丝',
+
   // 神话站台材料
   'bronze_fragment': '青铜碎片',
   'light_shard': '光芒碎片',
@@ -27,7 +27,7 @@ export const ITEM_NAME_MAP: Record<string, string> = {
   'abyss_essence': '深渊精华',
   'godless_relic': '无神遗物',
   'authority_shard': '权限碎片',
-  
+
   // 战利品
   'monster_fang': '怪物尖牙',
   'monster_hide': '怪物皮革',
@@ -35,13 +35,13 @@ export const ITEM_NAME_MAP: Record<string, string> = {
   'corrupted_blood': '腐化之血',
   'ancient_coin': '古老硬币',
   'mysterious_scroll': '神秘卷轴',
-  
+
   // 食物和水
   'food_canned': '罐头食品',
   'food_dried': '干粮',
   'water_clean': '纯净水',
   'water_filtered': '过滤水',
-  
+
   // 药品
   'med_bandage': '绷带',
   'med_painkiller': '止痛药',
@@ -64,6 +64,15 @@ export function getItemNameWithIcon(itemId: string): string {
 // 获取物品图标
 function getItemIcon(itemId: string): string {
   if (itemId.includes('bronze') || itemId.includes('mat_001')) return '🔩';
+  if (itemId.includes('mat_002')) return '⚡';
+  if (itemId.includes('mat_003')) return '🔧';
+  if (itemId.includes('mat_004')) return '💎';
+  if (itemId.includes('mat_005')) return '🧪';
+  if (itemId.includes('mat_006')) return '🔮';
+  if (itemId.includes('mat_007')) return '⛽';
+  if (itemId.includes('mat_008')) return '🧵';
+  if (itemId.includes('mat_009')) return '🌑';
+  if (itemId.includes('mat_010')) return '🔩';
   if (itemId.includes('light') || itemId.includes('shard')) return '✨';
   if (itemId.includes('weapon')) return '⚔️';
   if (itemId.includes('fog') || itemId.includes('crystal')) return '💎';

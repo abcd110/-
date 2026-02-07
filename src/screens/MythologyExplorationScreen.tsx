@@ -43,7 +43,7 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
     const location = MYTHOLOGY_LOCATIONS.find(l => l.id === locationId);
     if (!location) return;
 
-    // 直接到达目的地，消耗时间（30分钟）
+    // 直接跃迁至目的地，消耗时间（30分钟）
     gameManager.advanceTime(30);
     setExploration({
       phase: 'action_select',
@@ -52,7 +52,7 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
       driveTimeRemaining: 0,
     });
 
-    addLog(`🚂 到达 ${location.name}！请选择行动`);
+    addLog(`🚀 跃迁至 ${location.name}！请选择行动`);
   };
 
   // 驶入计时器
@@ -65,7 +65,7 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
         if (newTime <= 0) {
           // 驶入完成，消耗时间（30分钟）
           gameManager.advanceTime(30);
-          addLog('🚂 到达目的地！请选择行动');
+          addLog('🚀 跃迁至目的地！请选择行动');
           return {
             ...prev,
             phase: 'action_select',
@@ -86,7 +86,7 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
       addLog('⚠️ 体力不足，无法收集');
       return;
     }
-    addLog('📦 开始收集物资...');
+    addLog('📦 开始采集资源...');
     setExploration(prev => ({
       ...prev,
       phase: 'collecting',
@@ -102,7 +102,7 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
       addLog('⚠️ 体力不足，无法狩猎');
       return;
     }
-    addLog('👹 开始狩猎（普通）...');
+    addLog('👾 开始狩猎（普通）...');
     // 狩猎一定会遇到普通敌人
     if (exploration.locationId) {
       onStartBattle(exploration.locationId, false, false);
@@ -118,7 +118,7 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
       addLog('⚠️ 体力不足，无法狩猎（困难）');
       return;
     }
-    addLog('👹 开始狩猎（困难）...');
+    addLog('👾 开始狩猎（困难）...');
     // 狩猎一定会遇到精英敌人
     if (exploration.locationId) {
       onStartBattle(exploration.locationId, false, true);
@@ -184,18 +184,18 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
         materialProgress: newMaterialProgress
       });
 
-      // 随机获得制造材料（神话站台产出高品质材料）
+      // 随机获得制造材料（神话星球产出高品质材料）
       const possibleMaterials = [
         { name: '优质铁矿碎片', id: 'craft_优质iron' },
-        { name: '优质野兽皮革', id: 'craft_优质leather' },
+        { name: '优质虚空野兽皮革', id: 'craft_优质leather' },
         { name: '优质粗布纤维', id: 'craft_优质fabric' },
-        { name: '优质坚韧木材', id: 'craft_优质wood' },
-        { name: '优质能量水晶', id: 'craft_优质crystal' },
-        { name: '优质怪物精华', id: 'craft_优质essence' },
+        { name: '优质坚韧基础合金', id: 'craft_优质wood' },
+        { name: '优质能量冷却液晶', id: 'craft_优质crystal' },
+        { name: '优质虚空生物精华', id: 'craft_优质essence' },
         { name: '精良铁矿碎片', id: 'craft_精良iron' },
-        { name: '精良野兽皮革', id: 'craft_精良leather' },
+        { name: '精良虚空野兽皮革', id: 'craft_精良leather' },
         { name: '精良粗布纤维', id: 'craft_精良fabric' },
-        { name: '精良坚韧木材', id: 'craft_精良wood' },
+        { name: '精良坚韧基础合金', id: 'craft_精良wood' },
       ];
 
       const randomIndex = Math.floor(Math.random() * possibleMaterials.length);
@@ -249,14 +249,14 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
 
   // 获取神话体系颜色
   const getMythologyColor = (type: MythologyType) => {
-    return type === MythologyType.GREEK ? '#fbbf24' : '#60a5fa';
+    return type === MythologyType.GREEK ? '#00d4ff' : '#60a5fa';
   };
 
   // 获取神明状态颜色
   const getDeityStatusColor = (status: DeityStatus) => {
     switch (status) {
       case DeityStatus.HIDDEN: return '#6b7280';
-      case DeityStatus.EXPOSED: return '#fbbf24';
+      case DeityStatus.EXPOSED: return '#00d4ff';
       case DeityStatus.HOSTILE: return '#ef4444';
       case DeityStatus.NEUTRAL: return '#4ade80';
       default: return '#6b7280';
@@ -267,15 +267,15 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
   return (
     <div style={{
       height: '100vh',
-      backgroundColor: '#1a1a1a',
+      backgroundColor: '#0a0e27',
       display: 'flex',
       flexDirection: 'column'
     }}>
       {/* 顶部标题栏 */}
       <header style={{
         flexShrink: 0,
-        backgroundColor: '#2d2d2d',
-        borderBottom: '1px solid #4b5563',
+        backgroundColor: '#1a1f3a',
+        borderBottom: '1px solid #2a3050',
         padding: '12px 16px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -285,7 +285,7 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
-              color: '#9ca3af',
+              color: '#a1a1aa',
               background: 'none',
               border: 'none',
               cursor: 'pointer',
@@ -296,10 +296,10 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
             <span>{exploration.phase === 'select' ? '返回' : '结束'}</span>
           </button>
           <h1 style={{ color: 'white', fontWeight: 'bold', fontSize: '18px' }}>
-            {exploration.phase === 'select' && '选择神话站台'}
-            {exploration.phase === 'driving' && '行驶中...'}
+            {exploration.phase === 'select' && '选择神话星球'}
+            {exploration.phase === 'driving' && '跃迁中...'}
             {exploration.phase === 'action_select' && '选择行动'}
-            {exploration.phase === 'collecting' && '收集物资中'}
+            {exploration.phase === 'collecting' && '采集资源中'}
           </h1>
           <div style={{ width: '48px' }} />
         </div>
@@ -326,7 +326,7 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
                   disabled={!location.isUnlocked}
                   style={{
                     padding: '16px',
-                    backgroundColor: location.isUnlocked ? '#2d2d2d' : '#1f2937',
+                    backgroundColor: location.isUnlocked ? '#1a1f3a' : '#1f2937',
                     border: '1px solid #374151',
                     borderRadius: '12px',
                     textAlign: 'left',
@@ -339,7 +339,7 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
                     <span style={{ fontSize: '24px' }}>{location.icon}</span>
                     <div style={{ flex: 1 }}>
                       <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>{location.name}</h3>
-                      <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#9ca3af' }}>
+                      <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#a1a1aa' }}>
                         {location.description}
                       </p>
                     </div>
@@ -360,7 +360,7 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
                         padding: '4px 8px',
                         backgroundColor: '#374151',
                         borderRadius: '4px',
-                        color: '#9ca3af'
+                        color: '#a1a1aa'
                       }}>
                         未解锁
                       </span>
@@ -370,7 +370,7 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
                     display: 'flex',
                     gap: '16px',
                     fontSize: '12px',
-                    color: '#9ca3af'
+                    color: '#a1a1aa'
                   }}>
                     <span style={{ color: getMythologyColor(location.mythology) }}>
                       {location.mythology === MythologyType.GREEK ? '☀️ 希腊神话' : '❄️ 北欧神话'}
@@ -379,7 +379,7 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
                     {location.isUnlocked && (
                       <>
                         <span>📦 {progress.materialProgress}/20</span>
-                        <span>👹 {progress.huntProgress}/80</span>
+                        <span>👾 {progress.huntProgress}/80</span>
                       </>
                     )}
                   </div>
@@ -399,9 +399,9 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
             height: '100%',
             gap: '24px'
           }}>
-            <div style={{ fontSize: '64px' }}>🚂</div>
+            <div style={{ fontSize: '64px' }}>🚀</div>
             <div style={{ color: 'white', fontSize: '18px', fontWeight: 'bold' }}>
-              行驶中...
+              跃迁中...
             </div>
             <div style={{
               width: '200px',
@@ -412,13 +412,13 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
             }}>
               <div style={{
                 height: '100%',
-                backgroundColor: '#d97706',
+                backgroundColor: '#0099cc',
                 transition: 'width 1s linear',
                 width: `${((3 - exploration.driveTimeRemaining) / 3) * 100}%`
               }} />
             </div>
-            <p style={{ color: '#9ca3af', fontSize: '14px' }}>
-              预计 {exploration.driveTimeRemaining} 秒后到达
+            <p style={{ color: '#a1a1aa', fontSize: '14px' }}>
+              预计 {exploration.driveTimeRemaining} 秒后跃迁至
             </p>
           </div>
         )}
@@ -434,7 +434,7 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
 
               return (
                 <div style={{
-                  backgroundColor: '#2d2d2d',
+                  backgroundColor: '#1a1f3a',
                   borderRadius: '12px',
                   padding: '16px',
                   border: '1px solid #374151'
@@ -450,8 +450,8 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
                   {/* 物资收集进度 */}
                   <div style={{ marginBottom: '12px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                      <span style={{ color: '#9ca3af', fontSize: '14px' }}>📦 物资收集</span>
-                      <span style={{ color: progress.materialProgress >= 20 ? '#4ade80' : '#fbbf24', fontSize: '14px' }}>
+                      <span style={{ color: '#a1a1aa', fontSize: '14px' }}>📦 物资收集</span>
+                      <span style={{ color: progress.materialProgress >= 20 ? '#4ade80' : '#00d4ff', fontSize: '14px' }}>
                         {progress.materialProgress}%/20%
                       </span>
                     </div>
@@ -463,7 +463,7 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
                     }}>
                       <div style={{
                         height: '100%',
-                        backgroundColor: progress.materialProgress >= 20 ? '#4ade80' : '#fbbf24',
+                        backgroundColor: progress.materialProgress >= 20 ? '#4ade80' : '#00d4ff',
                         transition: 'width 0.5s',
                         width: `${Math.min(100, (progress.materialProgress / 20) * 100)}%`
                       }} />
@@ -473,8 +473,8 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
                   {/* 狩猎进度 */}
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                      <span style={{ color: '#9ca3af', fontSize: '14px' }}>👹 狩猎进度</span>
-                      <span style={{ color: progress.huntProgress >= 80 ? '#ef4444' : '#fbbf24', fontSize: '14px' }}>
+                      <span style={{ color: '#a1a1aa', fontSize: '14px' }}>👾 狩猎进度</span>
+                      <span style={{ color: progress.huntProgress >= 80 ? '#ef4444' : '#00d4ff', fontSize: '14px' }}>
                         {progress.huntProgress}%/80%
                       </span>
                     </div>
@@ -486,7 +486,7 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
                     }}>
                       <div style={{
                         height: '100%',
-                        backgroundColor: progress.huntProgress >= 80 ? '#ef4444' : '#fbbf24',
+                        backgroundColor: progress.huntProgress >= 80 ? '#ef4444' : '#00d4ff',
                         transition: 'width 0.5s',
                         width: `${Math.min(100, (progress.huntProgress / 80) * 100)}%`
                       }} />
@@ -496,7 +496,7 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
               );
             })()}
 
-            <p style={{ color: '#9ca3af', textAlign: 'center', margin: '0' }}>
+            <p style={{ color: '#a1a1aa', textAlign: 'center', margin: '0' }}>
               请选择要进行的行动
             </p>
 
@@ -506,7 +506,7 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
               disabled={gameManager.player.stamina < 5}
               style={{
                 padding: '16px',
-                backgroundColor: gameManager.player.stamina < 5 ? '#4b5563' : '#16a34a',
+                backgroundColor: gameManager.player.stamina < 5 ? '#2a3050' : '#16a34a',
                 color: 'white',
                 borderRadius: '12px',
                 border: 'none',
@@ -539,7 +539,7 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
                     disabled={gameManager.player.stamina < 10}
                     style={{
                       padding: '16px',
-                      backgroundColor: gameManager.player.stamina < 10 ? '#4b5563' : '#dc2626',
+                      backgroundColor: gameManager.player.stamina < 10 ? '#2a3050' : '#dc2626',
                       color: 'white',
                       borderRadius: '12px',
                       border: 'none',
@@ -548,7 +548,7 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
                       fontSize: '16px'
                     }}
                   >
-                    <div>👹 狩猎（普通）</div>
+                    <div>👾 狩猎（普通）</div>
                     <div style={{ fontSize: '12px', fontWeight: 'normal', marginTop: '4px', opacity: 0.8 }}>
                       消耗: 15分钟 + 10体力 | 遭遇普通敌人 | +10%狩猎进度
                     </div>
@@ -560,7 +560,7 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
                     disabled={gameManager.player.stamina < 15}
                     style={{
                       padding: '16px',
-                      backgroundColor: gameManager.player.stamina < 15 ? '#4b5563' : '#ea580c',
+                      backgroundColor: gameManager.player.stamina < 15 ? '#2a3050' : '#ea580c',
                       color: 'white',
                       borderRadius: '12px',
                       border: 'none',
@@ -569,7 +569,7 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
                       fontSize: '16px'
                     }}
                   >
-                    <div>👹 狩猎（困难）</div>
+                    <div>👾 狩猎（困难）</div>
                     <div style={{ fontSize: '12px', fontWeight: 'normal', marginTop: '4px', opacity: 0.8 }}>
                       消耗: 20分钟 + 15体力 | 遭遇精英敌人 | +15%狩猎进度
                     </div>
@@ -584,7 +584,7 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
                           disabled={gameManager.player.stamina < 10}
                           style={{
                             padding: '16px',
-                            backgroundColor: gameManager.player.stamina < 10 ? '#4b5563' : '#dc2626',
+                            backgroundColor: gameManager.player.stamina < 10 ? '#2a3050' : '#dc2626',
                             color: 'white',
                             borderRadius: '12px',
                             border: 'none',
@@ -603,8 +603,8 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
                           disabled
                           style={{
                             padding: '16px',
-                            backgroundColor: '#4b5563',
-                            color: '#9ca3af',
+                            backgroundColor: '#2a3050',
+                            color: '#a1a1aa',
                             borderRadius: '12px',
                             border: 'none',
                             cursor: 'not-allowed',
@@ -628,10 +628,10 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
                       disabled={gameManager.player.stamina < 10}
                       style={{
                         padding: '16px',
-                        backgroundColor: gameManager.player.stamina < 10 ? '#4b5563' : '#dc2626',
+                        backgroundColor: gameManager.player.stamina < 10 ? '#2a3050' : '#dc2626',
                         color: 'white',
                         borderRadius: '12px',
-                        border: gameManager.player.stamina < 10 ? 'none' : '2px solid #fbbf24',
+                        border: gameManager.player.stamina < 10 ? 'none' : '2px solid #00d4ff',
                         cursor: gameManager.player.stamina < 10 ? 'not-allowed' : 'pointer',
                         fontWeight: 'bold',
                         fontSize: '16px',
@@ -655,14 +655,14 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
           <>
             {/* 体力显示 */}
             <div style={{
-              backgroundColor: '#2d2d2d',
+              backgroundColor: '#1a1f3a',
               borderRadius: '12px',
               padding: '16px',
               border: '1px solid #374151',
               marginBottom: '16px'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ color: '#9ca3af', fontSize: '14px' }}>⚡ 体力</span>
+                <span style={{ color: '#a1a1aa', fontSize: '14px' }}>⚡ 体力</span>
                 <span style={{
                   color: gameManager.player.stamina < 10 ? '#ef4444' : '#4ade80',
                   fontSize: '14px',
@@ -688,14 +688,14 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
 
             {/* 收集状态 */}
             <div style={{
-              backgroundColor: '#2d2d2d',
+              backgroundColor: '#1a1f3a',
               borderRadius: '12px',
               padding: '16px',
               border: '1px solid #374151',
               marginBottom: '16px'
             }}>
-              <h3 style={{ color: 'white', margin: '0 0 12px 0', fontSize: '16px' }}>正在收集物资...</h3>
-              <p style={{ color: '#9ca3af', fontSize: '14px', margin: 0 }}>
+              <h3 style={{ color: 'white', margin: '0 0 12px 0', fontSize: '16px' }}>正在采集资源...</h3>
+              <p style={{ color: '#a1a1aa', fontSize: '14px', margin: 0 }}>
                 每3秒消耗5体力，随机获得神话物资
               </p>
             </div>
@@ -703,7 +703,7 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
             {/* 已收集物品 */}
             {exploration.collectedItems.length > 0 && (
               <div style={{
-                backgroundColor: '#2d2d2d',
+                backgroundColor: '#1a1f3a',
                 borderRadius: '12px',
                 padding: '16px',
                 border: '1px solid #374151'
@@ -720,7 +720,7 @@ export default function MythologyExplorationScreen({ onBack, onStartBattle, init
                       borderRadius: '8px'
                     }}>
                       <span style={{ color: '#d1d5db' }}>{item.name}</span>
-                      <span style={{ color: '#fbbf24', fontWeight: 'bold' }}>x{item.quantity}</span>
+                      <span style={{ color: '#00d4ff', fontWeight: 'bold' }}>x{item.quantity}</span>
                     </div>
                   ))}
                 </div>

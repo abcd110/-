@@ -14,17 +14,17 @@ export default function MythologyMapScreen({ onBack, onSelectLocation }: Mytholo
   const [selectedMythology, setSelectedMythology] = useState<MythologyType | 'all'>('all');
   const [selectedLocation, setSelectedLocation] = useState<MythologyLocation | null>(null);
 
-  // 检查神话站台是否已解锁
+  // 检查神话星球是否已解锁
   const isMythologyUnlocked = gameManager.isMythologyUnlocked();
 
-  // 过滤站台
+  // 过滤星球
   const filteredLocations = MYTHOLOGY_LOCATIONS.filter(loc =>
     selectedMythology === 'all' || loc.mythology === selectedMythology
   );
 
   // 获取神话体系颜色
   const getMythologyColor = (type: MythologyType) => {
-    return type === MythologyType.GREEK ? '#fbbf24' : '#60a5fa';
+    return type === MythologyType.GREEK ? '#00d4ff' : '#60a5fa';
   };
 
   // 获取神话体系名称
@@ -35,7 +35,7 @@ export default function MythologyMapScreen({ onBack, onSelectLocation }: Mytholo
   // 获取状态颜色
   const getStatusColor = (location: MythologyLocation) => {
     if (location.isCompleted) return '#4ade80';
-    if (location.isUnlocked) return '#fbbf24';
+    if (location.isUnlocked) return '#00d4ff';
     return '#6b7280';
   };
 
@@ -49,15 +49,15 @@ export default function MythologyMapScreen({ onBack, onSelectLocation }: Mytholo
   return (
     <div style={{
       height: '100vh',
-      backgroundColor: '#1a1a1a',
+      backgroundColor: '#0a0e27',
       display: 'flex',
       flexDirection: 'column'
     }}>
       {/* 顶部标题栏 */}
       <header style={{
         flexShrink: 0,
-        backgroundColor: '#2d2d2d',
-        borderBottom: '1px solid #4b5563',
+        backgroundColor: '#1a1f3a',
+        borderBottom: '1px solid #2a3050',
         padding: '12px 16px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -67,7 +67,7 @@ export default function MythologyMapScreen({ onBack, onSelectLocation }: Mytholo
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
-              color: '#9ca3af',
+              color: '#a1a1aa',
               background: 'none',
               border: 'none',
               cursor: 'pointer',
@@ -77,7 +77,7 @@ export default function MythologyMapScreen({ onBack, onSelectLocation }: Mytholo
             <span>←</span>
             <span>返回</span>
           </button>
-          <h1 style={{ color: 'white', fontWeight: 'bold', fontSize: '18px' }}>神话站台</h1>
+          <h1 style={{ color: 'white', fontWeight: 'bold', fontSize: '18px' }}>神话星球</h1>
           <div style={{ width: '48px' }} />
         </div>
       </header>
@@ -97,7 +97,7 @@ export default function MythologyMapScreen({ onBack, onSelectLocation }: Mytholo
             onClick={() => setSelectedMythology(type)}
             style={{
               padding: '8px 16px',
-              backgroundColor: selectedMythology === type ? '#4b5563' : '#1f2937',
+              backgroundColor: selectedMythology === type ? '#2a3050' : '#1f2937',
               color: selectedMythology === type ? 'white' : '#9ca3af',
               border: 'none',
               borderRadius: '8px',
@@ -127,16 +127,16 @@ export default function MythologyMapScreen({ onBack, onSelectLocation }: Mytholo
           }}>
             <span style={{ fontSize: '20px' }}>🔒</span>
             <div>
-              <p style={{ margin: 0, fontWeight: 'bold' }}>神话站台尚未解锁</p>
+              <p style={{ margin: 0, fontWeight: 'bold' }}>神话星球尚未解锁</p>
               <p style={{ margin: '4px 0 0 0', fontSize: '12px', opacity: 0.8 }}>
-                完成站台5「岩石峭壁中继站」的Boss挑战后可解锁神话站台
+                完成星球5「岩石峭壁中继站」的Boss挑战后可解锁神话星球
               </p>
             </div>
           </div>
         </div>
       )}
 
-      {/* 站台地图 */}
+      {/* 星球地图 */}
       <main style={{
         flex: 1,
         overflowY: 'auto',
@@ -168,13 +168,13 @@ export default function MythologyMapScreen({ onBack, onSelectLocation }: Mytholo
                 position: 'relative'
               }}
             >
-              {/* 站台编号 */}
+              {/* 星球编号 */}
               <div style={{
                 position: 'absolute',
                 top: '8px',
                 left: '8px',
                 backgroundColor: getMythologyColor(location.mythology),
-                color: '#1a1a1a',
+                color: '#0a0e27',
                 fontSize: '10px',
                 fontWeight: 'bold',
                 padding: '2px 6px',
@@ -234,7 +234,7 @@ export default function MythologyMapScreen({ onBack, onSelectLocation }: Mytholo
                   <div style={{
                     width: `${location.explorationProgress}%`,
                     height: '100%',
-                    backgroundColor: '#fbbf24',
+                    backgroundColor: '#00d4ff',
                     transition: 'width 0.3s'
                   }} />
                 </div>
@@ -244,7 +244,7 @@ export default function MythologyMapScreen({ onBack, onSelectLocation }: Mytholo
         </div>
       </main>
 
-      {/* 站台详情弹窗 */}
+      {/* 星球详情弹窗 */}
       {selectedLocation && (
         <div style={{
           position: 'fixed',
@@ -257,7 +257,7 @@ export default function MythologyMapScreen({ onBack, onSelectLocation }: Mytholo
           padding: '16px'
         }}>
           <div style={{
-            backgroundColor: '#2d2d2d',
+            backgroundColor: '#1a1f3a',
             borderRadius: '16px',
             width: '100%',
             maxWidth: '360px',
@@ -289,7 +289,7 @@ export default function MythologyMapScreen({ onBack, onSelectLocation }: Mytholo
                 </div>
                 <button
                   onClick={() => setSelectedLocation(null)}
-                  style={{ color: '#9ca3af', background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}
+                  style={{ color: '#a1a1aa', background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}
                 >
                   ✕
                 </button>
@@ -300,7 +300,7 @@ export default function MythologyMapScreen({ onBack, onSelectLocation }: Mytholo
             <div style={{ padding: '16px' }}>
               {/* 神明信息 */}
               <div style={{ marginBottom: '16px' }}>
-                <h3 style={{ color: '#9ca3af', fontSize: '12px', marginBottom: '8px' }}>神明</h3>
+                <h3 style={{ color: '#a1a1aa', fontSize: '12px', marginBottom: '8px' }}>神明</h3>
                 <div style={{
                   backgroundColor: '#1f2937',
                   borderRadius: '8px',
@@ -325,7 +325,7 @@ export default function MythologyMapScreen({ onBack, onSelectLocation }: Mytholo
                     <p style={{ color: 'white', fontWeight: 'bold', fontSize: '14px', margin: 0 }}>
                       {selectedLocation.deity.name}
                     </p>
-                    <p style={{ color: '#9ca3af', fontSize: '12px', margin: '4px 0 0 0' }}>
+                    <p style={{ color: '#a1a1aa', fontSize: '12px', margin: '4px 0 0 0' }}>
                       {selectedLocation.deity.title}
                     </p>
                   </div>
@@ -334,7 +334,7 @@ export default function MythologyMapScreen({ onBack, onSelectLocation }: Mytholo
 
               {/* 描述 */}
               <div style={{ marginBottom: '16px' }}>
-                <h3 style={{ color: '#9ca3af', fontSize: '12px', marginBottom: '8px' }}>背景</h3>
+                <h3 style={{ color: '#a1a1aa', fontSize: '12px', marginBottom: '8px' }}>背景</h3>
                 <p style={{ color: '#d1d5db', fontSize: '13px', lineHeight: '1.6' }}>
                   {selectedLocation.description}
                 </p>
@@ -342,7 +342,7 @@ export default function MythologyMapScreen({ onBack, onSelectLocation }: Mytholo
 
               {/* 核心道具 */}
               <div style={{ marginBottom: '16px' }}>
-                <h3 style={{ color: '#9ca3af', fontSize: '12px', marginBottom: '8px' }}>核心道具</h3>
+                <h3 style={{ color: '#a1a1aa', fontSize: '12px', marginBottom: '8px' }}>核心道具</h3>
                 <div style={{
                   backgroundColor: '#1f2937',
                   borderRadius: '8px',
@@ -353,19 +353,19 @@ export default function MythologyMapScreen({ onBack, onSelectLocation }: Mytholo
                 }}>
                   <span style={{ fontSize: '24px' }}>{selectedLocation.coreItem.icon}</span>
                   <div style={{ flex: 1 }}>
-                    <p style={{ color: '#fbbf24', fontWeight: 'bold', fontSize: '14px', margin: 0 }}>
+                    <p style={{ color: '#00d4ff', fontWeight: 'bold', fontSize: '14px', margin: 0 }}>
                       {selectedLocation.coreItem.name}
                     </p>
-                    <p style={{ color: '#9ca3af', fontSize: '11px', margin: '4px 0 0 0' }}>
+                    <p style={{ color: '#a1a1aa', fontSize: '11px', margin: '4px 0 0 0' }}>
                       {selectedLocation.coreItem.effectDescription}
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* 怪物信息 */}
+              {/* 虚空生物信息 */}
               <div style={{ marginBottom: '16px' }}>
-                <h3 style={{ color: '#9ca3af', fontSize: '12px', marginBottom: '8px' }}>威胁</h3>
+                <h3 style={{ color: '#a1a1aa', fontSize: '12px', marginBottom: '8px' }}>威胁</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{
                     backgroundColor: '#1f2937',
@@ -378,10 +378,10 @@ export default function MythologyMapScreen({ onBack, onSelectLocation }: Mytholo
                     <span style={{ fontSize: '16px' }}>🌿</span>
                     <div style={{ flex: 1 }}>
                       <p style={{ color: '#d1d5db', fontSize: '12px', margin: 0 }}>
-                        荒原：{selectedLocation.wildMonster.name}
+                        星际空间：{selectedLocation.wildMonster.name}
                       </p>
                       <p style={{ color: '#ef4444', fontSize: '11px', margin: '2px 0 0 0' }}>
-                        需速度 {selectedLocation.wildMonster.speedRequirement}x
+                        需跃迁速度 {selectedLocation.wildMonster.speedRequirement}x
                       </p>
                     </div>
                   </div>
@@ -396,7 +396,7 @@ export default function MythologyMapScreen({ onBack, onSelectLocation }: Mytholo
                     <span style={{ fontSize: '16px' }}>🏛️</span>
                     <div style={{ flex: 1 }}>
                       <p style={{ color: '#d1d5db', fontSize: '12px', margin: 0 }}>
-                        站台：{selectedLocation.stationMonster.name}
+                        星球：{selectedLocation.stationMonster.name}
                       </p>
                     </div>
                   </div>
@@ -406,15 +406,15 @@ export default function MythologyMapScreen({ onBack, onSelectLocation }: Mytholo
               {/* 探索进度 */}
               {selectedLocation.isUnlocked && !selectedLocation.isCompleted && (
                 <div style={{ marginBottom: '16px' }}>
-                  <h3 style={{ color: '#9ca3af', fontSize: '12px', marginBottom: '8px' }}>探索进度</h3>
+                  <h3 style={{ color: '#a1a1aa', fontSize: '12px', marginBottom: '8px' }}>探索进度</h3>
                   <div style={{
                     backgroundColor: '#1f2937',
                     borderRadius: '8px',
                     padding: '12px'
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <span style={{ color: '#9ca3af', fontSize: '12px' }}>当前进度</span>
-                      <span style={{ color: '#fbbf24', fontWeight: 'bold', fontSize: '14px' }}>
+                      <span style={{ color: '#a1a1aa', fontSize: '12px' }}>当前进度</span>
+                      <span style={{ color: '#00d4ff', fontWeight: 'bold', fontSize: '14px' }}>
                         {selectedLocation.explorationProgress}%
                       </span>
                     </div>
@@ -426,7 +426,7 @@ export default function MythologyMapScreen({ onBack, onSelectLocation }: Mytholo
                     }}>
                       <div style={{
                         height: '100%',
-                        backgroundColor: '#fbbf24',
+                        backgroundColor: '#00d4ff',
                         width: `${selectedLocation.explorationProgress}%`,
                         transition: 'width 0.3s'
                       }} />
@@ -445,7 +445,7 @@ export default function MythologyMapScreen({ onBack, onSelectLocation }: Mytholo
                   style={{
                     width: '100%',
                     padding: '14px',
-                    backgroundColor: '#d97706',
+                    backgroundColor: '#0099cc',
                     color: 'white',
                     fontWeight: 'bold',
                     borderRadius: '8px',
@@ -481,7 +481,7 @@ export default function MythologyMapScreen({ onBack, onSelectLocation }: Mytholo
                   textAlign: 'center',
                   fontSize: '14px'
                 }}>
-                  🔒 需攻略前置站台解锁
+                  🔒 需攻略前置星球解锁
                 </div>
               )}
             </div>

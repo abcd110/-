@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { GameManager, type GameState } from '../core/GameManager';
 import { GameStorage } from '../core/Storage';
 import type { Location } from '../data/types';
+import { AutoCollectMode, CollectReward } from '../data/autoCollectTypes';
+import type { ToastMessage } from '../components/Toast';
 
 interface GameStore {
   // 游戏实例
@@ -11,6 +13,11 @@ interface GameStore {
   isLoading: boolean;
   hasSave: boolean;
   logs: string[];
+
+  // Toast 提示
+  toasts: ToastMessage[];
+  showToast: (message: string, type?: ToastMessage['type'], duration?: number) => void;
+  removeToast: (id: string) => void;
 
   // 操作方法
   init: () => Promise<void>;
@@ -72,6 +79,17 @@ interface GameStore {
   endBattleVictory: (enemy: any) => { exp: number; loot: any[]; logs: string[] };
   attemptEscape: (enemy: any) => { success: boolean; message: string; logs: string[] };
 
+  // 自动采集系统
+  startAutoCollect: (locationId: string, mode: AutoCollectMode) => { success: boolean; message: string };
+  stopAutoCollect: () => { success: boolean; message: string; rewards?: CollectReward };
+  claimAutoCollectRewards: () => { success: boolean; message: string; rewards?: CollectReward };
+  getAutoCollectState: () => GameManager['autoCollectSystem']['state'];
+  getAutoCollectConfig: () => GameManager['autoCollectSystem']['config'];
+  updateAutoCollectConfig: (config: Partial<GameManager['autoCollectSystem']['config']>) => void;
+  getAutoCollectDuration: () => string;
+  getEstimatedHourlyRewards: () => CollectReward;
+  getAvailableCollectLocations: () => import('../data/autoCollectTypes').CollectLocation[];
+
   // 获取器
   getPlayer: () => GameManager['player'];
   getInventory: () => GameManager['inventory'];
@@ -90,6 +108,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
   isLoading: false,
   hasSave: false,
   logs: [],
+  toasts: [],
+
+  // Toast 提示方法
+  showToast: (message: string, type: ToastMessage['type'] = 'info', duration: number = 2000) => {
+    const id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+    const newToast: ToastMessage = { id, message, type, duration };
+    set((state) => ({ toasts: [...state.toasts, newToast] }));
+  },
+  removeToast: (id: string) => {
+    set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }));
+  },
 
   // 初始化
   init: async () => {
@@ -323,6 +352,38 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ logs: gameManager.logs });
     return result;
   },
+
+  // 自动采集系统
+  startAutoCollect: (locationId: string, mode: AutoCollectMode) => {
+    const { gameManager } = get();
+    const result = gameManager.startAutoCollect(locationId, mode);
+    get().saveGame();
+    set({ logs: gameManager.logs });
+    return result;
+  },
+  stopAutoCollect: () => {
+    const { gameManager } = get();
+    const result = gameManager.stopAutoCollect();
+    get().saveGame();
+    set({ logs: gameManager.logs });
+    return result;
+  },
+  claimAutoCollectRewards: () => {
+    const { gameManager } = get();
+    const result = gameManager.claimAutoCollectRewards();
+    get().saveGame();
+    set({ logs: gameManager.logs });
+    return result;
+  },
+  getAutoCollectState: () => get().gameManager.getAutoCollectState(),
+  getAutoCollectConfig: () => get().gameManager.getAutoCollectConfig(),
+  updateAutoCollectConfig: (config: Partial<GameManager['autoCollectSystem']['config']>) => {
+    const { gameManager } = get();
+    gameManager.updateAutoCollectConfig(config);
+  },
+  getAutoCollectDuration: () => get().gameManager.getAutoCollectDuration(),
+  getEstimatedHourlyRewards: () => get().gameManager.getEstimatedHourlyRewards(),
+  getAvailableCollectLocations: () => get().gameManager.getAvailableCollectLocations(),
 
   // 获取器
   getPlayer: () => get().gameManager.player,

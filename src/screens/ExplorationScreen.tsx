@@ -58,7 +58,7 @@ export default function ExplorationScreen({ onBack, onStartBattle, initialLocati
     const location = LOCATIONS.find(l => l.id === locationId);
     if (!location) return;
 
-    // 直接到达目的地，消耗时间（30分钟）
+    // 直接跃迁至目的地，消耗时间（30分钟）
     gameManager.advanceTime(30);
     setExploration({
       phase: 'action_select',
@@ -67,7 +67,7 @@ export default function ExplorationScreen({ onBack, onStartBattle, initialLocati
       driveTimeRemaining: 0,
     });
 
-    addLog(`🚂 到达 ${location.name}！请选择行动`);
+    addLog(`🚀 跃迁至 ${location.name}！请选择行动`);
   };
 
   // 驶入计时器
@@ -80,7 +80,7 @@ export default function ExplorationScreen({ onBack, onStartBattle, initialLocati
         if (newTime <= 0) {
           // 驶入完成，消耗时间（30分钟）
           gameManager.advanceTime(30);
-          addLog('🚂 到达目的地！请选择行动');
+          addLog('🚀 跃迁完成！请选择行动');
           return {
             ...prev,
             phase: 'action_select',
@@ -98,10 +98,10 @@ export default function ExplorationScreen({ onBack, onStartBattle, initialLocati
   const startCollecting = () => {
     // 检查体力是否足够
     if (gameManager.player.stamina < 5) {
-      addLog('⚠️ 体力不足，无法收集');
+      addLog('⚠️ 体力不足，无法采集');
       return;
     }
-    addLog('📦 开始收集物资...');
+    addLog('📦 开始采集资源...');
     setExploration(prev => ({
       ...prev,
       phase: 'collecting',
@@ -117,7 +117,7 @@ export default function ExplorationScreen({ onBack, onStartBattle, initialLocati
       addLog('⚠️ 体力不足，无法狩猎');
       return;
     }
-    addLog('👹 开始狩猎（普通）...');
+    addLog('👾 开始狩猎虚空生物（普通）...');
     // 狩猎一定会遇到普通敌人
     if (exploration.locationId) {
       onStartBattle(exploration.locationId, false);
@@ -133,14 +133,14 @@ export default function ExplorationScreen({ onBack, onStartBattle, initialLocati
       addLog('⚠️ 体力不足，无法狩猎（困难）');
       return;
     }
-    addLog('👹 开始狩猎（困难）...');
+    addLog('👾 开始狩猎虚空生物（困难）...');
     // 狩猎一定会遇到精英敌人
     if (exploration.locationId) {
       onStartBattle(exploration.locationId, false, true);
     }
   };
 
-  // 选择挑战BOSS
+  // 选择挑战虚空首领
   const startBossBattle = () => {
     if (!exploration.locationId) return;
 
@@ -148,13 +148,13 @@ export default function ExplorationScreen({ onBack, onStartBattle, initialLocati
     const progress = gameManager.getLocationProgress(exploration.locationId);
     const today = new Date().toISOString().split('T')[0];
     if (progress.lastBossChallengeDate === today) {
-      addLog('⚠️ 今天已经挑战过BOSS，请明天再来');
+      addLog('⚠️ 今天已经挑战过首领，请明天再来');
       return;
     }
 
     // 检查体力
     if (gameManager.player.stamina < 10) {
-      addLog('⚠️ 体力不足，无法挑战BOSS');
+      addLog('⚠️ 体力不足，无法挑战首领');
       return;
     }
 
@@ -165,10 +165,10 @@ export default function ExplorationScreen({ onBack, onStartBattle, initialLocati
     gameManager.advanceTime(15);
     const bossSuccess = gameManager.player.consumeStamina(10);
     if (!bossSuccess) {
-      addLog('⚠️ 体力不足，无法挑战BOSS');
+      addLog('⚠️ 体力不足，无法挑战首领');
       return;
     }
-    addLog('👹 挑战BOSS！');
+    addLog('👾 挑战虚空首领！');
 
     onStartBattle(exploration.locationId, true);
   };
@@ -193,36 +193,36 @@ export default function ExplorationScreen({ onBack, onStartBattle, initialLocati
       // 根据地点类型生成不同奖励
       switch (location.id) {
         case 'loc_001': // 废弃车站
-          rewards.push({ name: '废铁片', itemId: 'mat_001', quantity: 2 });
-          rewards.push({ name: '布料', itemId: 'mat_002', quantity: 1 });
+          rewards.push({ name: '星核碎片', itemId: 'mat_001', quantity: 2 });
+          rewards.push({ name: '基础合金', itemId: 'mat_002', quantity: 1 });
           break;
         case 'loc_002': // 废弃工厂
-          rewards.push({ name: '废铁片', itemId: 'mat_001', quantity: 3 });
+          rewards.push({ name: '星核碎片', itemId: 'mat_001', quantity: 3 });
           rewards.push({ name: '电子元件', itemId: 'mat_003', quantity: 1 });
           break;
         case 'loc_003': // 废弃医院
           rewards.push({ name: '医疗绷带', itemId: 'consumable_003', quantity: 2 });
-          rewards.push({ name: '布料', itemId: 'mat_002', quantity: 2 });
+          rewards.push({ name: '基础合金', itemId: 'mat_002', quantity: 2 });
           break;
         case 'loc_004': // 荒野
-          rewards.push({ name: '布料', itemId: 'mat_002', quantity: 2 });
-          rewards.push({ name: '瓶装水', itemId: 'consumable_001', quantity: 1 });
+          rewards.push({ name: '基础合金', itemId: 'mat_002', quantity: 2 });
+          rewards.push({ name: '冷却液', itemId: 'consumable_001', quantity: 1 });
           break;
         case 'loc_005': // 地下掩体
           rewards.push({ name: '电子元件', itemId: 'mat_003', quantity: 2 });
-          rewards.push({ name: '废铁片', itemId: 'mat_001', quantity: 2 });
+          rewards.push({ name: '星核碎片', itemId: 'mat_001', quantity: 2 });
           break;
         case 'loc_006': // 废弃超市
-          rewards.push({ name: '压缩饼干', itemId: 'consumable_002', quantity: 2 });
-          rewards.push({ name: '瓶装水', itemId: 'consumable_001', quantity: 2 });
+          rewards.push({ name: '能量块', itemId: 'consumable_002', quantity: 2 });
+          rewards.push({ name: '冷却液', itemId: 'consumable_001', quantity: 2 });
           break;
         case 'loc_007': // 废弃学校
-          rewards.push({ name: '布料', itemId: 'mat_002', quantity: 2 });
-          rewards.push({ name: '废铁片', itemId: 'mat_001', quantity: 1 });
+          rewards.push({ name: '基础合金', itemId: 'mat_002', quantity: 2 });
+          rewards.push({ name: '星核碎片', itemId: 'mat_001', quantity: 1 });
           break;
         default:
-          rewards.push({ name: '废铁片', itemId: 'mat_001', quantity: 2 });
-          rewards.push({ name: '布料', itemId: 'mat_002', quantity: 1 });
+          rewards.push({ name: '星核碎片', itemId: 'mat_001', quantity: 2 });
+          rewards.push({ name: '基础合金', itemId: 'mat_002', quantity: 1 });
       }
     }
 
@@ -245,7 +245,7 @@ export default function ExplorationScreen({ onBack, onStartBattle, initialLocati
     const timer = setInterval(async () => {
       // 检查体力是否足够
       if (gameManager.player.stamina < 5) {
-        addLog('⚠️ 体力不足，停止收集');
+        addLog('⚠️ 体力不足，停止采集');
         setExploration(prev => ({
           ...prev,
           phase: 'action_select',
@@ -264,7 +264,7 @@ export default function ExplorationScreen({ onBack, onStartBattle, initialLocati
         materialProgress: newMaterialProgress
       });
 
-      // 随机获得制造材料（所有站台都可以掉落全部6种材料）
+      // 随机获得制造材料（所有星球都可以掉落全部6种材料）
       const location = LOCATIONS.find(l => l.id === exploration.locationId);
       const locationIndex = LOCATIONS.findIndex(l => l.id === exploration.locationId);
       const stationNumber = locationIndex + 1;
@@ -273,7 +273,7 @@ export default function ExplorationScreen({ onBack, onStartBattle, initialLocati
       const randomMaterialIndex = Math.floor(Math.random() * ALL_MATERIAL_BASE_IDS.length);
       const selectedBaseMaterial = ALL_MATERIAL_BASE_IDS[randomMaterialIndex];
 
-      // 根据站台决定材料品质
+      // 根据星球决定材料品质
       const rolledQuality = rollMaterialQuality(stationNumber);
       const qualityName = MATERIAL_QUALITY_NAMES[rolledQuality];
 
@@ -305,7 +305,7 @@ export default function ExplorationScreen({ onBack, onStartBattle, initialLocati
 
       // 检查是否满进度（只提示，不自动返回）
       if (newMaterialProgress >= 20) {
-        addLog('✅ 物资收集进度已满！可继续收集');
+        addLog('✅ 资源采集进度已满！可继续采集');
       }
 
       // 保存游戏
@@ -329,18 +329,18 @@ export default function ExplorationScreen({ onBack, onStartBattle, initialLocati
 
   // 渲染界面
   return (
-    <div style={{
+    <div className="space-theme" style={{
       height: '100vh',
-      backgroundColor: '#1a1a1a',
       display: 'flex',
       flexDirection: 'column'
     }}>
-      {/* 顶部标题栏 */}
+      {/* 顶部标题栏 - 新主题 */}
       <header style={{
         flexShrink: 0,
-        backgroundColor: '#2d2d2d',
-        borderBottom: '1px solid #4b5563',
-        padding: '12px 16px'
+        background: 'linear-gradient(180deg, rgba(26, 31, 58, 0.95) 0%, rgba(10, 14, 39, 0.95) 100%)',
+        borderBottom: '1px solid rgba(0, 212, 255, 0.3)',
+        padding: '12px 16px',
+        boxShadow: '0 2px 10px rgba(0, 212, 255, 0.1)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <button
@@ -349,7 +349,7 @@ export default function ExplorationScreen({ onBack, onStartBattle, initialLocati
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
-              color: '#9ca3af',
+              color: '#a1a1aa',
               background: 'none',
               border: 'none',
               cursor: 'pointer',
@@ -359,11 +359,16 @@ export default function ExplorationScreen({ onBack, onStartBattle, initialLocati
             <span>←</span>
             <span>{exploration.phase === 'select' ? '返回' : '结束'}</span>
           </button>
-          <h1 style={{ color: 'white', fontWeight: 'bold', fontSize: '18px' }}>
-            {exploration.phase === 'select' && '选择探索地点'}
-            {exploration.phase === 'driving' && '行驶中...'}
+          <h1 style={{
+            color: '#00d4ff',
+            fontWeight: 'bold',
+            fontSize: '18px',
+            textShadow: '0 0 10px rgba(0, 212, 255, 0.3)'
+          }}>
+            {exploration.phase === 'select' && '选择目标星球'}
+            {exploration.phase === 'driving' && '跃迁中...'}
             {exploration.phase === 'action_select' && '选择行动'}
-            {exploration.phase === 'collecting' && '收集物资中'}
+            {exploration.phase === 'collecting' && '采集资源中'}
           </h1>
           <div style={{ width: '48px' }} />
         </div>
@@ -390,11 +395,11 @@ export default function ExplorationScreen({ onBack, onStartBattle, initialLocati
 
               // 品质颜色映射
               const qualityColors: Record<number, string> = {
-                [MaterialQuality.NORMAL]: '#9ca3af',    // 灰色
-                [MaterialQuality.GOOD]: '#22c55e',      // 绿色
-                [MaterialQuality.FINE]: '#3b82f6',      // 蓝色
-                [MaterialQuality.RARE]: '#a855f7',      // 紫色
-                [MaterialQuality.LEGENDARY]: '#f97316', // 橙色
+                [MaterialQuality.NORMAL]: '#71717a',    // 灰色
+                [MaterialQuality.GOOD]: '#10b981',      // 绿色
+                [MaterialQuality.FINE]: '#00d4ff',      // 蓝色
+                [MaterialQuality.RARE]: '#8b5cf6',      // 紫色
+                [MaterialQuality.LEGENDARY]: '#f59e0b', // 橙色
               };
 
               return (
@@ -403,19 +408,21 @@ export default function ExplorationScreen({ onBack, onStartBattle, initialLocati
                   onClick={() => startExploration(location.id)}
                   style={{
                     padding: '16px',
-                    backgroundColor: '#2d2d2d',
-                    border: '1px solid #374151',
+                    background: 'linear-gradient(145deg, rgba(26, 31, 58, 0.8) 0%, rgba(10, 14, 39, 0.8) 100%)',
+                    border: '1px solid rgba(0, 212, 255, 0.2)',
                     borderRadius: '12px',
                     textAlign: 'left',
                     cursor: 'pointer',
-                    color: 'white'
+                    color: 'white',
+                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)',
+                    transition: 'all 0.3s ease'
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '24px' }}>{location.icon}</span>
+                    <span style={{ fontSize: '24px' }}>🪐</span>
                     <div style={{ flex: 1 }}>
-                      <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>{location.name}</h3>
-                      <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#9ca3af' }}>
+                      <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: '#00d4ff' }}>{location.name}</h3>
+                      <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#a1a1aa' }}>
                         {location.description}
                       </p>
                     </div>
@@ -423,11 +430,12 @@ export default function ExplorationScreen({ onBack, onStartBattle, initialLocati
                       <span style={{
                         fontSize: '11px',
                         padding: '4px 8px',
-                        backgroundColor: isBossRefreshed ? '#dc2626' : '#065f46',
+                        backgroundColor: isBossRefreshed ? '#dc2626' : '#059669',
                         borderRadius: '4px',
-                        color: 'white'
+                        color: 'white',
+                        fontWeight: 'bold'
                       }}>
-                        {isBossRefreshed ? 'BOSS已刷新' : '已通关'}
+                        {isBossRefreshed ? '首领已刷新' : '已探索'}
                       </span>
                     )}
                   </div>
@@ -436,11 +444,12 @@ export default function ExplorationScreen({ onBack, onStartBattle, initialLocati
                   <div style={{
                     marginBottom: '8px',
                     padding: '8px',
-                    backgroundColor: '#1f2937',
-                    borderRadius: '8px'
+                    backgroundColor: 'rgba(10, 14, 39, 0.6)',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(0, 212, 255, 0.1)'
                   }}>
-                    <div style={{ fontSize: '11px', color: '#9ca3af', marginBottom: '4px' }}>
-                      📊 品质掉落率:
+                    <div style={{ fontSize: '11px', color: '#a1a1aa', marginBottom: '4px' }}>
+                      📊 资源品质概率:
                     </div>
                     <div style={{
                       display: 'flex',
@@ -475,10 +484,10 @@ export default function ExplorationScreen({ onBack, onStartBattle, initialLocati
                     display: 'flex',
                     gap: '16px',
                     fontSize: '12px',
-                    color: '#9ca3af'
+                    color: '#a1a1aa'
                   }}>
                     <span>📦 {progress.materialProgress}/20</span>
-                    <span>👹 {progress.huntProgress}/80</span>
+                    <span>👾 {progress.huntProgress}/80</span>
                   </div>
                 </button>
               );
@@ -496,412 +505,238 @@ export default function ExplorationScreen({ onBack, onStartBattle, initialLocati
             height: '100%',
             gap: '24px'
           }}>
-            <div style={{ fontSize: '64px' }}>🚂</div>
-            <div style={{ color: 'white', fontSize: '18px', fontWeight: 'bold' }}>
-              行驶中...
+            <div style={{
+              fontSize: '64px',
+              filter: 'drop-shadow(0 0 20px rgba(0, 212, 255, 0.5))',
+              animation: 'pulse 2s ease-in-out infinite'
+            }}>🚀</div>
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ color: '#00d4ff', fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
+                跃迁引擎启动中...
+              </p>
+              <p style={{ color: '#a1a1aa', fontSize: '14px' }}>
+                剩余时间: {exploration.driveTimeRemaining}秒
+              </p>
             </div>
+            {/* 进度条 */}
             <div style={{
               width: '200px',
               height: '8px',
-              backgroundColor: '#374151',
-              borderRadius: '9999px',
-              overflow: 'hidden'
+              backgroundColor: 'rgba(10, 14, 39, 0.8)',
+              borderRadius: '4px',
+              overflow: 'hidden',
+              border: '1px solid rgba(0, 212, 255, 0.2)'
             }}>
               <div style={{
                 height: '100%',
-                backgroundColor: '#d97706',
+                background: 'linear-gradient(90deg, #0099cc 0%, #00d4ff 100%)',
+                width: `${((10 - exploration.driveTimeRemaining) / 10) * 100}%`,
                 transition: 'width 1s linear',
-                width: `${((3 - exploration.driveTimeRemaining) / 3) * 100}%`
+                boxShadow: '0 0 10px rgba(0, 212, 255, 0.3)'
               }} />
             </div>
-            <p style={{ color: '#9ca3af', fontSize: '14px' }}>
-              预计 {exploration.driveTimeRemaining} 秒后到达
-            </p>
           </div>
         )}
 
-        {/* 选择行动阶段 */}
-        {exploration.phase === 'action_select' && exploration.locationId && (
+        {/* 行动选择阶段 */}
+        {exploration.phase === 'action_select' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {/* 进度显示 */}
-            {(() => {
-              const progress = getCurrentProgress();
-              if (!progress) return null;
-
-              return (
-                <div style={{
-                  backgroundColor: '#2d2d2d',
-                  borderRadius: '12px',
-                  padding: '16px',
-                  border: '1px solid #374151'
-                }}>
-                  <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-                    <div style={{ fontSize: '48px', marginBottom: '8px' }}>🎯</div>
-                    <h2 style={{ color: 'white', margin: 0, fontSize: '18px' }}>到达目的地！</h2>
-                  </div>
-
-                  {/* 物资收集进度 */}
-                  <div style={{ marginBottom: '12px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                      <span style={{ color: '#9ca3af', fontSize: '14px' }}>📦 物资收集</span>
-                      <span style={{ color: progress.materialProgress >= 20 ? '#4ade80' : '#fbbf24', fontSize: '14px' }}>
-                        {progress.materialProgress}%/20%
-                      </span>
+            {/* 当前地点信息 */}
+            <div style={{
+              background: 'linear-gradient(145deg, rgba(26, 31, 58, 0.9) 0%, rgba(10, 14, 39, 0.9) 100%)',
+              borderRadius: '12px',
+              padding: '16px',
+              border: '1px solid rgba(0, 212, 255, 0.3)',
+              boxShadow: '0 0 20px rgba(0, 212, 255, 0.1)'
+            }}>
+              {(() => {
+                const location = LOCATIONS.find(l => l.id === exploration.locationId);
+                const progress = getCurrentProgress();
+                return (
+                  <>
+                    <h2 style={{ color: '#00d4ff', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>
+                      🪐 {location?.name}
+                    </h2>
+                    <p style={{ color: '#a1a1aa', fontSize: '14px', margin: '0 0 12px 0' }}>
+                      {location?.description}
+                    </p>
+                    <div style={{ display: 'flex', gap: '16px', fontSize: '13px' }}>
+                      <span style={{ color: '#a1a1aa' }}>📦 采集进度: {progress?.materialProgress}/20</span>
+                      <span style={{ color: '#a1a1aa' }}>👾 狩猎进度: {progress?.huntProgress}/80</span>
                     </div>
-                    <div style={{
-                      backgroundColor: '#1f2937',
-                      borderRadius: '9999px',
-                      height: '8px',
-                      overflow: 'hidden'
-                    }}>
-                      <div style={{
-                        height: '100%',
-                        backgroundColor: progress.materialProgress >= 20 ? '#4ade80' : '#fbbf24',
-                        transition: 'width 0.5s',
-                        width: `${Math.min(100, (progress.materialProgress / 20) * 100)}%`
-                      }} />
-                    </div>
-                  </div>
+                  </>
+                );
+              })()}
+            </div>
 
-                  {/* 狩猎进度 */}
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                      <span style={{ color: '#9ca3af', fontSize: '14px' }}>👹 狩猎进度</span>
-                      <span style={{ color: progress.huntProgress >= 80 ? '#ef4444' : '#fbbf24', fontSize: '14px' }}>
-                        {progress.huntProgress}%/80%
-                      </span>
-                    </div>
-                    <div style={{
-                      backgroundColor: '#1f2937',
-                      borderRadius: '9999px',
-                      height: '8px',
-                      overflow: 'hidden'
-                    }}>
-                      <div style={{
-                        height: '100%',
-                        backgroundColor: progress.huntProgress >= 80 ? '#ef4444' : '#fbbf24',
-                        transition: 'width 0.5s',
-                        width: `${Math.min(100, (progress.huntProgress / 80) * 100)}%`
-                      }} />
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
+            {/* 行动按钮 */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+              <ActionButton
+                icon="📦"
+                label="采集资源"
+                description="消耗体力采集制造材料"
+                color="linear-gradient(135deg, #059669 0%, #10b981 100%)"
+                onClick={startCollecting}
+              />
+              <ActionButton
+                icon="👾"
+                label="狩猎"
+                description="遭遇虚空生物（普通）"
+                color="linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%)"
+                onClick={startHuntingNormal}
+              />
+              <ActionButton
+                icon="👾"
+                label="危险狩猎"
+                description="遭遇精英虚空生物"
+                color="linear-gradient(135deg, #dc2626 0%, #ef4444 100%)"
+                onClick={startHuntingHard}
+              />
+              <ActionButton
+                icon="👾"
+                label="挑战首领"
+                description="挑战虚空首领（每日1次）"
+                color="linear-gradient(135deg, #f59e0b 0%, #00d4ff 100%)"
+                onClick={startBossBattle}
+              />
+            </div>
 
-            <p style={{ color: '#9ca3af', textAlign: 'center', margin: '0' }}>
-              请选择要进行的行动
-            </p>
-
-            {/* 物资收集按钮 */}
-            <button
-              onClick={startCollecting}
-              disabled={gameManager.player.stamina < 5}
-              style={{
-                padding: '16px',
-                backgroundColor: gameManager.player.stamina < 5 ? '#4b5563' : '#16a34a',
-                color: 'white',
-                borderRadius: '12px',
-                border: 'none',
-                cursor: gameManager.player.stamina < 5 ? 'not-allowed' : 'pointer',
-                fontWeight: 'bold',
-                fontSize: '16px'
-              }}
-            >
-              <div>📦 物资收集</div>
-              <div style={{ fontSize: '12px', fontWeight: 'normal', marginTop: '4px', opacity: 0.8 }}>
-                消耗: 10分钟 + 5体力 | 进度满后可继续收集
+            {/* 日志显示 */}
+            <div style={{
+              backgroundColor: 'rgba(10, 14, 39, 0.6)',
+              borderRadius: '8px',
+              padding: '12px',
+              border: '1px solid rgba(0, 212, 255, 0.1)',
+              maxHeight: '150px',
+              overflowY: 'auto'
+            }}>
+              <h4 style={{ color: '#00d4ff', fontSize: '12px', margin: '0 0 8px 0' }}>探索日志</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {logs.length === 0 ? (
+                  <span style={{ color: '#71717a', fontSize: '12px' }}>暂无日志</span>
+                ) : (
+                  logs.map((log, index) => (
+                    <span key={index} style={{ color: '#a1a1aa', fontSize: '12px' }}>{log}</span>
+                  ))
+                )}
               </div>
-            </button>
-
-            {/* 狩猎按钮区域 */}
-            {(() => {
-              const progress = getCurrentProgress();
-              if (!progress) return null;
-
-              const canChallengeBoss = progress.materialProgress >= 20 && progress.huntProgress >= 80;
-              const isBossDefeated = progress.bossDefeated;
-              const canChallengeToday = gameManager.isBossRefreshed(exploration.locationId!);
-
-              return (
-                <>
-                  {/* 狩猎（普通）按钮 - 始终显示 */}
-                  <button
-                    onClick={startHuntingNormal}
-                    disabled={gameManager.player.stamina < 10}
-                    style={{
-                      padding: '16px',
-                      backgroundColor: gameManager.player.stamina < 10 ? '#4b5563' : '#dc2626',
-                      color: 'white',
-                      borderRadius: '12px',
-                      border: 'none',
-                      cursor: gameManager.player.stamina < 10 ? 'not-allowed' : 'pointer',
-                      fontWeight: 'bold',
-                      fontSize: '16px'
-                    }}
-                  >
-                    <div>👹 狩猎（普通）</div>
-                    <div style={{ fontSize: '12px', fontWeight: 'normal', marginTop: '4px', opacity: 0.8 }}>
-                      消耗: 15分钟 + 10体力 | 遭遇普通敌人 | +10%狩猎进度
-                    </div>
-                  </button>
-
-                  {/* 狩猎（困难）按钮 - 始终显示 */}
-                  <button
-                    onClick={startHuntingHard}
-                    disabled={gameManager.player.stamina < 15}
-                    style={{
-                      padding: '16px',
-                      backgroundColor: gameManager.player.stamina < 15 ? '#4b5563' : '#ea580c',
-                      color: 'white',
-                      borderRadius: '12px',
-                      border: 'none',
-                      cursor: gameManager.player.stamina < 15 ? 'not-allowed' : 'pointer',
-                      fontWeight: 'bold',
-                      fontSize: '16px'
-                    }}
-                  >
-                    <div>👹 狩猎（困难）</div>
-                    <div style={{ fontSize: '12px', fontWeight: 'normal', marginTop: '4px', opacity: 0.8 }}>
-                      消耗: 20分钟 + 15体力 | 遭遇精英敌人 | +15%狩猎进度
-                    </div>
-                  </button>
-
-                  {/* BOSS已击败后的扫荡和挑战按钮 */}
-                  {isBossDefeated && (
-                    <>
-                      <button
-                        onClick={doSweep}
-                        disabled={gameManager.player.stamina < 10}
-                        style={{
-                          padding: '16px',
-                          backgroundColor: gameManager.player.stamina < 10 ? '#4b5563' : '#8b5cf6',
-                          color: 'white',
-                          borderRadius: '12px',
-                          border: 'none',
-                          cursor: gameManager.player.stamina < 10 ? 'not-allowed' : 'pointer',
-                          fontWeight: 'bold',
-                          fontSize: '16px'
-                        }}
-                      >
-                        <div>🧹 扫荡</div>
-                        <div style={{ fontSize: '12px', fontWeight: 'normal', marginTop: '4px', opacity: 0.8 }}>
-                          消耗: 15分钟 + 10体力 | 快速获得奖励
-                        </div>
-                      </button>
-                      {canChallengeToday ? (
-                        <button
-                          onClick={startBossBattle}
-                          disabled={gameManager.player.stamina < 10}
-                          style={{
-                            padding: '16px',
-                            backgroundColor: gameManager.player.stamina < 10 ? '#4b5563' : '#dc2626',
-                            color: 'white',
-                            borderRadius: '12px',
-                            border: 'none',
-                            cursor: gameManager.player.stamina < 10 ? 'not-allowed' : 'pointer',
-                            fontWeight: 'bold',
-                            fontSize: '16px'
-                          }}
-                        >
-                          <div>👹 挑战BOSS</div>
-                          <div style={{ fontSize: '12px', fontWeight: 'normal', marginTop: '4px', opacity: 0.8 }}>
-                            消耗: 15分钟 + 10体力 | 已刷新，可再次挑战
-                          </div>
-                        </button>
-                      ) : (
-                        <button
-                          disabled
-                          style={{
-                            padding: '16px',
-                            backgroundColor: '#4b5563',
-                            color: '#9ca3af',
-                            borderRadius: '12px',
-                            border: 'none',
-                            cursor: 'not-allowed',
-                            fontWeight: 'bold',
-                            fontSize: '16px'
-                          }}
-                        >
-                          <div>⏳ 明日再来</div>
-                          <div style={{ fontSize: '12px', fontWeight: 'normal', marginTop: '4px', opacity: 0.8 }}>
-                            今天已经挑战过，请明天再来
-                          </div>
-                        </button>
-                      )}
-                    </>
-                  )}
-
-                  {/* BOSS未击败且条件满足时显示挑战BOSS按钮 */}
-                  {!isBossDefeated && canChallengeBoss && (
-                    <button
-                      onClick={startBossBattle}
-                      disabled={gameManager.player.stamina < 10}
-                      style={{
-                        padding: '16px',
-                        backgroundColor: gameManager.player.stamina < 10 ? '#4b5563' : '#dc2626',
-                        color: 'white',
-                        borderRadius: '12px',
-                        border: 'none',
-                        cursor: gameManager.player.stamina < 10 ? 'not-allowed' : 'pointer',
-                        fontWeight: 'bold',
-                        fontSize: '16px'
-                      }}
-                    >
-                      <div>👹 挑战BOSS</div>
-                      <div style={{ fontSize: '12px', fontWeight: 'normal', marginTop: '4px', opacity: 0.8 }}>
-                        消耗: 15分钟 + 10体力 | 物资和狩猎进度已满！
-                      </div>
-                    </button>
-                  )}
-                </>
-              );
-            })()}
+            </div>
           </div>
         )}
 
         {/* 收集阶段 */}
-        {exploration.phase === 'collecting' && exploration.locationId && (
-          <>
-            {/* 体力显示 */}
+        {exploration.phase === 'collecting' && (
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+            gap: '24px'
+          }}>
             <div style={{
-              backgroundColor: '#2d2d2d',
-              borderRadius: '12px',
-              padding: '16px',
-              border: '1px solid #374151',
-              marginBottom: '16px'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ color: '#9ca3af', fontSize: '14px' }}>⚡ 体力</span>
-                <span style={{
-                  color: gameManager.player.stamina < 10 ? '#ef4444' : '#4ade80',
-                  fontSize: '14px',
-                  fontWeight: 'bold'
-                }}>
-                  {gameManager.player.stamina}/{gameManager.player.maxStamina}
-                </span>
-              </div>
-              <div style={{
-                backgroundColor: '#1f2937',
-                borderRadius: '9999px',
-                height: '8px',
-                overflow: 'hidden'
-              }}>
-                <div style={{
-                  height: '100%',
-                  backgroundColor: gameManager.player.stamina < 10 ? '#ef4444' : '#22c55e',
-                  transition: 'width 0.5s',
-                  width: `${(gameManager.player.stamina / gameManager.player.maxStamina) * 100}%`
-                }} />
-              </div>
-              <p style={{ color: '#6b7280', fontSize: '12px', margin: '8px 0 0 0', textAlign: 'center' }}>
-                每次消耗: 5体力 | 剩余次数: {Math.floor(gameManager.player.stamina / 5)}次
+              fontSize: '64px',
+              animation: 'bounce 1s ease-in-out infinite'
+            }}>📦</div>
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ color: '#00d4ff', fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
+                正在采集资源...
+              </p>
+              <p style={{ color: '#a1a1aa', fontSize: '14px' }}>
+                每3秒自动采集一次，消耗5点体力
               </p>
             </div>
-
-            {/* 物资收集进度 */}
-            {(() => {
-              const progress = gameManager.getLocationProgress(exploration.locationId!);
-              return (
-                <div style={{
-                  backgroundColor: '#2d2d2d',
-                  borderRadius: '12px',
-                  padding: '16px',
-                  border: '1px solid #374151',
-                  marginBottom: '16px'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ color: '#9ca3af', fontSize: '14px' }}>📦 物资收集进度</span>
-                    <span style={{ color: progress.materialProgress >= 20 ? '#4ade80' : '#fbbf24', fontSize: '14px' }}>
-                      {progress.materialProgress}%{progress.materialProgress >= 20 ? ' (已满，可继续)' : ''}
-                    </span>
-                  </div>
-                  <div style={{
-                    backgroundColor: '#1f2937',
-                    borderRadius: '9999px',
-                    height: '10px',
-                    overflow: 'hidden'
-                  }}>
-                    <div style={{
-                      height: '100%',
-                      backgroundColor: progress.materialProgress >= 20 ? '#4ade80' : '#fbbf24',
-                      transition: 'width 0.5s',
-                      width: `${Math.min(100, (progress.materialProgress / 20) * 100)}%`
-                    }} />
-                  </div>
-                </div>
-              );
-            })()}
 
             {/* 已收集物品 */}
             {exploration.collectedItems.length > 0 && (
               <div style={{
-                backgroundColor: '#2d2d2d',
-                borderRadius: '12px',
-                padding: '16px',
-                border: '1px solid #374151',
-                marginBottom: '16px'
+                backgroundColor: 'rgba(10, 14, 39, 0.6)',
+                borderRadius: '8px',
+                padding: '12px',
+                border: '1px solid rgba(0, 212, 255, 0.2)',
+                width: '100%',
+                maxWidth: '300px'
               }}>
-                <h3 style={{ color: '#9ca3af', fontSize: '14px', margin: '0 0 12px 0' }}>已收集物品</h3>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                <h4 style={{ color: '#00d4ff', fontSize: '12px', margin: '0 0 8px 0' }}>本次采集收获</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   {exploration.collectedItems.map((item, index) => (
-                    <span
-                      key={index}
-                      style={{
-                        padding: '6px 12px',
-                        backgroundColor: '#374151',
-                        borderRadius: '6px',
-                        fontSize: '12px',
-                        color: 'white'
-                      }}
-                    >
-                      {item.name} x{item.quantity}
-                    </span>
+                    <div key={index} style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      fontSize: '13px'
+                    }}>
+                      <span style={{ color: '#a1a1aa' }}>{item.name}</span>
+                      <span style={{ color: '#00d4ff', fontWeight: 'bold' }}>x{item.quantity}</span>
+                    </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* 停止收集按钮 */}
             <button
               onClick={() => setExploration(prev => ({ ...prev, phase: 'action_select' }))}
               style={{
-                padding: '14px',
-                backgroundColor: '#374151',
-                color: '#9ca3af',
+                padding: '12px 24px',
+                background: 'linear-gradient(135deg, #374151 0%, #2a3050 100%)',
+                border: '1px solid rgba(0, 212, 255, 0.3)',
                 borderRadius: '8px',
-                border: 'none',
-                cursor: 'pointer',
+                color: 'white',
                 fontWeight: 'bold',
-                fontSize: '14px'
+                cursor: 'pointer'
               }}
             >
-              ⏹️ 停止收集
+              停止采集
             </button>
-          </>
-        )}
-
-        {/* 探索日志 */}
-        <div style={{
-          backgroundColor: '#2d2d2d',
-          borderRadius: '12px',
-          padding: '12px',
-          border: '1px solid #374151',
-          marginTop: '16px'
-        }}>
-          <h3 style={{ color: '#9ca3af', fontSize: '12px', margin: '0 0 8px 0' }}>探索日志</h3>
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '4px',
-            fontSize: '12px'
-          }}>
-            {logs.map((log, index) => (
-              <div key={index} style={{ color: '#9ca3af' }}>{log}</div>
-            ))}
           </div>
-        </div>
+        )}
       </main>
     </div>
+  );
+}
+
+// 行动按钮组件 - 新主题
+function ActionButton({
+  icon,
+  label,
+  description,
+  color,
+  onClick
+}: {
+  icon: string;
+  label: string;
+  description: string;
+  color: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: '16px',
+        background: color,
+        border: 'none',
+        borderRadius: '12px',
+        color: 'white',
+        cursor: 'pointer',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '8px',
+        boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3)',
+        transition: 'all 0.3s ease'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'scale(1.02)';
+        e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 212, 255, 0.2)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'scale(1)';
+        e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.3)';
+      }}
+    >
+      <span style={{ fontSize: '28px' }}>{icon}</span>
+      <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{label}</span>
+      <span style={{ fontSize: '11px', opacity: 0.8 }}>{description}</span>
+    </button>
   );
 }
