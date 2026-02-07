@@ -880,7 +880,7 @@ function AutoCollectModal({
   );
 }
 
-// 操作按钮组件 - 新主题
+// 操作按钮组件 - 玻璃拟态风格
 function ActionButton({
   icon,
   label,
@@ -894,39 +894,89 @@ function ActionButton({
   onClick: () => void;
   disabled?: boolean;
 }) {
+  // 提取渐变色中的亮色作为发光色
+  const getGlowColor = (gradient: string) => {
+    const match = gradient.match(/#[a-fA-F0-9]{6}/g);
+    return match ? match[match.length - 1] : '#00D4FF';
+  };
+
+  const glowColor = getGlowColor(gradient);
+
   return (
     <button
       onClick={onClick}
       disabled={disabled}
       style={{
-        background: gradient,
-        border: 'none',
-        borderRadius: '12px',
-        padding: '16px 8px',
+        background: `linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)`,
+        border: `1px solid ${disabled ? 'rgba(255,255,255,0.1)' : `${glowColor}40`}`,
+        borderRadius: '16px',
+        padding: '14px 6px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: '6px',
+        gap: '8px',
         cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.6 : 1,
-        transition: 'all 0.3s ease',
-        boxShadow: disabled ? 'none' : '0 4px 15px rgba(0, 0, 0, 0.3)',
-        transform: 'scale(1)'
+        opacity: disabled ? 0.5 : 1,
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        boxShadow: disabled
+          ? 'none'
+          : `0 4px 20px ${glowColor}20, inset 0 1px 0 rgba(255,255,255,0.1)`,
+        transform: 'scale(1)',
+        position: 'relative',
+        overflow: 'hidden',
+        backdropFilter: 'blur(10px)'
       }}
       onMouseEnter={(e) => {
         if (!disabled) {
-          e.currentTarget.style.transform = 'scale(1.02)';
-          e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 212, 255, 0.2)';
+          e.currentTarget.style.transform = 'scale(1.03) translateY(-2px)';
+          e.currentTarget.style.boxShadow = `0 8px 30px ${glowColor}40, inset 0 1px 0 rgba(255,255,255,0.2)`;
+          e.currentTarget.style.borderColor = `${glowColor}80`;
         }
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'scale(1)';
-        e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.3)';
+        e.currentTarget.style.transform = 'scale(1) translateY(0)';
+        e.currentTarget.style.boxShadow = disabled
+          ? 'none'
+          : `0 4px 20px ${glowColor}20, inset 0 1px 0 rgba(255,255,255,0.1)`;
+        e.currentTarget.style.borderColor = disabled ? 'rgba(255,255,255,0.1)' : `${glowColor}40`;
       }}
     >
-      <span style={{ fontSize: '24px' }}>{icon}</span>
-      <span style={{ color: 'white', fontSize: '13px', fontWeight: '500' }}>{label}</span>
+      {/* 顶部渐变光效 */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: '10%',
+        right: '10%',
+        height: '1px',
+        background: `linear-gradient(90deg, transparent 0%, ${glowColor}80 50%, transparent 100%)`,
+        opacity: disabled ? 0.3 : 0.6
+      }} />
+
+      {/* 图标容器 */}
+      <div style={{
+        width: '44px',
+        height: '44px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: `linear-gradient(135deg, ${glowColor}30 0%, ${glowColor}10 100%)`,
+        borderRadius: '12px',
+        border: `1px solid ${glowColor}50`,
+        fontSize: '24px',
+        filter: disabled ? 'grayscale(100%)' : 'none',
+        transition: 'all 0.3s ease'
+      }}>
+        {icon}
+      </div>
+
+      <span style={{
+        color: disabled ? '#9CA3AF' : 'white',
+        fontSize: '12px',
+        fontWeight: '600',
+        textShadow: `0 1px 2px rgba(0,0,0,0.5)`,
+        letterSpacing: '0.3px'
+      }}>{label}</span>
     </button>
   );
 }
