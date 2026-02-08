@@ -251,7 +251,10 @@ export default function ShopScreen({ onBack }: ShopScreenProps) {
                     <h3 style={{ fontWeight: 'bold', color: 'white', fontSize: '14px', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {shopItem.name}
                     </h3>
-                    <p style={{ fontSize: '12px', color: '#6b7280', margin: '4px 0 0 0' }}>
+                    <p style={{ fontSize: '11px', color: '#9ca3af', margin: '2px 0 0 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {shopItem.description || ''}
+                    </p>
+                    <p style={{ fontSize: '12px', color: '#6b7280', margin: '2px 0 0 0' }}>
                       限购: {shopItem.stock}/{shopItem.dailyLimit}
                     </p>
                   </div>

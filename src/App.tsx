@@ -3,18 +3,16 @@ import StartScreen from './screens/StartScreen';
 import HomeScreen from './screens/HomeScreen';
 import PlayerScreen from './screens/PlayerScreen';
 import InventoryScreen from './screens/InventoryScreen';
-import ExplorationScreen from './screens/ExplorationScreen';
-import CraftingScreen from './screens/CraftingScreen';
+import NanoArmorCraftingScreen from './screens/NanoArmorCraftingScreen';
 import QuestScreen from './screens/QuestScreen';
 import ShopScreen from './screens/ShopScreen';
-import SkillScreen from './screens/SkillScreen';
+
 import DecomposeScreen from './screens/DecomposeScreen';
+import MaterialSynthesisScreen from './screens/MaterialSynthesisScreen';
 import TrainScreen from './screens/TrainScreen';
 import BattleScreen from './screens/BattleScreen';
 import EnhanceScreen from './screens/EnhanceScreen';
 import SublimationScreen from './screens/SublimationScreen';
-import MythologyMapScreen from './screens/MythologyMapScreen';
-import MythologyExplorationScreen from './screens/MythologyExplorationScreen';
 import TestScreen from './screens/TestScreen';
 import ExplorationSelectScreen from './screens/ExplorationSelectScreen';
 import PlanetExplorationScreen from './screens/PlanetExplorationScreen';
@@ -59,11 +57,11 @@ type ScreenType =
   | 'train'
   | 'quests'
   | 'shop'
-  | 'skills'
   | 'crafting'
   | 'equipment'
   | 'sublimation'
   | 'decompose'
+  | 'synthesis'
   | 'settings'
   | 'battle'
   | 'mythology'
@@ -195,42 +193,23 @@ function App() {
         return <QuestScreen onBack={handleBack} />;
       case 'shop':
         return <ShopScreen onBack={handleBack} />;
-      case 'skills':
-        return <SkillScreen onBack={handleBack} />;
+
       case 'crafting':
-        return <CraftingScreen onBack={handleBack} />;
+        return <NanoArmorCraftingScreen onBack={handleBack} />;
       case 'equipment':
         return <EnhanceScreen onBack={handleBack} />;
       case 'sublimation':
         return <SublimationScreen onBack={handleBack} />;
       case 'decompose':
         return <DecomposeScreen onBack={handleBack} />;
+      case 'synthesis':
+        return <MaterialSynthesisScreen onBack={handleBack} />;
       case 'settings':
         return <PlaceholderScreen title="设置" onBack={handleBack} />;
       case 'mythology':
-        return (
-          <MythologyMapScreen
-            onBack={() => setCurrentScreen('exploration')}
-            onSelectLocation={(id) => {
-              setMythologyLocationId(id);
-              setCurrentScreen('mythology_explore');
-            }}
-          />
-        );
+        return <PlaceholderScreen title="神域探索" onBack={handleBack} />;
       case 'mythology_explore':
-        return (
-          <MythologyExplorationScreen
-            onBack={() => {
-              setMythologyLocationId(null);
-              setCurrentScreen('exploration');
-            }}
-            onStartBattle={(locationId, isBoss, isElite) => {
-              setBattleParams({ locationId, isBoss, isElite });
-              setCurrentScreen('battle');
-            }}
-            initialLocationId={mythologyLocationId}
-          />
-        );
+        return <PlaceholderScreen title="神域探索" onBack={handleBack} />;
       case 'test':
         return <TestScreen onBack={handleBack} />;
       default:

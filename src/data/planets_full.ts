@@ -260,7 +260,7 @@ export const PLANET_GAMMA: Planet = {
   name: '伽马研究星',
   type: PlanetType.TECH_STAR,
   category: PlanetCategory.REGULAR,
-  level: 6,
+  level: 4,
   description: '联邦科学研究院所在地。拥有先进的实验室和观测站，专门研究虚空能量和神能技术。',
   dangerLevel: 'medium',
   factionControl: FactionType.FEDERATION,
@@ -270,8 +270,9 @@ export const PLANET_GAMMA: Planet = {
     { itemId: 'tech_blueprint', dropRate: 0.25, minAmount: 1, maxAmount: 1 },
   ],
   enemies: [
-    { enemyId: 'experiment_gone_wrong', spawnRate: 0.3, minCount: 1, maxCount: 2 },
-    { enemyId: 'void_researcher', spawnRate: 0.25, minCount: 1, maxCount: 1 },
+    { enemyId: 'experiment_gone_wrong', spawnRate: 0.35, minCount: 1, maxCount: 2 },
+    { enemyId: 'void_researcher', spawnRate: 0.3, minCount: 1, maxCount: 2 },
+    { enemyId: 'enhanced_experiment', spawnRate: 0.2, minCount: 1, maxCount: 1 },
   ],
   specialLoot: ['advanced_tech', 'research_notes'],
   explorationTime: 30,
@@ -283,7 +284,7 @@ export const PLANET_DELTA: Planet = {
   name: '德尔塔军事星',
   type: PlanetType.TECH_STAR,
   category: PlanetCategory.REGULAR,
-  level: 9,
+  level: 5,
   description: '联邦军事要塞。拥有坚固的防御工事和先进的武器系统，是对抗虚空生物的前线基地。',
   dangerLevel: 'medium',
   factionControl: FactionType.FEDERATION,
@@ -294,7 +295,8 @@ export const PLANET_DELTA: Planet = {
   ],
   enemies: [
     { enemyId: 'void_soldier', spawnRate: 0.4, minCount: 2, maxCount: 4 },
-    { enemyId: 'battle_drone', spawnRate: 0.3, minCount: 1, maxCount: 2 },
+    { enemyId: 'battle_drone', spawnRate: 0.35, minCount: 1, maxCount: 2 },
+    { enemyId: 'void_commando', spawnRate: 0.25, minCount: 1, maxCount: 2 },
   ],
   specialLoot: ['military_blueprint', 'combat_gear'],
   explorationTime: 35,
@@ -306,7 +308,7 @@ export const PLANET_EPSILON: Planet = {
   name: '艾普西隆贸易星',
   type: PlanetType.TECH_STAR,
   category: PlanetCategory.REGULAR,
-  level: 7,
+  level: 6,
   description: '银河系最大的贸易中心。来自各个势力的商人在此交易，可以买到稀有的物资和装备。',
   dangerLevel: 'low',
   factionControl: FactionType.FEDERATION,
@@ -316,8 +318,9 @@ export const PLANET_EPSILON: Planet = {
     { itemId: 'luxury_items', dropRate: 0.2, minAmount: 1, maxAmount: 1 },
   ],
   enemies: [
-    { enemyId: 'space_pirate', spawnRate: 0.25, minCount: 1, maxCount: 2 },
-    { enemyId: 'smuggler', spawnRate: 0.2, minCount: 1, maxCount: 2 },
+    { enemyId: 'space_pirate', spawnRate: 0.3, minCount: 1, maxCount: 2 },
+    { enemyId: 'smuggler', spawnRate: 0.25, minCount: 1, maxCount: 2 },
+    { enemyId: 'pirate_captain', spawnRate: 0.2, minCount: 1, maxCount: 1 },
   ],
   specialLoot: ['trade_permit', 'rare_goods'],
   explorationTime: 25,
@@ -329,7 +332,7 @@ export const PLANET_ZETA: Planet = {
   name: '泽塔能源星',
   type: PlanetType.TECH_STAR,
   category: PlanetCategory.REGULAR,
-  level: 11,
+  level: 7,
   description: '拥有丰富能源矿藏的星球。地表布满能源采集设施和储能站，是整个星区的能源供应中心。',
   dangerLevel: 'medium',
   factionControl: FactionType.FEDERATION,
@@ -340,7 +343,8 @@ export const PLANET_ZETA: Planet = {
   ],
   enemies: [
     { enemyId: 'energy_leech', spawnRate: 0.4, minCount: 2, maxCount: 3 },
-    { enemyId: 'plasma_beast', spawnRate: 0.3, minCount: 1, maxCount: 2 },
+    { enemyId: 'plasma_beast', spawnRate: 0.35, minCount: 1, maxCount: 2 },
+    { enemyId: 'energy_core_guardian', spawnRate: 0.25, minCount: 1, maxCount: 1 },
   ],
   specialLoot: ['energy_blueprint', 'power_cell'],
   explorationTime: 35,
@@ -352,7 +356,7 @@ export const PLANET_ETA: Planet = {
   name: '伊塔农业星',
   type: PlanetType.TECH_STAR,
   category: PlanetCategory.REGULAR,
-  level: 4,
+  level: 2,
   description: '联邦的粮食生产基地。拥有先进的生态穹顶和水培农场，为整个星区提供食物供应。',
   dangerLevel: 'low',
   factionControl: FactionType.FEDERATION,
@@ -362,8 +366,9 @@ export const PLANET_ETA: Planet = {
     { itemId: 'seeds', dropRate: 0.3, minAmount: 1, maxAmount: 2 },
   ],
   enemies: [
-    { enemyId: 'mutated_crop', spawnRate: 0.25, minCount: 1, maxCount: 2 },
-    { enemyId: 'pest_swarm', spawnRate: 0.3, minCount: 2, maxCount: 4 },
+    { enemyId: 'mutated_crop', spawnRate: 0.3, minCount: 1, maxCount: 2 },
+    { enemyId: 'pest_swarm', spawnRate: 0.35, minCount: 2, maxCount: 4 },
+    { enemyId: 'mutated_farmer', spawnRate: 0.2, minCount: 1, maxCount: 1 },
   ],
   specialLoot: ['agricultural_tech', 'food_supplies'],
   explorationTime: 25,
@@ -377,7 +382,7 @@ export const PLANET_THETA: Planet = {
   category: PlanetCategory.REGULAR,
   level: 8,
   description: '联邦最先进的医疗中心。拥有顶尖的医疗设施和药物研发中心，是伤员治疗的首选之地。',
-  dangerLevel: 'low',
+  dangerLevel: 'medium',
   factionControl: FactionType.FEDERATION,
   resources: [
     { itemId: 'medical_supplies', dropRate: 0.6, minAmount: 2, maxAmount: 4 },
@@ -385,8 +390,9 @@ export const PLANET_THETA: Planet = {
     { itemId: 'bio_samples', dropRate: 0.3, minAmount: 1, maxAmount: 2 },
   ],
   enemies: [
-    { enemyId: 'medical_drone', spawnRate: 0.2, minCount: 1, maxCount: 2 },
-    { enemyId: 'virus_carrier', spawnRate: 0.25, minCount: 1, maxCount: 1 },
+    { enemyId: 'medical_drone', spawnRate: 0.3, minCount: 1, maxCount: 2 },
+    { enemyId: 'virus_carrier', spawnRate: 0.3, minCount: 1, maxCount: 2 },
+    { enemyId: 'augmented_patient', spawnRate: 0.25, minCount: 1, maxCount: 1 },
   ],
   specialLoot: ['medical_blueprint', 'healing_tech'],
   explorationTime: 30,
@@ -799,7 +805,7 @@ export const ALL_PLANETS_FULL: Planet[] = [
   PLANET_BIFROST,
   PLANET_MIMIR,
   PLANET_HEL,
-  
+
   // 科技星（8个）
   PLANET_ALPHA,
   PLANET_BETA,
@@ -809,7 +815,7 @@ export const ALL_PLANETS_FULL: Planet[] = [
   PLANET_ZETA,
   PLANET_ETA,
   PLANET_THETA,
-  
+
   // 废土星（8个）
   PLANET_WITHERED,
   PLANET_RUINS,
@@ -819,7 +825,7 @@ export const ALL_PLANETS_FULL: Planet[] = [
   PLANET_FORSAKEN,
   PLANET_INFESTED,
   PLANET_BURNT,
-  
+
   // 混沌神域星（8个）
   PLANET_TYPHON,
   PLANET_LOKI,

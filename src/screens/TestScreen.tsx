@@ -1,259 +1,339 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useGameStore } from '../stores/gameStore';
-import { EquipmentSlot, EquipmentRarity, type MythologyEquipment } from '../data/equipmentTypes';
 import { ItemRarity, ItemType } from '../data/types';
-import { ALL_MYTHOLOGY_EQUIPMENT, getEquipmentByStation, createEquipmentInstance } from '../data/mythologyEquipmentIndex';
 import { ITEMS } from '../data/items';
-import { ALL_CRAFTING_MATERIALS, CraftingMaterialType, MaterialQuality, MATERIAL_QUALITY_NAMES } from '../data/craftingMaterials';
+import {
+  ArmorQuality,
+  ARMOR_QUALITY_NAMES,
+  ARMOR_QUALITY_COLORS,
+  NanoArmorSlot,
+  NANO_ARMOR_SLOT_NAMES,
+  NANO_ARMOR_SLOT_ICONS,
+  getRecipeBySlot,
+} from '../data/nanoArmorRecipes';
 import { ENHANCE_STONE_ID } from '../core/EnhanceSystem';
+import { EquipmentSlot } from '../data/equipmentTypes';
+import type { EquipmentInstance } from '../core/EquipmentSystem';
 
 interface TestScreenProps {
   onBack: () => void;
 }
 
 const RARITY_COLORS: Record<ItemRarity, string> = {
-  [EquipmentRarity.COMMON]: '#9ca3af',
-  [EquipmentRarity.UNCOMMON]: '#4ade80',
-  [EquipmentRarity.RARE]: '#60a5fa',
-  [EquipmentRarity.EPIC]: '#c084fc',
-  [EquipmentRarity.LEGENDARY]: '#00d4ff',
-  [EquipmentRarity.MYTHIC]: '#f87171',
+  [ItemRarity.COMMON]: '#9ca3af',
+  [ItemRarity.UNCOMMON]: '#4ade80',
+  [ItemRarity.RARE]: '#60a5fa',
+  [ItemRarity.EPIC]: '#c084fc',
+  [ItemRarity.LEGENDARY]: '#f59e0b',
+  [ItemRarity.MYTHIC]: '#ef4444',
 };
 
 const RARITY_NAMES: Record<ItemRarity, string> = {
-  [EquipmentRarity.COMMON]: '普通',
-  [EquipmentRarity.UNCOMMON]: '优秀',
-  [EquipmentRarity.RARE]: '稀有',
-  [EquipmentRarity.EPIC]: '史诗',
-  [EquipmentRarity.LEGENDARY]: '传说',
-  [EquipmentRarity.MYTHIC]: '神话',
+  [ItemRarity.COMMON]: '普通',
+  [ItemRarity.UNCOMMON]: '优秀',
+  [ItemRarity.RARE]: '稀有',
+  [ItemRarity.EPIC]: '史诗',
+  [ItemRarity.LEGENDARY]: '传说',
+  [ItemRarity.MYTHIC]: '神话',
+};
+
+// 纳米战甲材料基础ID
+const NANO_ARMOR_MATERIALS = [
+  { id: 'mat_001', name: '星铁基础构件' },
+  { id: 'mat_002', name: '星铜传导组件' },
+  { id: 'mat_003', name: '钛钢外甲坯料' },
+  { id: 'mat_004', name: '战甲能量晶核' },
+  { id: 'mat_005', name: '稀土传感基质' },
+  { id: 'mat_006', name: '虚空防护核心' },
+  { id: 'mat_007', name: '推进模块燃料' },
+  { id: 'mat_008', name: '纳米韧化纤维' },
+  { id: 'mat_009', name: '陨铁缓冲衬垫' },
+  { id: 'mat_010', name: '量子紧固组件' },
+];
+
+// 品质后缀
+const QUALITY_SUFFIX: Record<ArmorQuality, string> = {
+  [ArmorQuality.STARDUST]: '_stardust',
+  [ArmorQuality.ALLOY]: '_alloy',
+  [ArmorQuality.CRYSTAL]: '_crystal',
+  [ArmorQuality.QUANTUM]: '_quantum',
+  [ArmorQuality.VOID]: '_void',
+};
+
+// NanoArmorSlot 到 EquipmentSlot 的映射
+const SLOT_MAPPING: Record<NanoArmorSlot, EquipmentSlot> = {
+  [NanoArmorSlot.HELMET]: EquipmentSlot.HEAD,
+  [NanoArmorSlot.CHEST]: EquipmentSlot.BODY,
+  [NanoArmorSlot.SHOULDER]: EquipmentSlot.SHOULDER,
+  [NanoArmorSlot.ARM]: EquipmentSlot.ARM,
+  [NanoArmorSlot.LEG]: EquipmentSlot.LEGS,
+  [NanoArmorSlot.BOOT]: EquipmentSlot.FEET,
+};
+
+// 品质到稀有度的映射
+const QUALITY_TO_RARITY: Record<ArmorQuality, ItemRarity> = {
+  [ArmorQuality.STARDUST]: ItemRarity.COMMON,
+  [ArmorQuality.ALLOY]: ItemRarity.UNCOMMON,
+  [ArmorQuality.CRYSTAL]: ItemRarity.RARE,
+  [ArmorQuality.QUANTUM]: ItemRarity.EPIC,
+  [ArmorQuality.VOID]: ItemRarity.LEGENDARY,
 };
 
 export default function TestScreen({ onBack }: TestScreenProps) {
-  const { gameManager } = useGameStore();
-  const [activeTab, setActiveTab] = useState<'equipment' | 'items' | 'materials' | 'player' | 'system'>('equipment');
+  const { gameManager, saveGame } = useGameStore();
+  const [activeTab, setActiveTab] = useState<'items' | 'materials' | 'armor' | 'player'>('items');
   const [message, setMessage] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [selectedStation, setSelectedStation] = useState<number | 'all'>('all');
-  const [selectedRarity, setSelectedRarity] = useState<ItemRarity | 'all'>('all');
+  const [selectedArmorQuality, setSelectedArmorQuality] = useState<ArmorQuality>(ArmorQuality.VOID);
 
   const forceRefresh = () => {
     setRefreshKey(prev => prev + 1);
   };
 
-  // 获取所有装备按星球分组
-  const equipmentByStation: Record<number, MythologyEquipment[]> = {};
-  for (let i = 1; i <= 32; i++) {
-    equipmentByStation[i] = getEquipmentByStation(i);
-  }
-
-  // 获取所有制造材料
-  const allCraftingMaterials = ALL_CRAFTING_MATERIALS;
-
-  // 按材料类型分组
-  const materialsByType: Record<string, typeof allCraftingMaterials> = {
-    '基础材料（星球1-4）': [],
-    '高级材料（星球5-8）': [],
-    '优质品质材料': [],
-    '精良品质材料': [],
-    '稀有品质材料': [],
-    '传说品质材料': [],
-  };
-
-  allCraftingMaterials.forEach(mat => {
-    // 基础材料：铁矿、皮革、布料、基础合金（星球1-4）
-    if (mat.type === CraftingMaterialType.IRON ||
-      mat.type === CraftingMaterialType.LEATHER ||
-      mat.type === CraftingMaterialType.FABRIC ||
-      mat.type === CraftingMaterialType.WOOD) {
-      materialsByType['基础材料（星球1-4）'].push(mat);
-    }
-    // 高级材料：冷却液晶、精华（星球5-8）
-    else if (mat.type === CraftingMaterialType.CRYSTAL ||
-      mat.type === CraftingMaterialType.ESSENCE) {
-      materialsByType['高级材料（星球5-8）'].push(mat);
-    }
-
-    // 按品质分组
-    if (mat.quality === MaterialQuality.GOOD) {
-      materialsByType['优质品质材料'].push(mat);
-    } else if (mat.quality === MaterialQuality.FINE) {
-      materialsByType['精良品质材料'].push(mat);
-    } else if (mat.quality === MaterialQuality.RARE) {
-      materialsByType['稀有品质材料'].push(mat);
-    } else if (mat.quality === MaterialQuality.LEGENDARY) {
-      materialsByType['传说品质材料'].push(mat);
-    }
-  });
-
   // 显示消息
   const showMessage = (msg: string) => {
     setMessage(msg);
-    setTimeout(() => setMessage(null), 2000);
+    setTimeout(() => setMessage(null), 3000);
   };
 
-  // 添加所有制造材料
+  // ==================== 材料相关 ====================
+
+  // 添加所有纳米战甲材料
   const addAllMaterials = (quantity: number = 99) => {
-    allCraftingMaterials.forEach(mat => {
-      gameManager.inventory.addItem(mat.id, quantity);
+    NANO_ARMOR_MATERIALS.forEach(mat => {
+      [ArmorQuality.STARDUST, ArmorQuality.ALLOY, ArmorQuality.CRYSTAL, ArmorQuality.QUANTUM, ArmorQuality.VOID].forEach(quality => {
+        const qualityId = `${mat.id}${QUALITY_SUFFIX[quality]}`;
+        gameManager.inventory.addItem(qualityId, quantity);
+      });
     });
     forceRefresh();
-    showMessage(`已获得所有制造材料 x${quantity}`);
+    showMessage(`已添加所有纳米战甲材料 x${quantity}`);
   };
 
-  // 添加分组材料
-  const addMaterialsByGroup = (groupName: string, quantity: number = 99) => {
-    const materials = materialsByType[groupName] || [];
-    materials.forEach(mat => {
-      gameManager.inventory.addItem(mat.id, quantity);
+  // 添加特定品质的所有材料
+  const addMaterialsByQuality = (quality: ArmorQuality, quantity: number = 99) => {
+    NANO_ARMOR_MATERIALS.forEach(mat => {
+      const qualityId = `${mat.id}${QUALITY_SUFFIX[quality]}`;
+      gameManager.inventory.addItem(qualityId, quantity);
     });
     forceRefresh();
-    showMessage(`已获得 ${groupName} x${quantity}`);
+    showMessage(`已添加${ARMOR_QUALITY_NAMES[quality]}材料 x${quantity}`);
   };
 
-  // 添加消耗品
-  const addConsumables = () => {
-    const consumables = Object.values(ITEMS).filter(item => item.type === ItemType.CONSUMABLE);
-    consumables.forEach(item => {
-      gameManager.inventory.addItem(item.id, 20);
+  // ==================== 战甲部件相关 ====================
+
+  // 添加特定部位的战甲（所有品质）
+  const addArmorPart = (slot: NanoArmorSlot) => {
+    const recipe = getRecipeBySlot(slot);
+    if (!recipe) return;
+
+    // 检查背包空间（需要5个品质的位置）
+    const usedSlots = gameManager.inventory.items.length + gameManager.inventory.equipment.length;
+    const maxSlots = gameManager.inventory.maxSlots;
+    const remainingSlots = maxSlots - usedSlots;
+
+    if (remainingSlots < 5) {
+      showMessage(`背包空间不足 (${usedSlots}/${maxSlots})，需要 5 个空位`);
+      return;
+    }
+
+    [ArmorQuality.STARDUST, ArmorQuality.ALLOY, ArmorQuality.CRYSTAL, ArmorQuality.QUANTUM, ArmorQuality.VOID].forEach(quality => {
+      const multiplier = [1, 1.2, 1.5, 2.0, 2.5][quality - 1];
+      const equipmentInstance: EquipmentInstance = {
+        id: recipe.id,
+        instanceId: `${recipe.id}_${quality}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        name: `${ARMOR_QUALITY_NAMES[quality]}${recipe.name}`,
+        slot: SLOT_MAPPING[slot],
+        rarity: QUALITY_TO_RARITY[quality],
+        level: 1,
+        stationId: 'station_1',
+        stationNumber: 1,
+        description: recipe.description,
+        stats: {
+          attack: Math.floor((recipe.baseStats.attack || 0) * multiplier),
+          defense: Math.floor((recipe.baseStats.defense || 0) * multiplier),
+          hp: Math.floor((recipe.baseStats.hp || 0) * multiplier),
+          agility: Math.floor((recipe.baseStats.speed || 0) * multiplier),
+          hit: Math.floor((recipe.baseStats.hit || 0) * multiplier),
+          dodge: Math.floor((recipe.baseStats.dodge || 0) * multiplier),
+          speed: Math.floor((recipe.baseStats.speed || 0) * multiplier),
+          crit: Math.floor(((recipe.baseStats.critRate || 0) * multiplier) * 100),
+          critDamage: Math.floor(((recipe.baseStats.critDamage || 0) * multiplier) * 100),
+          penetration: 0,
+          penetrationPercent: 0,
+          trueDamage: 0,
+          guard: 0,
+          luck: 0,
+        },
+        effects: [],
+        quantity: 1,
+        equipped: false,
+        enhanceLevel: 0,
+        sublimationLevel: 0,
+        isCrafted: true,
+      };
+      gameManager.inventory.addEquipment(equipmentInstance);
     });
+
     forceRefresh();
-    showMessage('已获得所有消耗品 x20');
+    showMessage(`已添加${recipe.name}（全品质）`);
   };
 
-  // 添加金币
-  const addCoins = (amount: number) => {
-    gameManager.trainCoins += amount;
+  // 添加所有战甲部件（特定品质）
+  const addAllArmorParts = (quality: ArmorQuality) => {
+    const multiplier = [1, 1.2, 1.5, 2.0, 2.5][quality - 1];
+    const slots = Object.values(NanoArmorSlot);
+
+    // 检查背包空间
+    const usedSlots = gameManager.inventory.items.length + gameManager.inventory.equipment.length;
+    const maxSlots = gameManager.inventory.maxSlots;
+    const remainingSlots = maxSlots - usedSlots;
+
+    if (remainingSlots < slots.length) {
+      showMessage(`背包空间不足 (${usedSlots}/${maxSlots})，需要 ${slots.length} 个空位`);
+      return;
+    }
+
+    Object.values(NanoArmorSlot).forEach(slot => {
+      const recipe = getRecipeBySlot(slot);
+      if (!recipe) return;
+
+      const equipmentInstance: EquipmentInstance = {
+        id: recipe.id,
+        instanceId: `${recipe.id}_${quality}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        name: `${ARMOR_QUALITY_NAMES[quality]}${recipe.name}`,
+        slot: SLOT_MAPPING[slot],
+        rarity: QUALITY_TO_RARITY[quality],
+        level: 1,
+        stationId: 'station_1',
+        stationNumber: 1,
+        description: recipe.description,
+        stats: {
+          attack: Math.floor((recipe.baseStats.attack || 0) * multiplier),
+          defense: Math.floor((recipe.baseStats.defense || 0) * multiplier),
+          hp: Math.floor((recipe.baseStats.hp || 0) * multiplier),
+          agility: Math.floor((recipe.baseStats.speed || 0) * multiplier),
+          hit: Math.floor((recipe.baseStats.hit || 0) * multiplier),
+          dodge: Math.floor((recipe.baseStats.dodge || 0) * multiplier),
+          speed: Math.floor((recipe.baseStats.speed || 0) * multiplier),
+          crit: Math.floor(((recipe.baseStats.critRate || 0) * multiplier) * 100),
+          critDamage: Math.floor(((recipe.baseStats.critDamage || 0) * multiplier) * 100),
+          penetration: 0,
+          penetrationPercent: 0,
+          trueDamage: 0,
+          guard: 0,
+          luck: 0,
+        },
+        effects: [],
+        quantity: 1,
+        equipped: false,
+        enhanceLevel: 0,
+        sublimationLevel: 0,
+        isCrafted: true,
+      };
+      gameManager.inventory.addEquipment(equipmentInstance);
+    });
+
     forceRefresh();
-    showMessage(`已获得 ${amount.toLocaleString()} 航船币`);
+    showMessage(`已添加整套${ARMOR_QUALITY_NAMES[quality]}战甲`);
   };
 
-  // 添加强化石
-  const addEnhanceStones = (quantity: number) => {
-    gameManager.inventory.addItem(ENHANCE_STONE_ID, quantity);
-    forceRefresh();
-    showMessage(`已获得强化石 x${quantity}`);
-  };
+  // ==================== 玩家状态相关 ====================
 
-  // 计算属性值 - 每级提升10%（基于初始数值，叠乘）
-  const calculateAttribute = (baseValue: number, level: number): number => {
-    return baseValue * Math.pow(1.1, level - 1);
-  };
-
-  // 设置玩家等级
-  const setPlayerLevel = (level: number) => {
-    gameManager.player.level = level;
-    gameManager.player.exp = 0;
-
-    // 使用与Player类相同的计算方式设置属性
-    gameManager.player.maxHp = Math.floor(calculateAttribute(100, level));
-    gameManager.player.maxStamina = 100 + (level - 1) * 10; // 每级固定+10
-    gameManager.player.maxSpirit = 100 + (level - 1) * 10; // 每级固定+10
-    gameManager.player.baseAttack = Math.floor(calculateAttribute(10, level));
-    gameManager.player.baseDefense = Math.floor(calculateAttribute(5, level));
-    gameManager.player.baseAgility = Math.floor(10 * (1 + level * 0.1)); // 叠加：10*(1+等级*0.1)
-    gameManager.player.baseHit = Math.floor(calculateAttribute(50, level));
-    gameManager.player.baseDodge = 5; // 固定5%，不随等级提升
-    gameManager.player.baseCrit = 5; // 固定5%，不随等级提升
-    gameManager.player.baseCritDamage = 50;
-    gameManager.player.basePenetration = 0;
-    gameManager.player.baseTrueDamage = 0;
-
-    // 恢复满状态
+  // 恢复所有状态
+  const restoreAll = () => {
     gameManager.player.hp = gameManager.player.maxHp;
     gameManager.player.stamina = gameManager.player.maxStamina;
     gameManager.player.spirit = gameManager.player.maxSpirit;
-
     forceRefresh();
-    showMessage(`玩家等级已设置为 ${level}`);
+    showMessage('✅ 已恢复所有状态');
   };
 
-  // 恢复满状态
-  const restoreFullStatus = () => {
+  // 只恢复生命值
+  const restoreHp = () => {
     gameManager.player.hp = gameManager.player.maxHp;
+    forceRefresh();
+    showMessage('❤️ 生命值已回满');
+  };
+
+  // 只恢复体力
+  const restoreStamina = () => {
     gameManager.player.stamina = gameManager.player.maxStamina;
-    gameManager.player.hunger = 100;
-    gameManager.player.thirst = 100;
     forceRefresh();
-    showMessage('已恢复满状态');
+    showMessage('⚡ 体力已回满');
   };
 
-  // 重置游戏
-  const resetGame = () => {
-    if (confirm('确定要重置游戏吗？所有数据将被清空！')) {
-      gameManager.reset();
-      forceRefresh();
-      showMessage('游戏已重置');
-    }
-  };
-
-  // 保存游戏
-  const saveGame = async () => {
-    await gameManager.saveGame();
-    showMessage('游戏已保存');
-  };
-
-  // 获得装备
-  const addEquipment = (equipmentId: string) => {
-    const instance = createEquipmentInstance(equipmentId);
-    if (instance) {
-      instance.equipped = false;
-      gameManager.inventory.addEquipment(instance);
-      forceRefresh();
-      showMessage(`已获得: ${instance.name}`);
-    }
-  };
-
-  // 获得星球全套装备
-  const addStationEquipment = (stationNum: number) => {
-    const equipment = getEquipmentByStation(stationNum);
-    equipment.forEach(equip => {
-      const instance = createEquipmentInstance(equip.id);
-      if (instance) {
-        instance.equipped = false;
-        gameManager.inventory.addEquipment(instance);
-      }
-    });
+  // 只恢复精神
+  const restoreSpirit = () => {
+    gameManager.player.spirit = gameManager.player.maxSpirit;
     forceRefresh();
-    showMessage(`已获得星球${stationNum}全套装备`);
+    showMessage('🔮 精神已回满');
   };
 
-  // 获得所有武器
-  const addAllWeapons = () => {
-    for (let i = 1; i <= 32; i++) {
-      const equip = getEquipmentByStation(i).find(e => e.slot === EquipmentSlot.WEAPON);
-      if (equip) {
-        addEquipment(equip.id);
-      }
-    }
-    showMessage('已获得所有武器');
-  };
+  // ==================== 经验与等级 ====================
 
-  // 获得指定品质的所有装备
-  const addEquipmentByRarity = (rarity: ItemRarity) => {
-    let count = 0;
-    for (let i = 1; i <= 32; i++) {
-      const equipment = getEquipmentByStation(i).filter(e => e.rarity === rarity);
-      equipment.forEach(equip => {
-        const instance = createEquipmentInstance(equip.id);
-        if (instance) {
-          instance.equipped = false;
-          gameManager.inventory.addEquipment(instance);
-          count++;
-        }
-      });
-    }
+  // 升级
+  const levelUp = () => {
+    const oldLevel = gameManager.player.level;
+    gameManager.player.addExp(gameManager.player.expToNextLevel);
     forceRefresh();
-    showMessage(`已获得 ${RARITY_NAMES[rarity]} 装备 ${count} 件`);
+    showMessage(`⬆️ 升级！${oldLevel} → ${gameManager.player.level}`);
   };
 
-  // 过滤装备
-  const getFilteredEquipment = (stationNum: number) => {
-    let equipment = equipmentByStation[stationNum] || [];
-    if (selectedRarity !== 'all') {
-      equipment = equipment.filter(e => e.rarity === selectedRarity);
-    }
-    return equipment;
+  // 添加经验
+  const addExp = (amount: number) => {
+    gameManager.player.addExp(amount);
+    forceRefresh();
+    showMessage(`✨ 获得 ${amount} 经验值`);
+  };
+
+  // 直接升到指定等级
+  const setLevel = (level: number) => {
+    const expNeeded = gameManager.player.expToNextLevel * (level - gameManager.player.level);
+    gameManager.player.addExp(expNeeded > 0 ? expNeeded : 0);
+    forceRefresh();
+    showMessage(`🎯 等级已设为 ${gameManager.player.level}`);
+  };
+
+  // ==================== 货币与道具 ====================
+
+  // 添加金币
+  const addCoins = (amount: number) => {
+    gameManager.inventory.addItem('coin', amount);
+    forceRefresh();
+    showMessage(`💰 已添加 ${amount.toLocaleString()} 金币`);
+  };
+
+  // 添加强化石
+  const addEnhanceStones = (amount: number) => {
+    gameManager.inventory.addItem(ENHANCE_STONE_ID, amount);
+    forceRefresh();
+    showMessage(`💎 已添加 ${amount} 强化石`);
+  };
+
+  // ==================== 数据展示 ====================
+
+  // 获取背包物品列表
+  const inventoryItems = gameManager.inventory.getAllItems()
+    .filter(item => item && item.id)
+    .map(item => ({
+      ...item,
+      template: ITEMS[item.id],
+    }))
+    .filter(item => item.template);
+
+  // 获取战甲装备列表
+  const armorEquipment = gameManager.inventory.equipment;
+
+  // 背包空间信息
+  const usedSlots = gameManager.inventory.items.length + gameManager.inventory.equipment.length;
+  const maxSlots = gameManager.inventory.maxSlots;
+  const remainingSlots = maxSlots - usedSlots;
+
+  // 计算材料数量
+  const getMaterialCount = (baseId: string, quality: ArmorQuality) => {
+    const qualityId = `${baseId}${QUALITY_SUFFIX[quality]}`;
+    return gameManager.inventory.getItem(qualityId)?.quantity || 0;
   };
 
   return (
@@ -261,66 +341,68 @@ export default function TestScreen({ onBack }: TestScreenProps) {
       height: '100vh',
       backgroundColor: '#0a0e27',
       display: 'flex',
-      flexDirection: 'column'
+      flexDirection: 'column',
     }}>
       {/* 顶部标题栏 */}
       <header style={{
         flexShrink: 0,
         backgroundColor: '#1a1f3a',
         borderBottom: '1px solid #2a3050',
-        padding: '12px 16px'
+        padding: '12px 16px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button
             onClick={onBack}
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              color: '#a1a1aa',
               background: 'none',
               border: 'none',
+              color: '#a1a1aa',
+              fontSize: '20px',
               cursor: 'pointer',
-              fontSize: '14px'
             }}
           >
-            <span>←</span>
-            <span>返回</span>
+            ←
           </button>
-          <h1 style={{ color: 'white', fontWeight: 'bold', fontSize: '18px' }}>测试面板</h1>
-          <div style={{ width: '48px' }} />
+          <h1 style={{ color: '#00d4ff', fontSize: '18px', fontWeight: 'bold', margin: 0 }}>
+            🧪 系统测试
+          </h1>
         </div>
       </header>
 
-      {/* 标签切换 */}
+      {/* 标签页切换 */}
       <div style={{
-        flexShrink: 0,
         display: 'flex',
+        gap: '8px',
+        padding: '12px 16px',
         backgroundColor: '#1a1f3a',
-        borderBottom: '1px solid #374151'
+        borderBottom: '1px solid #2a3050',
+        overflowX: 'auto',
       }}>
-        {[
-          { id: 'equipment', label: '装备', icon: '🛡️' },
-          { id: 'items', label: '道具', icon: '📦' },
-          { id: 'materials', label: '材料', icon: '🧱' },
-          { id: 'player', label: '玩家', icon: '👤' },
-          { id: 'system', label: '系统', icon: '⚙️' },
-        ].map(tab => (
+        {([
+          { key: 'items', label: '📦 物品', desc: '背包' },
+          { key: 'materials', label: '🔧 材料', desc: '战甲材料' },
+          { key: 'armor', label: '🛡️ 战甲', desc: '战甲部件' },
+          { key: 'player', label: '👤 玩家', desc: '状态/经验' },
+        ] as const).map(tab => (
           <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key as any)}
             style={{
-              flex: 1,
-              padding: '12px',
-              backgroundColor: activeTab === tab.id ? '#dc2626' : 'transparent',
-              color: activeTab === tab.id ? 'white' : '#9ca3af',
+              padding: '10px 16px',
+              backgroundColor: activeTab === tab.key ? '#0099cc' : '#374151',
+              color: activeTab === tab.key ? 'white' : '#a1a1aa',
               border: 'none',
+              borderRadius: '8px',
               cursor: 'pointer',
-              fontWeight: activeTab === tab.id ? 'bold' : 'normal',
-              fontSize: '12px'
+              fontSize: '13px',
+              fontWeight: activeTab === tab.key ? 'bold' : 'normal',
+              whiteSpace: 'nowrap',
             }}
           >
-            {tab.icon} {tab.label}
+            {tab.label}
           </button>
         ))}
       </div>
@@ -329,675 +411,487 @@ export default function TestScreen({ onBack }: TestScreenProps) {
       <main style={{
         flex: 1,
         overflowY: 'auto',
-        padding: '16px'
+        padding: '16px',
       }}>
-        {/* 装备标签 */}
-        {activeTab === 'equipment' && (
-          <div>
-            {/* 快速操作 */}
-            <div style={{
-              backgroundColor: '#1a1f3a',
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '16px'
-            }}>
-              <h3 style={{ color: 'white', fontSize: '14px', marginBottom: '12px' }}>
-                快速操作
-              </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginBottom: '12px' }}>
-                <button
-                  onClick={addAllWeapons}
-                  style={{
-                    padding: '12px',
-                    backgroundColor: '#7c3aed',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold',
-                    fontSize: '13px'
-                  }}
-                >
-                  获得所有武器
-                </button>
-                <button
-                  onClick={() => {
-                    for (let i = 1; i <= 8; i++) {
-                      addStationEquipment(i);
-                    }
-                    showMessage('已获得星球1-8全套');
-                  }}
-                  style={{
-                    padding: '12px',
-                    backgroundColor: '#2563eb',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold',
-                    fontSize: '13px'
-                  }}
-                >
-                  获得1-8星球全套
-                </button>
-              </div>
-
-              {/* 品质筛选 */}
-              <div style={{ marginBottom: '12px' }}>
-                <span style={{ color: '#a1a1aa', fontSize: '12px', marginRight: '8px' }}>按品质获取:</span>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
-                  {[
-                    { id: ItemRarity.COMMON, name: '普通', color: '#a1a1aa' },
-                    { id: ItemRarity.UNCOMMON, name: '优秀', color: '#4ade80' },
-                    { id: ItemRarity.RARE, name: '稀有', color: '#60a5fa' },
-                    { id: ItemRarity.EPIC, name: '史诗', color: '#c084fc' },
-                    { id: ItemRarity.LEGENDARY, name: '传说', color: '#00d4ff' },
-                    { id: ItemRarity.MYTHIC, name: '神话', color: '#f87171' },
-                  ].map(rarity => (
-                    <button
-                      key={rarity.id}
-                      onClick={() => addEquipmentByRarity(rarity.id)}
-                      style={{
-                        padding: '6px 12px',
-                        backgroundColor: rarity.color,
-                        color: rarity.id === ItemRarity.COMMON || rarity.id === ItemRarity.LEGENDARY ? 'black' : 'white',
-                        border: 'none',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        fontSize: '11px',
-                        fontWeight: 'bold'
-                      }}
-                    >
-                      {rarity.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 品质过滤器 */}
-              <div>
-                <span style={{ color: '#a1a1aa', fontSize: '12px', marginRight: '8px' }}>筛选显示:</span>
-                <select
-                  value={selectedRarity}
-                  onChange={(e) => setSelectedRarity(e.target.value as any)}
-                  style={{
-                    padding: '6px 12px',
-                    backgroundColor: '#374151',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    fontSize: '12px'
-                  }}
-                >
-                  <option value="all">全部品质</option>
-                  <option value={ItemRarity.COMMON}>普通</option>
-                  <option value={ItemRarity.UNCOMMON}>优秀</option>
-                  <option value={ItemRarity.RARE}>稀有</option>
-                  <option value={ItemRarity.EPIC}>史诗</option>
-                  <option value={ItemRarity.LEGENDARY}>传说</option>
-                  <option value={ItemRarity.MYTHIC}>神话</option>
-                </select>
-              </div>
-            </div>
-
-            {/* 星球列表 */}
-            {Object.entries(equipmentByStation).map(([stationNum, equipment]) => {
-              const filteredEquipment = getFilteredEquipment(parseInt(stationNum));
-              if (filteredEquipment.length === 0) return null;
-
-              return (
-                <div
-                  key={stationNum}
-                  style={{
-                    backgroundColor: '#1a1f3a',
-                    borderRadius: '12px',
-                    padding: '12px',
-                    marginBottom: '12px'
-                  }}
-                >
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '8px'
-                  }}>
-                    <h4 style={{ color: '#00d4ff', fontSize: '14px', margin: 0 }}>
-                      星球 {stationNum}
-                    </h4>
-                    <button
-                      onClick={() => addStationEquipment(parseInt(stationNum))}
-                      style={{
-                        padding: '4px 12px',
-                        backgroundColor: '#16a34a',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        fontSize: '12px'
-                      }}
-                    >
-                      一键获得
-                    </button>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
-                    {filteredEquipment.map(equip => (
-                      <button
-                        key={equip.id}
-                        onClick={() => addEquipment(equip.id)}
-                        style={{
-                          padding: '8px',
-                          backgroundColor: '#1f2937',
-                          border: `1px solid ${RARITY_COLORS[equip.rarity]}`,
-                          borderRadius: '6px',
-                          cursor: 'pointer',
-                          fontSize: '11px',
-                          color: RARITY_COLORS[equip.rarity]
-                        }}
-                      >
-                        {equip.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* 道具标签 */}
+        {/* ========== 物品标签 ========== */}
         {activeTab === 'items' && (
           <div>
-            {/* 消耗品 */}
-            <div style={{
-              backgroundColor: '#1a1f3a',
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '16px'
-            }}>
-              <h3 style={{ color: 'white', fontSize: '14px', marginBottom: '12px' }}>
-                消耗品
-              </h3>
+            <h2 style={{ color: 'white', fontSize: '16px', marginBottom: '16px' }}>背包物品</h2>
+
+            {/* 快捷操作 */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '20px' }}>
               <button
-                onClick={addConsumables}
+                onClick={() => addCoins(100000)}
                 style={{
-                  width: '100%',
-                  padding: '16px',
-                  backgroundColor: '#16a34a',
+                  padding: '14px',
+                  backgroundColor: '#f59e0b',
                   color: 'white',
                   border: 'none',
                   borderRadius: '8px',
-                  cursor: 'pointer',
+                  fontSize: '14px',
                   fontWeight: 'bold',
-                  fontSize: '16px'
+                  cursor: 'pointer',
                 }}
               >
-                获得所有消耗品 x20
+                💰 +100,000 金币
+              </button>
+              <button
+                onClick={() => addEnhanceStones(999)}
+                style={{
+                  padding: '14px',
+                  backgroundColor: '#a855f7',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                }}
+              >
+                💎 +999 强化石
               </button>
             </div>
 
-            {/* 技能 */}
-            <div style={{
-              backgroundColor: '#1a1f3a',
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '16px'
-            }}>
-              <h3 style={{ color: 'white', fontSize: '14px', marginBottom: '12px' }}>
-                学习技能
-              </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
-                {[
-                  { id: 'skill_power_strike', name: '强力打击' },
-                  { id: 'skill_first_aid', name: '急救' },
-                  { id: 'passive_toughness', name: '坚韧' },
-                  { id: 'passive_agility', name: '敏捷' },
-                ].map(skill => (
-                  <button
-                    key={skill.id}
-                    onClick={() => {
-                      // 添加到可用技能列表
-                      if (!gameManager.availableSkills.includes(skill.id)) {
-                        gameManager.availableSkills.push(skill.id);
-                      }
-                      // 直接学习技能
-                      const result = gameManager.learnSkill(skill.id);
-                      forceRefresh();
-                      showMessage(result.message);
-                    }}
+            {/* 物品列表 */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {inventoryItems.length === 0 ? (
+                <p style={{ color: '#6b7280', textAlign: 'center', padding: '40px' }}>背包为空</p>
+              ) : (
+                inventoryItems.map(item => (
+                  <div
+                    key={item.id}
                     style={{
                       padding: '12px',
-                      backgroundColor: '#7c3aed',
-                      color: 'white',
-                      border: 'none',
+                      backgroundColor: '#1f2937',
                       borderRadius: '8px',
-                      cursor: 'pointer',
-                      fontSize: '13px'
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
                     }}
                   >
-                    {skill.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* 金币 */}
-            <div style={{
-              backgroundColor: '#1a1f3a',
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '16px'
-            }}>
-              <h3 style={{ color: 'white', fontSize: '14px', marginBottom: '12px' }}>
-                当前航船币: {gameManager.trainCoins.toLocaleString()}
-              </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
-                <button
-                  onClick={() => addCoins(1000)}
-                  style={{
-                    padding: '16px',
-                    backgroundColor: '#00d4ff',
-                    color: 'black',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold'
-                  }}
-                >
-                  +1,000
-                </button>
-                <button
-                  onClick={() => addCoins(10000)}
-                  style={{
-                    padding: '16px',
-                    backgroundColor: '#f59e0b',
-                    color: 'black',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold'
-                  }}
-                >
-                  +10,000
-                </button>
-                <button
-                  onClick={() => addCoins(100000)}
-                  style={{
-                    padding: '16px',
-                    backgroundColor: '#0099cc',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold'
-                  }}
-                >
-                  +100,000
-                </button>
-                <button
-                  onClick={() => addCoins(1000000)}
-                  style={{
-                    padding: '16px',
-                    backgroundColor: '#b45309',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold'
-                  }}
-                >
-                  +1,000,000
-                </button>
-              </div>
+                    <div>
+                      <span style={{
+                        color: item.template ? RARITY_COLORS[item.template.rarity] : '#e5e7eb',
+                        fontWeight: 'bold',
+                      }}>
+                        {item.template?.name || item.id}
+                      </span>
+                      <span style={{ color: '#6b7280', fontSize: '12px', marginLeft: '8px' }}>
+                        {item.template && RARITY_NAMES[item.template.rarity]}
+                      </span>
+                    </div>
+                    <span style={{ color: '#00d4ff', fontWeight: 'bold' }}>
+                      x{item.quantity}
+                    </span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}
 
-        {/* 材料标签 */}
+        {/* ========== 材料标签 ========== */}
         {activeTab === 'materials' && (
           <div>
-            {/* 强化石快速获取 */}
-            <div style={{
-              backgroundColor: '#1a1f3a',
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '16px'
-            }}>
-              <h3 style={{ color: 'white', fontSize: '14px', marginBottom: '12px' }}>
-                🔷 强化石
-              </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-                <button
-                  onClick={() => addEnhanceStones(10)}
-                  style={{
-                    padding: '12px',
-                    backgroundColor: '#3b82f6',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold',
-                    fontSize: '13px'
-                  }}
-                >
-                  +10
-                </button>
-                <button
-                  onClick={() => addEnhanceStones(100)}
-                  style={{
-                    padding: '12px',
-                    backgroundColor: '#2563eb',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold',
-                    fontSize: '13px'
-                  }}
-                >
-                  +100
-                </button>
-                <button
-                  onClick={() => addEnhanceStones(999)}
-                  style={{
-                    padding: '12px',
-                    backgroundColor: '#1d4ed8',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold',
-                    fontSize: '13px'
-                  }}
-                >
-                  +999
-                </button>
-              </div>
-            </div>
+            <h2 style={{ color: 'white', fontSize: '16px', marginBottom: '16px' }}>纳米战甲材料</h2>
 
-            {/* 全部材料 */}
-            <div style={{
-              backgroundColor: '#1a1f3a',
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '16px'
-            }}>
-              <h3 style={{ color: 'white', fontSize: '14px', marginBottom: '12px' }}>
-                全部材料 ({allCraftingMaterials.length}种)
-              </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
-                <button
-                  onClick={() => addAllMaterials(99)}
-                  style={{
-                    padding: '16px',
-                    backgroundColor: '#0099cc',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold',
-                    fontSize: '14px'
-                  }}
-                >
-                  获得所有材料 x99
-                </button>
-                <button
-                  onClick={() => addAllMaterials(999)}
-                  style={{
-                    padding: '16px',
-                    backgroundColor: '#b45309',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold',
-                    fontSize: '14px'
-                  }}
-                >
-                  获得所有材料 x999
-                </button>
-              </div>
-            </div>
-
-            {/* 分组材料 */}
-            {Object.entries(materialsByType).map(([groupName, materials]) => (
-              <div
-                key={groupName}
+            {/* 快捷添加按钮 */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+              <button
+                onClick={() => addAllMaterials(99)}
                 style={{
-                  backgroundColor: '#1a1f3a',
-                  borderRadius: '12px',
-                  padding: '12px',
-                  marginBottom: '12px'
+                  padding: '16px',
+                  backgroundColor: '#0099cc',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontSize: '15px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
                 }}
               >
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '8px'
-                }}>
-                  <h4 style={{ color: '#00d4ff', fontSize: '14px', margin: 0 }}>
-                    {groupName} ({materials.length}种)
-                  </h4>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
+                ➕ 添加所有材料 x99（全品质）
+              </button>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                {[ArmorQuality.STARDUST, ArmorQuality.ALLOY, ArmorQuality.CRYSTAL, ArmorQuality.QUANTUM, ArmorQuality.VOID].map(quality => (
                   <button
-                    onClick={() => addMaterialsByGroup(groupName, 99)}
+                    key={quality}
+                    onClick={() => addMaterialsByQuality(quality, 99)}
                     style={{
-                      padding: '10px',
-                      backgroundColor: '#059669',
-                      color: 'white',
+                      padding: '12px',
+                      backgroundColor: ARMOR_QUALITY_COLORS[quality],
+                      color: quality === ArmorQuality.STARDUST ? '#000' : 'white',
                       border: 'none',
-                      borderRadius: '6px',
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                      fontWeight: 'bold',
                       cursor: 'pointer',
-                      fontSize: '12px',
-                      fontWeight: 'bold'
                     }}
                   >
-                    获得 x99
-                  </button>
-                  <button
-                    onClick={() => addMaterialsByGroup(groupName, 999)}
-                    style={{
-                      padding: '10px',
-                      backgroundColor: '#047857',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    获得 x999
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* 玩家标签 */}
-        {activeTab === 'player' && (
-          <div>
-            {/* 等级设置 */}
-            <div style={{
-              backgroundColor: '#1a1f3a',
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '16px'
-            }}>
-              <h3 style={{ color: 'white', fontSize: '14px', marginBottom: '12px' }}>
-                设置等级 (当前: {gameManager.player.level})
-              </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
-                {[1, 5, 10, 15, 20, 30, 40, 50, 60, 70, 80].map(level => (
-                  <button
-                    key={level}
-                    onClick={() => setPlayerLevel(level)}
-                    style={{
-                      padding: '10px',
-                      backgroundColor: gameManager.player.level === level ? '#dc2626' : '#2a3050',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    Lv.{level}
+                    {ARMOR_QUALITY_NAMES[quality]} x99
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* 当前属性 */}
+            {/* 材料列表 */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {NANO_ARMOR_MATERIALS.map(mat => (
+                <div key={mat.id} style={{
+                  padding: '14px',
+                  backgroundColor: '#1f2937',
+                  borderRadius: '10px',
+                }}>
+                  <div style={{ color: 'white', fontWeight: 'bold', marginBottom: '10px', fontSize: '14px' }}>
+                    {mat.name}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px' }}>
+                    {[ArmorQuality.STARDUST, ArmorQuality.ALLOY, ArmorQuality.CRYSTAL, ArmorQuality.QUANTUM, ArmorQuality.VOID].map(quality => {
+                      const count = getMaterialCount(mat.id, quality);
+                      return (
+                        <div
+                          key={quality}
+                          style={{
+                            padding: '6px',
+                            backgroundColor: count > 0 ? 'rgba(0,0,0,0.3)' : '#374151',
+                            borderRadius: '6px',
+                            textAlign: 'center',
+                          }}
+                        >
+                          <div style={{
+                            fontSize: '10px',
+                            color: ARMOR_QUALITY_COLORS[quality],
+                            marginBottom: '2px',
+                          }}>
+                            {ARMOR_QUALITY_NAMES[quality].slice(0, 2)}
+                          </div>
+                          <div style={{
+                            fontSize: '12px',
+                            color: count > 0 ? '#4ade80' : '#6b7280',
+                            fontWeight: 'bold',
+                          }}>
+                            {count}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ========== 战甲标签 ========== */}
+        {activeTab === 'armor' && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h2 style={{ color: 'white', fontSize: '16px', margin: 0 }}>战甲部件获取</h2>
+              <span style={{
+                color: remainingSlots < 6 ? '#ef4444' : '#4ade80',
+                fontSize: '12px',
+                backgroundColor: 'rgba(0,0,0,0.3)',
+                padding: '4px 10px',
+                borderRadius: '4px',
+              }}>
+                背包: {usedSlots}/{maxSlots} (剩{remainingSlots})
+              </span>
+            </div>
+
+            {/* 品质选择 */}
             <div style={{
-              backgroundColor: '#1a1f3a',
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '16px'
+              backgroundColor: '#1f2937',
+              borderRadius: '10px',
+              padding: '14px',
+              marginBottom: '16px',
             }}>
-              <h3 style={{ color: 'white', fontSize: '14px', marginBottom: '12px' }}>
-                当前属性
-              </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
-                <div style={{ backgroundColor: '#374151', padding: '10px', borderRadius: '6px' }}>
-                  <span style={{ color: '#a1a1aa', fontSize: '11px' }}>生命值</span>
-                  <div style={{ color: '#ef4444', fontWeight: 'bold' }}>{gameManager.player.hp}/{gameManager.player.maxHp}</div>
-                </div>
-                <div style={{ backgroundColor: '#374151', padding: '10px', borderRadius: '6px' }}>
-                  <span style={{ color: '#a1a1aa', fontSize: '11px' }}>攻击力</span>
-                  <div style={{ color: '#f97316', fontWeight: 'bold' }}>{gameManager.player.totalAttack}</div>
-                </div>
-                <div style={{ backgroundColor: '#374151', padding: '10px', borderRadius: '6px' }}>
-                  <span style={{ color: '#a1a1aa', fontSize: '11px' }}>防御力</span>
-                  <div style={{ color: '#3b82f6', fontWeight: 'bold' }}>{gameManager.player.totalDefense}</div>
-                </div>
-                <div style={{ backgroundColor: '#374151', padding: '10px', borderRadius: '6px' }}>
-                  <span style={{ color: '#a1a1aa', fontSize: '11px' }}>体力</span>
-                  <div style={{ color: '#22c55e', fontWeight: 'bold' }}>{gameManager.player.stamina}/{gameManager.player.maxStamina}</div>
-                </div>
-                <div style={{ backgroundColor: '#374151', padding: '10px', borderRadius: '6px' }}>
-                  <span style={{ color: '#a1a1aa', fontSize: '11px' }}>能量储备值</span>
-                  <div style={{ color: '#eab308', fontWeight: 'bold' }}>{gameManager.player.hunger}/100</div>
-                </div>
-                <div style={{ backgroundColor: '#374151', padding: '10px', borderRadius: '6px' }}>
-                  <span style={{ color: '#a1a1aa', fontSize: '11px' }}>冷却液水平值</span>
-                  <div style={{ color: '#06b6d4', fontWeight: 'bold' }}>{gameManager.player.thirst}/100</div>
-                </div>
+              <div style={{ color: '#a1a1aa', fontSize: '12px', marginBottom: '10px' }}>选择要添加的品质</div>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {[ArmorQuality.STARDUST, ArmorQuality.ALLOY, ArmorQuality.CRYSTAL, ArmorQuality.QUANTUM, ArmorQuality.VOID].map(quality => (
+                  <button
+                    key={quality}
+                    onClick={() => setSelectedArmorQuality(quality)}
+                    style={{
+                      padding: '10px 14px',
+                      backgroundColor: selectedArmorQuality === quality ? ARMOR_QUALITY_COLORS[quality] : '#374151',
+                      color: selectedArmorQuality === quality ? (quality === ArmorQuality.STARDUST ? '#000' : 'white') : ARMOR_QUALITY_COLORS[quality],
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {ARMOR_QUALITY_NAMES[quality]}
+                  </button>
+                ))}
               </div>
             </div>
+
+            {/* 添加整套按钮 */}
+            <button
+              onClick={() => addAllArmorParts(selectedArmorQuality)}
+              style={{
+                width: '100%',
+                padding: '16px',
+                backgroundColor: ARMOR_QUALITY_COLORS[selectedArmorQuality],
+                color: selectedArmorQuality === ArmorQuality.STARDUST ? '#000' : 'white',
+                border: 'none',
+                borderRadius: '10px',
+                fontSize: '15px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                marginBottom: '16px',
+              }}
+            >
+              🛡️ 添加整套{ARMOR_QUALITY_NAMES[selectedArmorQuality]}战甲（6件）
+            </button>
+
+            {/* 单独添加各部位 */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+              {Object.values(NanoArmorSlot).map(slot => (
+                <button
+                  key={slot}
+                  onClick={() => addArmorPart(slot)}
+                  style={{
+                    padding: '14px',
+                    backgroundColor: '#1f2937',
+                    border: '1px solid #374151',
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <span style={{ fontSize: '28px' }}>{NANO_ARMOR_SLOT_ICONS[slot]}</span>
+                  <span style={{ color: '#e5e7eb', fontSize: '12px', fontWeight: 'bold' }}>
+                    {NANO_ARMOR_SLOT_NAMES[slot]}
+                  </span>
+                  <span style={{ color: '#6b7280', fontSize: '10px' }}>
+                    点击添加全品质
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* 当前拥有的战甲 */}
+            <h3 style={{ color: 'white', fontSize: '14px', margin: '24px 0 12px 0' }}>已拥有的战甲</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {armorEquipment.length === 0 ? (
+                <p style={{ color: '#6b7280', textAlign: 'center', padding: '20px' }}>暂无战甲装备</p>
+              ) : (
+                armorEquipment.map(equip => (
+                  <div
+                    key={equip.instanceId}
+                    style={{
+                      padding: '12px',
+                      backgroundColor: '#1f2937',
+                      borderRadius: '8px',
+                      borderLeft: `4px solid ${RARITY_COLORS[equip.rarity]}`,
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: RARITY_COLORS[equip.rarity], fontWeight: 'bold' }}>
+                        {equip.name}
+                      </span>
+                      <span style={{ color: '#6b7280', fontSize: '11px' }}>
+                        {equip.equipped ? '已装备' : '未装备'}
+                      </span>
+                    </div>
+                    <div style={{ color: '#a1a1aa', fontSize: '11px', marginTop: '4px' }}>
+                      攻击:{equip.stats.attack} 防御:{equip.stats.defense} 生命:{equip.stats.hp} 攻速:{equip.stats.speed}
+                      {equip.stats.hit > 0 && ` 命中:${equip.stats.hit}`}
+                      {equip.stats.dodge > 0 && ` 闪避:${equip.stats.dodge}`}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ========== 玩家标签 ========== */}
+        {activeTab === 'player' && (
+          <div>
+            <h2 style={{ color: 'white', fontSize: '16px', marginBottom: '16px' }}>玩家状态管理</h2>
 
             {/* 状态恢复 */}
             <div style={{
-              backgroundColor: '#1a1f3a',
-              borderRadius: '12px',
+              backgroundColor: '#1f2937',
+              borderRadius: '10px',
               padding: '16px',
-              marginBottom: '16px'
+              marginBottom: '16px',
             }}>
-              <h3 style={{ color: 'white', fontSize: '14px', marginBottom: '12px' }}>
-                状态恢复
-              </h3>
-              <button
-                onClick={restoreFullStatus}
-                style={{
-                  width: '100%',
-                  padding: '16px',
-                  backgroundColor: '#10b981',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                  fontSize: '16px'
-                }}
-              >
-                恢复满状态
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* 系统标签 */}
-        {activeTab === 'system' && (
-          <div>
-            {/* 存档操作 */}
-            <div style={{
-              backgroundColor: '#1a1f3a',
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '16px'
-            }}>
-              <h3 style={{ color: 'white', fontSize: '14px', marginBottom: '12px' }}>
-                存档操作
-              </h3>
-              <button
-                onClick={saveGame}
-                style={{
-                  width: '100%',
-                  padding: '16px',
-                  backgroundColor: '#3b82f6',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                  fontSize: '16px',
-                  marginBottom: '8px'
-                }}
-              >
-                保存游戏
-              </button>
+              <h3 style={{ color: '#00d4ff', fontSize: '13px', margin: '0 0 12px 0' }}>⚡ 状态恢复</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                <button
+                  onClick={restoreAll}
+                  style={{
+                    padding: '14px',
+                    backgroundColor: '#22c55e',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    gridColumn: 'span 2',
+                  }}
+                >
+                  💚 恢复所有状态
+                </button>
+                <button
+                  onClick={restoreHp}
+                  style={{
+                    padding: '12px',
+                    backgroundColor: '#ef4444',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  ❤️ 回满生命
+                </button>
+                <button
+                  onClick={restoreStamina}
+                  style={{
+                    padding: '12px',
+                    backgroundColor: '#f59e0b',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  ⚡ 回满体力
+                </button>
+              </div>
             </div>
 
-            {/* 危险操作 */}
+            {/* 经验与等级 */}
             <div style={{
-              backgroundColor: '#1a1f3a',
-              borderRadius: '12px',
+              backgroundColor: '#1f2937',
+              borderRadius: '10px',
               padding: '16px',
-              marginBottom: '16px'
+              marginBottom: '16px',
             }}>
-              <h3 style={{ color: '#ef4444', fontSize: '14px', marginBottom: '12px' }}>
-                危险操作
-              </h3>
-              <button
-                onClick={resetGame}
-                style={{
-                  width: '100%',
-                  padding: '16px',
-                  backgroundColor: '#dc2626',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                  fontSize: '16px'
-                }}
-              >
-                重置游戏
-              </button>
-              <p style={{ color: '#a1a1aa', fontSize: '11px', marginTop: '8px' }}>
-                警告：重置游戏将清空所有数据，无法恢复！
-              </p>
+              <h3 style={{ color: '#f59e0b', fontSize: '13px', margin: '0 0 12px 0' }}>✨ 经验与等级</h3>
+
+              {/* 当前状态 */}
+              <div style={{
+                backgroundColor: '#0f172a',
+                borderRadius: '8px',
+                padding: '12px',
+                marginBottom: '12px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <span style={{ color: '#a1a1aa' }}>当前等级</span>
+                  <span style={{ color: '#f59e0b', fontWeight: 'bold' }}>Lv.{gameManager.player.level}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#a1a1aa' }}>当前经验</span>
+                  <span style={{ color: '#e5e7eb' }}>{gameManager.player.exp} / {gameManager.player.expToNextLevel}</span>
+                </div>
+              </div>
+
+              {/* 操作按钮 */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <button
+                  onClick={levelUp}
+                  style={{
+                    padding: '14px',
+                    backgroundColor: '#f59e0b',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                  }}
+                >
+                  ⬆️ 升 1 级
+                </button>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                  <button
+                    onClick={() => addExp(100)}
+                    style={{
+                      padding: '10px',
+                      backgroundColor: '#374151',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '11px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    +100 经验
+                  </button>
+                  <button
+                    onClick={() => addExp(1000)}
+                    style={{
+                      padding: '10px',
+                      backgroundColor: '#374151',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '11px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    +1000 经验
+                  </button>
+                  <button
+                    onClick={() => addExp(10000)}
+                    style={{
+                      padding: '10px',
+                      backgroundColor: '#374151',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '11px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    +10000 经验
+                  </button>
+                </div>
+              </div>
             </div>
 
-            {/* 游戏信息 */}
+            {/* 完整状态面板 */}
             <div style={{
-              backgroundColor: '#1a1f3a',
-              borderRadius: '12px',
+              backgroundColor: '#1f2937',
+              borderRadius: '10px',
               padding: '16px',
-              marginBottom: '16px'
             }}>
-              <h3 style={{ color: 'white', fontSize: '14px', marginBottom: '12px' }}>
-                游戏信息
-              </h3>
-              <div style={{ color: '#a1a1aa', fontSize: '12px', lineHeight: '1.8' }}>
-                <div>游戏天数: {gameManager.day}</div>
-                <div>当前时间: {gameManager.time}:00</div>
-                <div>背包物品: {gameManager.inventory.items.length} 种</div>
-                <div>装备数量: {gameManager.inventory.equipment.length} 件</div>
-                <div>已解锁星球: {gameManager.locationProgress.size} 个</div>
+              <h3 style={{ color: '#a855f7', fontSize: '13px', margin: '0 0 12px 0' }}>📊 完整状态</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+                {[
+                  { label: '生命值', value: `${gameManager.player.hp}/${gameManager.player.maxHp}`, color: '#ef4444' },
+                  { label: '体力值', value: `${gameManager.player.stamina}/${gameManager.player.maxStamina}`, color: '#f59e0b' },
+                  { label: '精神值', value: `${gameManager.player.spirit}/${gameManager.player.maxSpirit}`, color: '#a855f7' },
+                  { label: '攻击力', value: gameManager.player.attack, color: '#f87171' },
+                  { label: '防御力', value: gameManager.player.defense, color: '#60a5fa' },
+                  { label: '速度', value: gameManager.player.speed, color: '#22c55e' },
+                ].map(stat => (
+                  <div
+                    key={stat.label}
+                    style={{
+                      padding: '10px',
+                      backgroundColor: '#0f172a',
+                      borderRadius: '6px',
+                      textAlign: 'center',
+                    }}
+                  >
+                    <div style={{ color: '#6b7280', fontSize: '11px', marginBottom: '4px' }}>{stat.label}</div>
+                    <div style={{ color: stat.color, fontSize: '14px', fontWeight: 'bold' }}>{stat.value}</div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -1008,16 +902,16 @@ export default function TestScreen({ onBack }: TestScreenProps) {
       {message && (
         <div style={{
           position: 'fixed',
-          bottom: '80px',
+          bottom: '100px',
           left: '50%',
           transform: 'translateX(-50%)',
-          backgroundColor: '#16a34a',
-          color: 'white',
-          padding: '12px 24px',
-          borderRadius: '8px',
-          fontWeight: 'bold',
+          padding: '14px 24px',
+          backgroundColor: '#065f46',
+          color: '#4ade80',
+          borderRadius: '10px',
           zIndex: 100,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+          fontWeight: 'bold',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
         }}>
           {message}
         </div>

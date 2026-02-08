@@ -9,7 +9,7 @@ export class Inventory {
   equipment: EquipmentInstance[]; // 神话装备存储在这里
   maxSlots: number;
 
-  constructor(items: InventoryItem[] = [], equipment: EquipmentInstance[] = [], maxSlots: number = 50) {
+  constructor(items: InventoryItem[] = [], equipment: EquipmentInstance[] = [], maxSlots: number = 100) {
     this.items = items;
     this.equipment = equipment;
     this.maxSlots = maxSlots;

@@ -10,6 +10,9 @@ export enum EquipmentSlot {
   FEET = 'feet',       // 靴子
   WEAPON = 'weapon',   // 武器
   ACCESSORY = 'accessory', // 饰品
+  // 纳米战甲专用部位
+  SHOULDER = 'shoulder', // 肩甲
+  ARM = 'arm',           // 臂甲
 }
 
 // 装备品质（与ItemRarity对应）

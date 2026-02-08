@@ -1,6 +1,6 @@
 import { useGameStore } from '../stores/gameStore';
 import { useState, useEffect } from 'react';
-import { AutoCollectMode, MODE_INFO, getCollectLocation } from '../data/autoCollectTypes';
+import { AutoCollectMode, MODE_INFO, getCollectRobot } from '../data/autoCollectTypes';
 
 interface HomeScreenProps {
   onNavigate: (screen: string) => void;
@@ -56,18 +56,39 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
     setShowCollectModal(false);
   };
 
+  // 处理领取收益并重新开始（切换模式时使用）
+  const handleClaimAndRestart = (locationId: string, newMode: AutoCollectMode) => {
+    // 先领取当前收益
+    const claimResult = claimAutoCollectRewards();
+    if (claimResult.success && claimResult.rewards) {
+      const rewards = claimResult.rewards;
+      showToast(`模式切换！获得 ${rewards.gold} 信用点、${rewards.exp} 经验值`, 'success', 3000);
+      if (rewards.materials.length > 0) {
+        showToast(`材料：${rewards.materials.map(m => `${m.name}x${m.quantity}`).join('、')}`, 'info', 3000);
+      }
+      if (rewards.enhanceStones > 0) {
+        showToast(`强化石x${rewards.enhanceStones}`, 'info', 3000);
+      }
+    }
+    // 使用新模式重新开始
+    const startResult = startAutoCollect(locationId, newMode);
+    if (startResult.success) {
+      showToast(`已切换到${newMode === AutoCollectMode.GATHER ? '资源采集' : newMode === AutoCollectMode.COMBAT ? '战斗巡逻' : '平衡'}模式`, 'success');
+    }
+  };
+
   // 处理停止采集
   const handleStopCollect = () => {
     const result = stopAutoCollect();
     if (result.success) {
-      if (result.rewards && (result.rewards.gold > 0 || result.rewards.exp > 0 || result.rewards.materials.length > 0 || result.rewards.equipments.length > 0)) {
+      if (result.rewards && (result.rewards.gold > 0 || result.rewards.exp > 0 || result.rewards.materials.length > 0 || result.rewards.enhanceStones > 0)) {
         const rewards = result.rewards;
         showToast(`采集完成！获得 ${rewards.gold} 信用点、${rewards.exp} 经验值`, 'success', 3000);
         if (rewards.materials.length > 0) {
           showToast(`材料：${rewards.materials.map(m => `${m.name}x${m.quantity}`).join('、')}`, 'info', 3000);
         }
-        if (rewards.equipments.length > 0) {
-          showToast(`装备：${rewards.equipments.map(e => e.name).join('、')}`, 'info', 3000);
+        if (rewards.enhanceStones > 0) {
+          showToast(`强化石x${rewards.enhanceStones}`, 'info', 3000);
         }
       } else {
         showToast('已停止采集，暂无收益', 'info');
@@ -81,14 +102,14 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
   const handleClaimRewards = () => {
     const result = claimAutoCollectRewards();
     if (result.success) {
-      if (result.rewards && (result.rewards.gold > 0 || result.rewards.exp > 0 || result.rewards.materials.length > 0 || result.rewards.equipments.length > 0)) {
+      if (result.rewards && (result.rewards.gold > 0 || result.rewards.exp > 0 || result.rewards.materials.length > 0 || result.rewards.enhanceStones > 0)) {
         const rewards = result.rewards;
         showToast(`领取成功！获得 ${rewards.gold} 信用点、${rewards.exp} 经验值`, 'success', 3000);
         if (rewards.materials.length > 0) {
           showToast(`材料：${rewards.materials.map(m => `${m.name}x${m.quantity}`).join('、')}`, 'info', 3000);
         }
-        if (rewards.equipments.length > 0) {
-          showToast(`装备：${rewards.equipments.map(e => e.name).join('、')}`, 'info', 3000);
+        if (rewards.enhanceStones > 0) {
+          showToast(`强化石x${rewards.enhanceStones}`, 'info', 3000);
         }
       } else {
         showToast('当前没有可领取的收益', 'warning');
@@ -108,8 +129,8 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
     }
   };
 
-  // 检查是否可以休息
-  const canRest = player.hunger >= 20 && player.thirst >= 10;
+  // 检查是否可以休整（需要能量x10，冷却x10）
+  const canRest = player.hunger >= 10 && player.thirst >= 10;
 
   // 预警颜色（新主题）
   const getWarningColor = (value: number, max: number) => {
@@ -139,7 +160,7 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
           justifyContent: 'space-between',
           alignItems: 'center'
         }}>
-          {/* 最左边：联邦拓荒队员 */}
+          {/* 最左边：战甲档案 */}
           <h1 style={{
             color: '#00d4ff',
             fontSize: '18px',
@@ -147,7 +168,7 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
             margin: 0,
             textShadow: '0 0 10px rgba(0, 212, 255, 0.5)'
           }}>
-            🚀 {gameManager.playerName || '联邦拓荒队员'}
+            🚀 {gameManager.playerName || '战甲档案'}
           </h1>
 
           {/* 中间：等级|第X天 XX:XX */}
@@ -274,27 +295,28 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
           />
           <ActionButton
             icon="🔨"
-            label="装备制造"
+            label="星械锻造所"
             gradient="linear-gradient(135deg, #1a1f3a 0%, #f59e0b 100%)"
             onClick={() => onNavigate('crafting')}
           />
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginTop: '12px' }}>
           <ActionButton
+            icon="⚗️"
+            label="材料合成"
+            gradient="linear-gradient(135deg, #059669 0%, #10b981 100%)"
+            onClick={() => onNavigate('synthesis')}
+          />
+          <ActionButton
             icon="📦"
             label="物资分解"
             gradient="linear-gradient(135deg, #374151 0%, #2a3050 100%)"
             onClick={() => onNavigate('decompose')}
           />
-          <ActionButton
-            icon="📖"
-            label="技能系统"
-            gradient="linear-gradient(135deg, #374151 0%, #2a3050 100%)"
-            onClick={() => onNavigate('skills')}
-          />
+
           <ActionButton
             icon="👤"
-            label="拓荒队员"
+            label="战甲档案"
             gradient="linear-gradient(135deg, #374151 0%, #2a3050 100%)"
             onClick={() => onNavigate('player')}
           />
@@ -389,8 +411,13 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
         <AutoCollectModal
           onClose={() => setShowCollectModal(false)}
           onStart={handleStartCollect}
+          onClaimAndRestart={handleClaimAndRestart}
+          isCollecting={isCollecting}
+          currentMode={autoCollectState.mode}
           availableLocations={getAvailableCollectLocations()}
           playerLevel={player.level}
+          defeatedBossCount={gameManager.autoCollectSystem.defeatedBosses.size}
+          remainingDailyHours={gameManager.autoCollectSystem.getRemainingDailyHours()}
         />
       )}
     </div>
@@ -417,7 +444,7 @@ function AutoCollectPanel({
   onClaim: () => void;
   onOpenSettings: () => void;
 }) {
-  const location = getCollectLocation(locationId);
+  const robot = getCollectRobot(locationId);
   const modeInfo = MODE_INFO[mode];
 
   return (
@@ -499,9 +526,9 @@ function AutoCollectPanel({
             alignItems: 'center',
             marginBottom: '4px',
           }}>
-            <span style={{ color: '#a1a1aa', fontSize: '12px' }}>📍 当前轨道</span>
+            <span style={{ color: '#a1a1aa', fontSize: '12px' }}>🤖 当前机器人</span>
             <span style={{ color: '#ffffff', fontSize: '13px' }}>
-              {location?.icon} {location?.name}
+              {robot?.icon} {robot?.name}
             </span>
           </div>
           <div style={{
@@ -614,18 +641,37 @@ function AutoCollectPanel({
 function AutoCollectModal({
   onClose,
   onStart,
+  onClaimAndRestart,
+  isCollecting,
+  currentMode,
   availableLocations,
   playerLevel,
+  defeatedBossCount,
+  remainingDailyHours,
 }: {
   onClose: () => void;
   onStart: (locationId: string, mode: AutoCollectMode) => void;
+  onClaimAndRestart: (locationId: string, newMode: AutoCollectMode) => void;
+  isCollecting: boolean;
+  currentMode: AutoCollectMode;
   availableLocations: import('../data/autoCollectTypes').CollectLocation[];
   playerLevel: number;
+  defeatedBossCount: number;
+  remainingDailyHours: number;
 }) {
-  const [selectedLocation, setSelectedLocation] = useState(availableLocations[0]?.id || 'orbit_debris');
-  const [selectedMode, setSelectedMode] = useState<AutoCollectMode>(AutoCollectMode.BALANCED);
+  const [selectedLocation, setSelectedLocation] = useState(availableLocations[0]?.id || 'robot_lv1');
+  const [selectedMode, setSelectedMode] = useState<AutoCollectMode>(currentMode || AutoCollectMode.BALANCED);
 
   const selectedLoc = availableLocations.find(loc => loc.id === selectedLocation);
+
+  // 处理模式切换
+  const handleModeChange = (mode: AutoCollectMode) => {
+    if (isCollecting && mode !== selectedMode) {
+      // 如果正在采集且切换了模式，结算收益并重新计时
+      onClaimAndRestart(selectedLocation, mode);
+    }
+    setSelectedMode(mode);
+  };
 
   return (
     <div style={{
@@ -689,7 +735,7 @@ function AutoCollectModal({
               fontSize: '13px',
               marginBottom: '8px',
             }}>
-              选择采集轨道
+              选择采集机器人
             </label>
             <div style={{
               display: 'flex',
@@ -743,16 +789,10 @@ function AutoCollectModal({
                     marginLeft: '28px',
                   }}>
                     <span style={{
-                      color: '#ef4444',
+                      color: '#00d4ff',
                       fontSize: '11px',
                     }}>
-                      危险: {loc.dangerLevel}/10
-                    </span>
-                    <span style={{
-                      color: '#10b981',
-                      fontSize: '11px',
-                    }}>
-                      资源: {loc.resourceQuality}/10
+                      Lv.{(loc as any).level || 1} 机器人
                     </span>
                   </div>
                 </button>
@@ -778,7 +818,7 @@ function AutoCollectModal({
               {(Object.keys(MODE_INFO) as AutoCollectMode[]).map(mode => (
                 <button
                   key={mode}
-                  onClick={() => setSelectedMode(mode)}
+                  onClick={() => handleModeChange(mode)}
                   style={{
                     background: selectedMode === mode
                       ? 'rgba(0, 212, 255, 0.2)'
@@ -817,43 +857,114 @@ function AutoCollectModal({
             </div>
           </div>
 
-          {/* 预计收益 */}
-          {selectedLoc && (
+          {/* 星球收益加成 */}
+          {defeatedBossCount > 0 && (
             <div style={{
-              background: 'rgba(16, 185, 129, 0.1)',
+              background: 'rgba(245, 158, 11, 0.1)',
               borderRadius: '12px',
               padding: '12px',
-              marginBottom: '20px',
+              marginBottom: '12px',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
             }}>
               <div style={{
-                color: '#10b981',
+                color: '#f59e0b',
                 fontSize: '12px',
                 fontWeight: 'bold',
-                marginBottom: '8px',
+                marginBottom: '4px',
               }}>
-                📊 预计每小时收益
+                🏆 星球征服加成
               </div>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '8px',
-                fontSize: '12px',
-              }}>
-                <div style={{ color: '#a1a1aa' }}>
-                  💰 {selectedLoc.baseRewards.goldMin}-{selectedLoc.baseRewards.goldMax} 信用点
-                </div>
-                <div style={{ color: '#a1a1aa' }}>
-                  ⭐ {selectedLoc.baseRewards.expMin}-{selectedLoc.baseRewards.expMax} 经验
-                </div>
-                <div style={{ color: '#a1a1aa' }}>
-                  📦 材料掉落率: {Math.round(selectedLoc.baseRewards.materialDropChance * 100)}%
-                </div>
-                <div style={{ color: '#a1a1aa' }}>
-                  🎁 装备掉落率: {Math.round(selectedLoc.baseRewards.equipmentDropChance * 100)}%
-                </div>
+              <div style={{ color: '#fbbf24', fontSize: '12px' }}>
+                已击败 {defeatedBossCount} 个星球首领，收益 +{Math.round(defeatedBossCount * 20)}%
               </div>
             </div>
           )}
+
+          {/* 今日剩余时间 */}
+          <div style={{
+            background: 'rgba(0, 212, 255, 0.1)',
+            borderRadius: '12px',
+            padding: '12px',
+            marginBottom: '12px',
+            border: '1px solid rgba(0, 212, 255, 0.3)',
+          }}>
+            <div style={{
+              color: '#00d4ff',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              marginBottom: '4px',
+            }}>
+              ⏱️ 今日挂机时间
+            </div>
+            <div style={{ color: '#a1a1aa', fontSize: '12px' }}>
+              剩余 {remainingDailyHours.toFixed(1)} 小时 / 每日上限 24 小时
+            </div>
+          </div>
+
+          {/* 预计收益 */}
+          {selectedLoc && (() => {
+            const base = (selectedLoc as any).baseRewards || { gold: 60, exp: 6, materialsPerHour: 10, enhanceStonesPerHour: 2 };
+            // 根据模式计算加成
+            let goldMultiplier = 1;
+            let expMultiplier = 1;
+            let materialMultiplier = 1;
+            let enhanceStoneMultiplier = 1;
+            switch (selectedMode) {
+              case AutoCollectMode.GATHER:
+                goldMultiplier = 1.5;
+                materialMultiplier = 1.5;
+                break;
+              case AutoCollectMode.COMBAT:
+                expMultiplier = 1.5;
+                enhanceStoneMultiplier = 1.5;
+                break;
+              case AutoCollectMode.BALANCED:
+                // 平衡模式无加成
+                break;
+            }
+            // 应用星球收益加成
+            const bossMultiplier = 1 + defeatedBossCount * 0.2;
+            goldMultiplier *= bossMultiplier;
+            expMultiplier *= bossMultiplier;
+            materialMultiplier *= bossMultiplier;
+            enhanceStoneMultiplier *= bossMultiplier;
+            return (
+              <div style={{
+                background: 'rgba(16, 185, 129, 0.1)',
+                borderRadius: '12px',
+                padding: '12px',
+                marginBottom: '20px',
+              }}>
+                <div style={{
+                  color: '#10b981',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  marginBottom: '8px',
+                }}>
+                  📊 预计每小时收益
+                </div>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '8px',
+                  fontSize: '12px',
+                }}>
+                  <div style={{ color: goldMultiplier > 1 ? '#00d4ff' : '#a1a1aa' }}>
+                    💰 ~{Math.round(base.gold * goldMultiplier)} 信用点
+                  </div>
+                  <div style={{ color: expMultiplier > 1 ? '#00d4ff' : '#a1a1aa' }}>
+                    ⭐ ~{Math.round(base.exp * expMultiplier)} 经验
+                  </div>
+                  <div style={{ color: materialMultiplier > 1 ? '#00d4ff' : '#a1a1aa' }}>
+                    📦 ~{Math.round(base.materialsPerHour * materialMultiplier)} 材料
+                  </div>
+                  <div style={{ color: enhanceStoneMultiplier > 1 ? '#00d4ff' : '#a1a1aa' }}>
+                    💎 ~{Math.round(base.enhanceStonesPerHour * enhanceStoneMultiplier)} 强化石
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* 开始按钮 */}
           <button
@@ -994,7 +1105,6 @@ function LogItem({ log, isLatest }: { log: string; isLatest: boolean }) {
     if (logText.includes('物品')) return '📦';
     if (logText.includes('制造')) return '🔨';
     if (logText.includes('分解')) return '📦';
-    if (logText.includes('技能')) return '📖';
     if (logText.includes('跃迁')) return '🚀';
     return '•';
   };

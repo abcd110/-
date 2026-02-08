@@ -12,24 +12,15 @@ interface BattleScreenProps {
 
 type BattleState = 'start' | 'fighting' | 'victory' | 'defeat' | 'escaped';
 
-interface SkillCooldown {
-  skillId: string;
-  currentCooldown: number;
-  maxCooldown: number;
-}
-
 export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBattleEnd }: BattleScreenProps) {
   const [battleState, setBattleState] = useState<BattleState>('start');
   const [enemy, setEnemy] = useState<Enemy | null>(null);
   const [battleLog, setBattleLog] = useState<string[]>([]);
-  const [isAutoBattle, setIsAutoBattle] = useState(true);
-  const [skillCooldowns, setSkillCooldowns] = useState<Map<string, SkillCooldown>>(new Map());
   const [isInitialized, setIsInitialized] = useState(false);
 
   // 战斗计时器
   const playerAttackTimer = useRef<number | null>(null);
   const enemyAttackTimer = useRef<number | null>(null);
-  const skillCheckTimer = useRef<number | null>(null);
 
   // 使用 ref 存储 player 和 enemy，避免依赖项变化导致定时器重建
   const playerRef = useRef(useGameStore.getState().gameManager.player);
@@ -37,7 +28,6 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
 
   const gameManager = useGameStore(state => state.gameManager);
   const player = useGameStore(state => state.getPlayer());
-  const activeSkills = useGameStore(state => state.getActiveSkills());
   const startBattle = useGameStore(state => state.startBattle);
   const endBattleVictory = useGameStore(state => state.endBattleVictory);
   const attemptEscape = useGameStore(state => state.attemptEscape);
@@ -69,17 +59,6 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
       setBattleLog([result.message, '战斗开始！']);
       setBattleState('fighting');
       setIsInitialized(true);
-
-      // 初始化技能冷却
-      const cooldowns = new Map<string, SkillCooldown>();
-      activeSkills.forEach((skill, skillId) => {
-        cooldowns.set(skillId, {
-          skillId,
-          currentCooldown: 0,
-          maxCooldown: skill.cooldown || 3
-        });
-      });
-      setSkillCooldowns(cooldowns);
     } else {
       setBattleLog([result.message]);
       setTimeout(() => onBack(), 1500);
@@ -108,10 +87,6 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
     if (enemyAttackTimer.current) {
       clearInterval(enemyAttackTimer.current);
       enemyAttackTimer.current = null;
-    }
-    if (skillCheckTimer.current) {
-      clearInterval(skillCheckTimer.current);
-      skillCheckTimer.current = null;
     }
   }, []);
 
@@ -222,116 +197,12 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
       doEnemyAttack();
     }, enemyInterval);
 
-    // 技能检查计时器（每秒检查一次）
-    skillCheckTimer.current = window.setInterval(() => {
-      checkAndUseSkills();
-      reduceCooldowns();
-    }, 1000);
-
     return () => {
       clearAllTimers();
     };
     // 注意：这里不依赖 doPlayerAttack 和 doEnemyAttack，因为它们使用 ref
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [battleState, isInitialized, player.totalAttackSpeed, enemy?.speed]);
-
-  // 使用技能
-  const useSkill = useCallback((skillId: string) => {
-    const currentEnemy = enemyRef.current;
-    const currentPlayer = playerRef.current;
-
-    if (!currentEnemy || battleState !== 'fighting') return false;
-
-    const skill = activeSkills.get(skillId);
-    if (!skill) return false;
-
-    const cooldown = skillCooldowns.get(skillId);
-    if (cooldown && cooldown.currentCooldown > 0) return false;
-
-    // 执行技能效果
-    let damage = 0;
-    const effect = skill.getCurrentEffect();
-
-    // 处理伤害类技能
-    if (effect.damage) {
-      damage = effect.damage;
-      damage = Math.max(1, damage - currentEnemy.defense);
-      currentEnemy.hp = Math.max(0, currentEnemy.hp - damage);
-    } else if (effect.damagePercent) {
-      damage = Math.floor(currentPlayer.totalAttack * (effect.damagePercent / 100));
-      damage = Math.max(1, damage - currentEnemy.defense);
-      currentEnemy.hp = Math.max(0, currentEnemy.hp - damage);
-    }
-
-    // 处理治疗类技能
-    if (effect.heal) {
-      const healAmount = effect.heal;
-      currentPlayer.hp = Math.min(currentPlayer.totalMaxHp, currentPlayer.hp + healAmount);
-      addLog(`${skill.name}！恢复 ${healAmount} 生命值`);
-    } else if (effect.healPercent) {
-      const healAmount = Math.floor(currentPlayer.totalMaxHp * (effect.healPercent / 100));
-      currentPlayer.hp = Math.min(currentPlayer.totalMaxHp, currentPlayer.hp + healAmount);
-      addLog(`${skill.name}！恢复 ${healAmount} 生命值`);
-    }
-
-    // 强制更新 enemy 状态
-    setEnemy({ ...currentEnemy });
-    enemyRef.current = { ...currentEnemy };
-
-    // 设置冷却
-    setSkillCooldowns(prev => {
-      const next = new Map(prev);
-      next.set(skillId, {
-        skillId,
-        currentCooldown: skill.cooldown || 3,
-        maxCooldown: skill.cooldown || 3
-      });
-      return next;
-    });
-
-    if (damage > 0) {
-      addLog(`${skill.name}！造成 ${damage} 伤害`);
-    }
-
-    // 检查胜利
-    if (currentEnemy.hp <= 0) {
-      clearAllTimers();
-      setBattleState('victory');
-      addLog('战斗胜利！');
-      if (!isBoss) {
-        const progressGain = isElite ? 15 : 10;
-        addLog(`狩猎进度 +${progressGain}%`);
-      }
-    }
-
-    return true;
-  }, [battleState, activeSkills, skillCooldowns, addLog, isBoss, isElite, clearAllTimers]);
-
-  // 检查并释放技能
-  const checkAndUseSkills = useCallback(() => {
-    if (!isAutoBattle || battleState !== 'fighting') return;
-
-    activeSkills.forEach((skill, skillId) => {
-      const cooldown = skillCooldowns.get(skillId);
-      if (cooldown && cooldown.currentCooldown === 0) {
-        useSkill(skillId);
-      }
-    });
-  }, [isAutoBattle, battleState, activeSkills, skillCooldowns, useSkill]);
-
-  // 减少技能冷却
-  const reduceCooldowns = useCallback(() => {
-    setSkillCooldowns(prev => {
-      const next = new Map();
-      prev.forEach((cooldown, skillId) => {
-        next.set(skillId, {
-          ...cooldown,
-          currentCooldown: Math.max(0, cooldown.currentCooldown - 1)
-        });
-      });
-      return next;
-    });
-  }, []);
 
   // 逃跑
   const handleEscape = () => {
@@ -347,11 +218,6 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
     } else {
       setBattleState('fighting');
     }
-  };
-
-  // 切换自动战斗
-  const toggleAutoBattle = () => {
-    setIsAutoBattle(prev => !prev);
   };
 
   // 继续狩猎 - 直接开始新战斗
@@ -381,7 +247,6 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
     setEnemy(null);
     enemyRef.current = null;
     setBattleLog([]);
-    setSkillCooldowns(new Map());
 
     // 延迟一点再初始化新战斗
     setTimeout(() => {
@@ -393,17 +258,6 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
         setBattleLog([result.message, '战斗开始！']);
         setBattleState('fighting');
         setIsInitialized(true);
-
-        // 初始化技能冷却
-        const cooldowns = new Map<string, SkillCooldown>();
-        activeSkills.forEach((skill, skillId) => {
-          cooldowns.set(skillId, {
-            skillId,
-            currentCooldown: 0,
-            maxCooldown: skill.cooldown || 3
-          });
-        });
-        setSkillCooldowns(cooldowns);
       }
     }, 100);
   };
@@ -651,43 +505,6 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
               <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#1f2937', borderRadius: '6px' }}>
                 <div style={{ color: '#00d4ff', fontWeight: 'bold' }}>{player.totalAttackSpeed.toFixed(1)}</div>
                 <div style={{ color: '#a1a1aa' }}>攻速</div>
-              </div>
-            </div>
-          )}
-
-          {/* 技能CD显示 - 胜利时隐藏 */}
-          {battleState !== 'victory' && activeSkills.size > 0 && (
-            <div style={{ marginTop: '12px' }}>
-              <h4 style={{ color: '#a1a1aa', fontSize: '12px', margin: '0 0 8px 0' }}>技能状态</h4>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {Array.from(activeSkills.entries()).map(([skillId, skill]) => {
-                  const cooldown = skillCooldowns.get(skillId);
-                  const currentCD = cooldown?.currentCooldown || 0;
-                  const maxCD = cooldown?.maxCooldown || skill.cooldown || 0;
-                  const isReady = currentCD === 0;
-
-                  return (
-                    <div
-                      key={skillId}
-                      style={{
-                        padding: '6px 10px',
-                        backgroundColor: isReady ? '#065f46' : '#7c2d12',
-                        borderRadius: '6px',
-                        fontSize: '11px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px'
-                      }}
-                    >
-                      <span style={{ color: isReady ? '#4ade80' : '#fdba74', fontWeight: 'bold' }}>
-                        {skill.name}
-                      </span>
-                      <span style={{ color: isReady ? '#4ade80' : '#fdba74' }}>
-                        {isReady ? '就绪' : `${currentCD}s`}
-                      </span>
-                    </div>
-                  );
-                })}
               </div>
             </div>
           )}

@@ -1,9 +1,9 @@
 // 《星航荒宇》存档迁移工具
 // 将《列车求生》旧存档迁移到新系统
 
-import { GameState as NewGameState } from '../core/GameManager_new';
-import { 
-  FactionType, 
+import type { GameState } from '../core/GameManager';
+import {
+  FactionType,
   PlanetType,
   FactionReputation,
 } from '../data/types_new';
@@ -101,7 +101,7 @@ const LOCATION_TO_PLANET_MAP: Record<string, string> = {
   'location_mimir': 'planet_mimir',
   'location_hel': 'planet_hel',
   'location_godless': 'planet_alpha', // 无神之境改为阿尔法星
-  
+
   // 其他站台映射到废土星
   'location_ruins': 'planet_withered',
   'location_forest': 'planet_withered',
@@ -116,12 +116,12 @@ const ITEM_MIGRATION_MAP: Record<string, string> = {
   'metal': 'star_core_fragment',
   'food': 'energy_block',
   'water': 'coolant',
-  
+
   // 特殊资源
   'train_coin': 'federation_credit',
   'fuel': 'energy_cell',
   'repair_kit': 'repair_kit', // 保持不变
-  
+
   // 默认映射
   'default': 'basic_alloy',
 };
@@ -129,7 +129,7 @@ const ITEM_MIGRATION_MAP: Record<string, string> = {
 // ==================== 迁移工具类 ====================
 
 export class SaveMigration {
-  
+
   /**
    * 检测存档版本
    */
@@ -138,16 +138,16 @@ export class SaveMigration {
     if (saveData._version) {
       return saveData._version as SaveVersion;
     }
-    
+
     // 通过数据结构判断
     if (saveData.train && saveData.currentLocation) {
       return OLD_VERSION;
     }
-    
+
     if (saveData.spaceship && saveData.currentPlanet) {
       return CURRENT_VERSION;
     }
-    
+
     // 无法识别，假设为最新版本
     return CURRENT_VERSION;
   }
@@ -163,17 +163,17 @@ export class SaveMigration {
   /**
    * 执行存档迁移
    */
-  static migrate(saveString: string): { 
-    success: boolean; 
-    data?: NewGameState; 
+  static migrate(saveString: string): {
+    success: boolean;
+    data?: GameState;
     message: string;
     warnings: string[];
   } {
     const warnings: string[] = [];
-    
+
     try {
       const oldData = JSON.parse(saveString) as OldGameState;
-      
+
       // 验证旧存档
       if (!this.validateOldSave(oldData)) {
         return {
@@ -182,17 +182,17 @@ export class SaveMigration {
           warnings: ['存档数据格式不正确'],
         };
       }
-      
+
       // 执行迁移
       const newData = this.performMigration(oldData, warnings);
-      
+
       return {
         success: true,
         data: newData,
         message: `存档迁移成功：从 ${OLD_VERSION.gameName} v${OLD_VERSION.version} 迁移到 ${CURRENT_VERSION.gameName} v${CURRENT_VERSION.version}`,
         warnings,
       };
-      
+
     } catch (error) {
       return {
         success: false,
@@ -217,33 +217,33 @@ export class SaveMigration {
    * 执行迁移逻辑
    */
   private static performMigration(
-    oldData: OldGameState, 
+    oldData: OldGameState,
     warnings: string[]
-  ): NewGameState {
-    
+  ): GameState {
+
     // 1. 迁移玩家数据
     const playerData = this.migratePlayerData(oldData.player, warnings);
-    
+
     // 2. 迁移航船数据（列车 -> 航船）
     const spaceshipData = this.migrateTrainToSpaceship(oldData.train, warnings);
-    
+
     // 3. 迁移背包数据
     const inventoryData = this.migrateInventory(oldData.inventory, warnings);
-    
+
     // 4. 迁移星球进度（站台 -> 星球）
     const planetProgress = this.migrateLocationProgress(
-      oldData.locationProgress || {}, 
+      oldData.locationProgress || {},
       warnings
     );
-    
+
     // 5. 迁移当前位置
     const currentPlanet = this.migrateLocationId(oldData.currentLocation);
     if (currentPlanet !== oldData.currentLocation) {
       warnings.push(`当前位置已迁移: ${oldData.currentLocation} -> ${currentPlanet}`);
     }
-    
+
     // 6. 构建新存档
-    const newState: NewGameState = {
+    const newState: GameState = {
       player: playerData,
       spaceship: spaceshipData,
       inventory: inventoryData,
@@ -262,7 +262,7 @@ export class SaveMigration {
       lastSaveTime: Date.now(),
       lastSpiritRecoveryTime: oldData.lastSpiritRecoveryTime || Date.now(),
     };
-    
+
     return newState;
   }
 
@@ -270,20 +270,20 @@ export class SaveMigration {
    * 迁移玩家数据
    */
   private static migratePlayerData(
-    oldPlayer: OldGameState['player'], 
+    oldPlayer: OldGameState['player'],
     warnings: string[]
-  ): NewGameState['player'] {
-    
+  ): GameState['player'] {
+
     // 添加势力声望（新系统）
     const factionReputations = createInitialReputations();
-    
+
     // 迁移装备
     const equipment = oldPlayer.equipment?.map(equip => ({
       ...equip,
       // 确保装备数据完整性
       equipped: true,
     })) || [];
-    
+
     return {
       name: oldPlayer.name || '联邦拓荒队员',
       level: oldPlayer.level || 1,
@@ -311,10 +311,10 @@ export class SaveMigration {
    * 迁移列车数据到航船
    */
   private static migrateTrainToSpaceship(
-    oldTrain: OldGameState['train'], 
+    oldTrain: OldGameState['train'],
     warnings: string[]
-  ): NewGameState['spaceship'] {
-    
+  ): GameState['spaceship'] {
+
     // 转换模块数据
     const modules = oldTrain.modules?.map(module => ({
       slot: module.slot,
@@ -323,7 +323,7 @@ export class SaveMigration {
         // 确保模块数据完整性
       } : null,
     })) || [];
-    
+
     return {
       id: oldTrain.id || 'ship_001',
       name: oldTrain.name?.replace('列车', '航船') || '初号拓荒舰',
@@ -342,23 +342,23 @@ export class SaveMigration {
    * 迁移背包数据
    */
   private static migrateInventory(
-    oldInventory: OldGameState['inventory'], 
+    oldInventory: OldGameState['inventory'],
     warnings: string[]
-  ): NewGameState['inventory'] {
-    
+  ): GameState['inventory'] {
+
     // 迁移物品
     const items = oldInventory.items?.map(item => ({
       ...item,
       // 迁移物品ID
       itemId: this.migrateItemId(item.itemId || item.id),
     })) || [];
-    
+
     // 迁移装备
     const equipment = oldInventory.equipment?.map(equip => ({
       ...equip,
       equipped: false, // 背包中的装备未装备
     })) || [];
-    
+
     return {
       items,
       equipment,
@@ -383,19 +383,19 @@ export class SaveMigration {
    * 迁移星球进度
    */
   private static migrateLocationProgress(
-    oldProgress: OldGameState['locationProgress'], 
+    oldProgress: OldGameState['locationProgress'],
     warnings: string[]
-  ): NewGameState['planetProgress'] {
-    
-    const newProgress: NewGameState['planetProgress'] = {};
-    
+  ): GameState['planetProgress'] {
+
+    const newProgress: GameState['planetProgress'] = {};
+
     Object.entries(oldProgress).forEach(([oldLocationId, progress]) => {
       const newPlanetId = this.migrateLocationId(oldLocationId);
-      
+
       if (newPlanetId !== oldLocationId) {
         warnings.push(`探索进度已迁移: ${oldLocationId} -> ${newPlanetId}`);
       }
-      
+
       newProgress[newPlanetId] = {
         materialProgress: progress.materialProgress || 0,
         huntProgress: progress.huntProgress || 0,
@@ -404,7 +404,7 @@ export class SaveMigration {
         lastBossChallengeDate: progress.lastBossChallengeDate || null,
       };
     });
-    
+
     return newProgress;
   }
 
@@ -412,7 +412,7 @@ export class SaveMigration {
    * 迁移日志
    */
   private static migrateLogs(oldLogs: string[]): string[] {
-    return oldLogs.map(log => 
+    return oldLogs.map(log =>
       log
         .replace(/列车/g, '航船')
         .replace(/站台/g, '星球')
@@ -425,19 +425,19 @@ export class SaveMigration {
   /**
    * 生成迁移报告
    */
-  static generateReport(result: { 
-    success: boolean; 
-    message: string; 
+  static generateReport(result: {
+    success: boolean;
+    message: string;
     warnings: string[];
   }): string {
     const lines: string[] = [];
-    
+
     lines.push('========== 存档迁移报告 ==========');
     lines.push('');
     lines.push(`状态: ${result.success ? '✅ 成功' : '❌ 失败'}`);
     lines.push(`消息: ${result.message}`);
     lines.push('');
-    
+
     if (result.warnings.length > 0) {
       lines.push('⚠️ 警告信息:');
       result.warnings.forEach((warning, index) => {
@@ -445,7 +445,7 @@ export class SaveMigration {
       });
       lines.push('');
     }
-    
+
     lines.push('迁移内容:');
     lines.push('  • 玩家数据 -> 联邦拓荒队员');
     lines.push('  • 列车 -> 星际航船');
@@ -455,7 +455,7 @@ export class SaveMigration {
     lines.push('  • 新增：神契者系统（初始为空）');
     lines.push('');
     lines.push('==================================');
-    
+
     return lines.join('\n');
   }
 }

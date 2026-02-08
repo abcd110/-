@@ -23,7 +23,6 @@ export { Train } from './Train';
 export { Inventory } from './Inventory';
 export { GameManager } from './GameManager';
 export { QuestSystem, Quest, QuestType, QuestStatus, QuestConditionType } from './QuestSystem';
-export { SkillSystem, Skill, SkillType } from './SkillSystem';
 export { ShopSystem, ShopItem } from './ShopSystem';
 export { CraftingSystem, CraftingRecipe, CraftingMaterial } from './CraftingSystem';
 export { EnhanceSystem, EnhanceResult, EnhanceResultType } from './EnhanceSystem';

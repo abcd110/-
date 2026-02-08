@@ -43,9 +43,6 @@ interface GameStore {
   // 任务系统
   claimQuestReward: (questId: string) => { success: boolean; message: string };
 
-  // 技能系统
-  learnSkill: (skillId: string) => { success: boolean; message: string };
-
   // 商店系统
   buyItem: (itemId: string, quantity?: number) => { success: boolean; message: string };
 
@@ -96,9 +93,6 @@ interface GameStore {
   getCurrentLocation: () => Location | undefined;
   isGameOver: () => boolean;
   getQuests: () => GameManager['quests'];
-  getActiveSkills: () => GameManager['activeSkills'];
-  getPassiveSkills: () => GameManager['passiveSkills'];
-  getAvailableSkills: () => string[];
   getShopItems: () => GameManager['shopItems'];
 }
 
@@ -213,14 +207,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   // 学习技能
-  learnSkill: (skillId: string) => {
-    const { gameManager } = get();
-    const result = gameManager.learnSkill(skillId);
-    get().saveGame();
-    set({ logs: gameManager.logs });
-    return result;
-  },
-
   // 购买物品
   buyItem: (itemId: string, quantity: number = 1) => {
     const { gameManager } = get();
@@ -391,8 +377,5 @@ export const useGameStore = create<GameStore>((set, get) => ({
   getCurrentLocation: () => get().gameManager.getCurrentLocation(),
   isGameOver: () => get().gameManager.isGameOver,
   getQuests: () => get().gameManager.quests,
-  getActiveSkills: () => get().gameManager.activeSkills,
-  getPassiveSkills: () => get().gameManager.passiveSkills,
-  getAvailableSkills: () => get().gameManager.availableSkills,
   getShopItems: () => get().gameManager.shopItems,
 }));

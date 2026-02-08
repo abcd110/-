@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useGameStore } from '../stores/gameStore';
 import { EquipmentSlot, EffectTrigger } from '../data/equipmentTypes';
 import { EquipmentInstance } from '../core/EquipmentSystem';
-import { getSetBonus } from '../data/mythologyEquipmentIndex';
 import { ItemType } from '../data/types';
 import type { InventoryItem } from '../data/types';
 import { calculateEquipmentStats } from '../core/EquipmentStatCalculator';
@@ -18,6 +17,8 @@ const SLOT_ICONS: Record<EquipmentSlot, string> = {
   [EquipmentSlot.FEET]: '靴',
   [EquipmentSlot.WEAPON]: '武',
   [EquipmentSlot.ACCESSORY]: '饰',
+  [EquipmentSlot.SHOULDER]: '肩',
+  [EquipmentSlot.ARM]: '臂',
 };
 
 const SLOT_NAMES: Record<EquipmentSlot, string> = {
@@ -27,7 +28,19 @@ const SLOT_NAMES: Record<EquipmentSlot, string> = {
   [EquipmentSlot.FEET]: '战靴',
   [EquipmentSlot.WEAPON]: '武器',
   [EquipmentSlot.ACCESSORY]: '饰品',
+  [EquipmentSlot.SHOULDER]: '肩甲',
+  [EquipmentSlot.ARM]: '臂甲',
 };
+
+// 战甲槽位（6个）
+const ARMOR_SLOTS: EquipmentSlot[] = [
+  EquipmentSlot.HEAD,
+  EquipmentSlot.BODY,
+  EquipmentSlot.SHOULDER,
+  EquipmentSlot.ARM,
+  EquipmentSlot.LEGS,
+  EquipmentSlot.FEET,
+];
 
 // 旧装备类型映射到新装备槽位
 const ITEM_TYPE_TO_SLOT: Record<string, EquipmentSlot> = {
@@ -59,8 +72,13 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
   // 获取背包中的装备
   const backpackEquipment = gameManager.inventory.equipment;
 
-  // 计算套装效果
-  const setBonuses = getSetBonus(equippedItems.map(item => item.id));
+  // 计算套装效果（简化版）
+  const equippedCount = equippedItems.length;
+  const setBonuses = [
+    equippedCount >= 2 ? { description: '2件套：能量共鸣 - 攻击 +10%' } : null,
+    equippedCount >= 4 ? { description: '4件套：力场强化 - 攻击 +20%，暴击率 +5%' } : null,
+    equippedCount >= 6 ? { description: '6件套：纳米觉醒 - 攻击 +35%，暴击率 +10%，战斗护盾' } : null,
+  ].filter(Boolean) as { description: string }[];
 
   // 强制刷新
   const forceRefresh = () => setRefreshKey(prev => prev + 1);
@@ -208,7 +226,7 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
           marginBottom: '16px'
         }}>
           <div style={{ display: 'flex', gap: '8px', justifyContent: 'space-between' }}>
-            {Object.values(EquipmentSlot).map(slot => {
+            {ARMOR_SLOTS.map(slot => {
               // 优先从新装备系统（神话装备）获取
               const mythEquippedItem = player.getEquipmentBySlot(slot);
               console.log('Rendering slot:', slot, 'mythEquippedItem:', mythEquippedItem?.name, 'mythEquippedItem.stats.speed:', mythEquippedItem?.stats.speed);
@@ -224,9 +242,6 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
                 // 检查旧装备系统
                 let oldItem: InventoryItem | null = null;
                 switch (slot) {
-                  case EquipmentSlot.WEAPON:
-                    oldItem = oldEquippedItems.weapon;
-                    break;
                   case EquipmentSlot.HEAD:
                     oldItem = oldEquippedItems.head;
                     break;
@@ -238,9 +253,6 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
                     break;
                   case EquipmentSlot.FEET:
                     oldItem = oldEquippedItems.feet;
-                    break;
-                  case EquipmentSlot.ACCESSORY:
-                    oldItem = oldEquippedItems.accessory;
                     break;
                 }
                 if (oldItem) {
@@ -419,9 +431,6 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
               }}>
                 {selectedItem.name}
               </h2>
-              <p style={{ color: '#a1a1aa', fontSize: '12px', margin: 0 }}>
-                {SLOT_NAMES[selectedItem.slot]} · 星球{selectedItem.stationNumber}
-              </p>
               <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '8px' }}>
                 <span style={{ color: '#00d4ff', fontSize: '12px' }}>强化 +{selectedItem.enhanceLevel}</span>
                 <span style={{ color: '#c084fc', fontSize: '12px' }}>升华 +{selectedItem.sublimationLevel}</span>
@@ -631,80 +640,90 @@ export default function PlayerScreen({ onBack }: PlayerScreenProps) {
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {/* 神话装备 */}
-                  {mythEquipments.map(equipment => (
-                    <button
-                      key={equipment.instanceId}
-                      onClick={() => handleEquipFromBackpack(equipment)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        padding: '12px',
-                        backgroundColor: '#1f2937',
-                        border: `2px solid ${RARITY_COLORS[equipment.rarity as keyof typeof RARITY_COLORS]}`,
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        textAlign: 'left'
-                      }}
-                    >
-                      <span style={{ fontSize: '24px' }}>{SLOT_ICONS[equipment.slot]}</span>
-                      <div style={{ flex: 1 }}>
-                        <p style={{
-                          color: RARITY_COLORS[equipment.rarity as keyof typeof RARITY_COLORS],
-                          fontWeight: 'bold',
-                          margin: '0 0 4px 0',
-                          fontSize: '14px'
-                        }}>
-                          {equipment.name}
-                        </p>
-                        <p style={{ color: '#a1a1aa', margin: 0, fontSize: '11px' }}>
-                          神话 · 强化+{equipment.enhanceLevel}
-                          {equipment.sublimationLevel > 0 && ` 升华+${equipment.sublimationLevel}`}
-                        </p>
-                      </div>
-                    </button>
-                  ))}
+                  {mythEquipments.map(equipment => {
+                    const { quality: eqQuality, name: eqName } = extractEquipmentName(equipment.name);
+                    const eqQualityConfig = eqQuality ? QUALITY_CONFIG[eqQuality] : null;
+                    const eqColor = eqQualityConfig ? eqQualityConfig.color : RARITY_COLORS[equipment.rarity as keyof typeof RARITY_COLORS];
+                    return (
+                      <button
+                        key={equipment.instanceId}
+                        onClick={() => handleEquipFromBackpack(equipment)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          padding: '12px',
+                          backgroundColor: '#1f2937',
+                          border: `2px solid ${eqColor}`,
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          textAlign: 'left'
+                        }}
+                      >
+                        <span style={{ fontSize: '24px', color: eqColor }}>{SLOT_ICONS[equipment.slot]}</span>
+                        <div style={{ flex: 1 }}>
+                          <p style={{
+                            color: eqColor,
+                            fontWeight: 'bold',
+                            margin: '0 0 4px 0',
+                            fontSize: '14px'
+                          }}>
+                            {equipment.name}
+                          </p>
+                          <p style={{ color: '#a1a1aa', margin: 0, fontSize: '11px' }}>
+                            神话 · 强化+{equipment.enhanceLevel}
+                            {equipment.sublimationLevel > 0 && ` 升华+${equipment.sublimationLevel}`}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
 
                   {/* 制造装备 */}
-                  {craftedItems.map(item => (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        // 装备制造的装备
-                        player.equipInventoryItem(item);
-                        setShowBackpack(false);
-                        setSelectedSlot(null);
-                        forceRefresh();
-                      }}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        padding: '12px',
-                        backgroundColor: '#1f2937',
-                        border: `2px solid ${RARITY_COLORS[item.rarity as keyof typeof RARITY_COLORS]}`,
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        textAlign: 'left'
-                      }}
-                    >
-                      <span style={{ fontSize: '24px' }}>{SLOT_ICONS[selectedSlot!]}</span>
-                      <div style={{ flex: 1 }}>
-                        <p style={{
-                          color: RARITY_COLORS[item.rarity as keyof typeof RARITY_COLORS],
-                          fontWeight: 'bold',
-                          margin: '0 0 4px 0',
-                          fontSize: '14px'
-                        }}>
-                          {item.name}
-                        </p>
-                        <p style={{ color: '#a1a1aa', margin: 0, fontSize: '11px' }}>
-                          制造 · 强化+{item.enhanceLevel || 0}
-                          {(item.sublimationLevel || 0) > 0 && ` 升华+${item.sublimationLevel}`}
-                        </p>
-                      </div>
-                    </button>
-                  ))}
+                  {craftedItems.map(item => {
+                    const { quality: itemQuality, name: itemName } = extractEquipmentName(item.name);
+                    const itemQualityConfig = itemQuality ? QUALITY_CONFIG[itemQuality] : null;
+                    const itemColor = itemQualityConfig ? itemQualityConfig.color : RARITY_COLORS[item.rarity as keyof typeof RARITY_COLORS];
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          // 装备制造的装备
+                          player.equipInventoryItem(item);
+                          setShowBackpack(false);
+                          setSelectedSlot(null);
+                          forceRefresh();
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          padding: '12px',
+                          backgroundColor: '#1f2937',
+                          border: `2px solid ${itemColor}`,
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          textAlign: 'left'
+                        }}
+                      >
+                        <span style={{ fontSize: '24px', color: itemColor }}>{SLOT_ICONS[selectedSlot!]}</span>
+                        <div style={{ flex: 1 }}>
+                          <p style={{
+                            color: itemColor,
+                            fontWeight: 'bold',
+                            margin: '0 0 4px 0',
+                            fontSize: '14px'
+                          }}>
+                            {item.name}
+                          </p>
+                          <p style={{ color: '#a1a1aa', margin: 0, fontSize: '11px' }}>
+                            制造 · 强化+{item.enhanceLevel || 0}
+                            {(item.sublimationLevel || 0) > 0 && ` 升华+${item.sublimationLevel}`}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               );
             })()}
@@ -771,47 +790,90 @@ function convertNewItemToUnified(item: EquipmentInstance | null): UnifiedEquipme
   };
 }
 
+// 品质配置
+const QUALITY_CONFIG: Record<string, { name: string; color: string; borderWidth: string; boxShadow: string; animation?: string }> = {
+  '星尘级': {
+    name: '星尘',
+    color: '#9ca3af',
+    borderWidth: '0px',
+    boxShadow: 'inset 0 0 10px rgba(156, 163, 175, 0.2)',
+  },
+  '合金级': {
+    name: '合金',
+    color: '#4ade80',
+    borderWidth: '1px',
+    boxShadow: 'inset 0 0 8px rgba(74, 222, 128, 0.3), 0 0 5px rgba(74, 222, 128, 0.2)',
+  },
+  '晶核级': {
+    name: '晶核',
+    color: '#60a5fa',
+    borderWidth: '2px',
+    boxShadow: 'inset 0 0 12px rgba(96, 165, 250, 0.4), 0 0 8px rgba(96, 165, 250, 0.3)',
+  },
+  '量子级': {
+    name: '量子',
+    color: '#c084fc',
+    borderWidth: '2px',
+    boxShadow: 'inset 0 0 15px rgba(192, 132, 252, 0.5), 0 0 10px rgba(192, 132, 252, 0.4)',
+  },
+  '虚空级': {
+    name: '虚空',
+    color: '#f59e0b',
+    borderWidth: '3px',
+    boxShadow: 'inset 0 0 20px rgba(245, 158, 11, 0.6), 0 0 15px rgba(245, 158, 11, 0.5), 0 0 30px rgba(245, 158, 11, 0.2)',
+  },
+};
+
+// 提取装备名称（移除品质前缀或括号内的品质标记）
+function extractEquipmentName(fullName: string): { quality: string; name: string } {
+  // 检查前缀格式：星尘级/合金级/晶核级/量子级/虚空级
+  const qualityPrefixes = ['星尘级', '合金级', '晶核级', '量子级', '虚空级'];
+  for (const prefix of qualityPrefixes) {
+    if (fullName.startsWith(prefix)) {
+      return { quality: prefix, name: fullName.slice(prefix.length) };
+    }
+  }
+
+  // 检查括号格式：(星尘)/(合金)/(晶核)/(量子)/(虚空)
+  const bracketMatch = fullName.match(/\((星尘|合金|晶核|量子|虚空)\)$/);
+  if (bracketMatch) {
+    const qualityMap: Record<string, string> = {
+      '星尘': '星尘级',
+      '合金': '合金级',
+      '晶核': '晶核级',
+      '量子': '量子级',
+      '虚空': '虚空级',
+    };
+    const quality = qualityMap[bracketMatch[1]] || '';
+    const name = fullName.slice(0, fullName.length - bracketMatch[0].length);
+    return { quality, name };
+  }
+
+  return { quality: '', name: fullName };
+}
+
 // 装备槽位组件
 function EquipmentSlotItem({ slot, item, onClick }: { slot: EquipmentSlot; item: UnifiedEquipment | null; onClick?: () => void }) {
-  return (
-    <div
-      onClick={onClick}
-      style={{
-        backgroundColor: item ? '#1f2937' : 'rgba(31, 41, 55, 0.5)',
-        borderRadius: '6px',
-        padding: '6px 2px',
-        border: `1px solid ${item ? RARITY_COLORS[item.rarity as keyof typeof RARITY_COLORS] : '#374151'}`,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: 'pointer',
-        flex: 1,
-        minWidth: 0,
-        height: '50px',
-        overflow: 'hidden'
-      }}
-    >
-      {item ? (
-        // 有装备时显示装备名称（两行）
-        <span style={{
-          fontSize: '10px',
-          color: RARITY_COLORS[item.rarity as keyof typeof RARITY_COLORS],
-          textAlign: 'center',
-          fontWeight: 'bold',
-          lineHeight: '1.3',
-          overflow: 'hidden',
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-          width: '100%',
-          padding: '0 2px',
-          wordBreak: 'break-all'
-        }}>
-          {item.name}
-        </span>
-      ) : (
-        // 无装备时显示装备类型名称
+  if (!item) {
+    return (
+      <div
+        onClick={onClick}
+        style={{
+          backgroundColor: 'rgba(31, 41, 55, 0.5)',
+          borderRadius: '6px',
+          padding: '6px 2px',
+          border: '1px dashed #374151',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          flex: 1,
+          minWidth: 0,
+          height: '50px',
+          overflow: 'hidden'
+        }}
+      >
         <span style={{
           fontSize: '11px',
           color: '#6b7280',
@@ -819,12 +881,62 @@ function EquipmentSlotItem({ slot, item, onClick }: { slot: EquipmentSlot; item:
         }}>
           {SLOT_NAMES[slot]}
         </span>
-      )}
-      {item && (item.enhanceLevel > 0 || item.sublimationLevel > 0) && (
-        <span style={{ fontSize: '8px', color: '#00d4ff', marginTop: '1px' }}>
-          +{item.enhanceLevel}{item.sublimationLevel > 0 && `·${item.sublimationLevel}`}
-        </span>
-      )}
+      </div>
+    );
+  }
+
+  const { quality, name } = extractEquipmentName(item.name);
+  const qualityConfig = quality ? QUALITY_CONFIG[quality] : null;
+  const borderColor = qualityConfig ? qualityConfig.color : RARITY_COLORS[item.rarity as keyof typeof RARITY_COLORS];
+  const borderWidth = qualityConfig ? qualityConfig.borderWidth : '1px';
+  const boxShadow = qualityConfig ? qualityConfig.boxShadow : 'none';
+  // 完整名称：品质前缀 + 装备名
+  const fullDisplayName = quality ? `${quality}${name}` : item.name;
+
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        backgroundColor: '#1f2937',
+        borderRadius: '6px',
+        padding: '4px',
+        border: `${borderWidth} solid ${borderColor}`,
+        boxShadow,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        cursor: 'pointer',
+        flex: 1,
+        minWidth: 0,
+        height: '50px',
+        overflow: 'hidden',
+        position: 'relative',
+      }}
+    >
+      {/* 装备名称（包含品质前缀，占满格子） */}
+      <span style={{
+        fontSize: '9px',
+        color: borderColor,
+        textAlign: 'center',
+        fontWeight: 'bold',
+        lineHeight: '1.2',
+        overflow: 'hidden',
+        display: '-webkit-box',
+        WebkitLineClamp: 2,
+        WebkitBoxOrient: 'vertical',
+        width: '100%',
+        padding: '0 1px',
+        wordBreak: 'break-all',
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        {fullDisplayName}
+      </span>
+
+
     </div>
   );
 }

@@ -4,23 +4,18 @@ import { Train, type TrainData } from './Train';
 import type { InventoryItem, Location, Enemy } from '../data/types';
 import { ItemType, ItemRarity } from '../data/types';
 import type { EquipmentInstance } from './EquipmentSystem';
-import { LOCATIONS, getRandomLoot, ALL_MATERIAL_BASE_IDS, rollMaterialQuality, calculateEnemyStats } from '../data/locations';
+import { calculateEnemyStats } from '../data/locations';
 import { getItemTemplate } from '../data/items';
-import { ENEMIES, createEnemyInstance, getRandomEnemyByLocation } from '../data/enemies';
+import { ENEMIES, createEnemyInstance } from '../data/enemies';
 import { getRandomEnemyForPlanet, getBossEnemyForPlanet, getEliteEnemyForPlanet, EXTENDED_ENEMIES } from '../data/enemyAdapter';
-import { generateMaterialId, MATERIAL_QUALITY_NAMES } from '../data/craftingMaterials';
+import { ArmorQuality, ARMOR_QUALITY_NAMES } from '../data/nanoArmorRecipes';
 import { Quest, QuestConditionType, QuestStatus, QuestType, DEFAULT_QUESTS } from './QuestSystem';
-import { Skill, SkillType, SKILL_TEMPLATES, SKILL_UNLOCK_CHAINS } from './SkillSystem';
-import { craftingSystem, MaterialSelection, CRAFTING_RECIPES } from './CraftingSystem';
-import { MaterialQuality } from '../data/craftingMaterials';
 import { EquipmentSlot } from '../data/equipmentTypes';
 import { ShopItem, SHOP_ITEMS } from './ShopSystem';
 import { DECOMPOSE_REWARDS, TYPE_BONUS, SUBLIMATION_BONUS, MATERIAL_NAMES, getDecomposePreview as getDecomposePreviewFunc, decompose as decomposeFunc } from './DecomposeSystem';
 import { ENHANCE_CONFIG, MAX_ENHANCE_LEVEL, ENHANCE_STONE_ID, PROTECTION_ITEM_ID, MATERIAL_NAMES as ENHANCE_MATERIAL_NAMES, EnhanceResultType, type EnhanceResult, type EnhancePreview, calculateEnhanceBonus, canEnhance, getSuccessRate } from './EnhanceSystem';
 import { equipmentSystem } from './EquipmentSystem';
 import { calculateEquipmentStats, calculateEnhancedStatsPreview } from './EquipmentStatCalculator';
-import { createEquipmentInstance, getEquipmentById } from '../data/mythologyEquipmentIndex';
-import { MYTHOLOGY_LOCATIONS } from '../data/mythologyLocations';
 import { TrainUpgradeType } from './Train';
 import {
   getTrainUpgradeInfo,
@@ -29,7 +24,8 @@ import {
   FACILITY_NAMES,
 } from '../data/trainUpgrades';
 import { AutoCollectSystem } from './AutoCollectSystem';
-import { AutoCollectMode, CollectReward, getCollectLocation } from '../data/autoCollectTypes';
+import { AutoCollectMode, CollectReward, getCollectRobot } from '../data/autoCollectTypes';
+import { synthesize, synthesizeBatch, getSynthesizableMaterials, QUALITY_NAMES } from './MaterialSynthesisSystem';
 
 export interface GameState {
   player: PlayerData;
@@ -42,11 +38,8 @@ export interface GameState {
   logs: string[];
   trainCoins: number;
   quests: any[];
-  activeSkills: any[];
-  passiveSkills: any[];
-  availableSkills: string[];
   shopItems: any[];
-  lastShopRefreshDay: number;
+  lastShopRefreshDate: string; // 上次商店刷新日期 (YYYY-MM-DD格式)
   playerName: string;
   locationProgress: Array<[string, {
     materialProgress: number;
@@ -74,14 +67,9 @@ export class GameManager {
   // 任务系统
   quests: Map<string, Quest> = new Map();
 
-  // 技能系统
-  activeSkills: Map<string, Skill> = new Map();
-  passiveSkills: Map<string, Skill> = new Map();
-  availableSkills: string[] = [];
-
   // 商店系统
   shopItems: Map<string, ShopItem> = new Map();
-  lastShopRefreshDay: number = 1;
+  lastShopRefreshDate: string = ''; // 上次商店刷新日期 (YYYY-MM-DD格式)
 
   // 地点探索进度
   locationProgress: Map<string, {
@@ -94,6 +82,7 @@ export class GameManager {
 
   // 精神值现实时间回复
   lastSpiritRecoveryTime: number = Date.now(); // 上次精神值回复时间戳
+  lastSpiritDailyRecoveryDate: string = ''; // 上次每日精神值回复日期
 
   // 自动采集系统
   autoCollectSystem: AutoCollectSystem = new AutoCollectSystem();
@@ -112,55 +101,51 @@ export class GameManager {
     this.playerName = '幸存者';
 
     this.initQuests();
-    this.initSkills();
     this.initShop();
-    this.initTestItems(); // 测试物品
-  }
-
-  // 初始化测试物品
-  initTestItems(): void {
-    // 添加所有技能书
-    const skillBooks = [
-      { id: 'book_power_strike', name: '强力打击技能书', quantity: 1 },
-      { id: 'book_first_aid', name: '急救技能书', quantity: 1 },
-      { id: 'book_toughness', name: '坚韧技能书', quantity: 1 },
-      { id: 'book_agility', name: '敏捷技能书', quantity: 1 },
-    ];
-    skillBooks.forEach(book => {
-      this.inventory.addItem(book.id, book.quantity);
-    });
   }
 
   // 检查并回复精神值（基于现实时间）
-  checkAndRecoverSpirit(): { recovered: number; hoursPassed: number } {
+  // 每分钟回复1点，每天自动回复50点
+  checkAndRecoverSpirit(): { recovered: number; minutesPassed: number; dailyRecovered: number } {
     const now = Date.now();
-    const oneHour = 60 * 60 * 1000; // 1小时的毫秒数
+    const oneMinute = 60 * 1000; // 1分钟的毫秒数
 
-    // 计算经过了多少小时
-    const elapsedMs = now - this.lastSpiritRecoveryTime;
-    const elapsedHours = Math.floor(elapsedMs / oneHour);
-
-    if (elapsedHours <= 0) {
-      return { recovered: 0, hoursPassed: 0 };
+    // 检查每日回复（每天自动回复50点）
+    const today = new Date().toISOString().split('T')[0];
+    let dailyRecovered = 0;
+    if (today !== this.lastSpiritDailyRecoveryDate) {
+      const oldSpirit = this.player.spirit;
+      this.player.spirit = Math.min(this.player.maxSpirit, this.player.spirit + 50);
+      dailyRecovered = this.player.spirit - oldSpirit;
+      this.lastSpiritDailyRecoveryDate = today;
+      if (dailyRecovered > 0) {
+        this.addLog('精神恢复', `每日自动回复 ${dailyRecovered} 精神值`);
+      }
     }
 
-    // 每小时回复10%最大精神值
-    const recoveryPercent = 0.10;
-    const recoveryPerHour = Math.floor(this.player.maxSpirit * recoveryPercent);
-    const totalRecovery = recoveryPerHour * elapsedHours;
+    // 计算经过了多少分钟
+    const elapsedMs = now - this.lastSpiritRecoveryTime;
+    const elapsedMinutes = Math.floor(elapsedMs / oneMinute);
+
+    if (elapsedMinutes <= 0) {
+      return { recovered: 0, minutesPassed: 0, dailyRecovered };
+    }
+
+    // 每分钟回复1点精神值
+    const totalRecovery = elapsedMinutes;
 
     const oldSpirit = this.player.spirit;
     this.player.spirit = Math.min(this.player.maxSpirit, this.player.spirit + totalRecovery);
     const actualRecovered = this.player.spirit - oldSpirit;
 
-    // 更新上次回复时间（只计算完整的小时）
-    this.lastSpiritRecoveryTime = this.lastSpiritRecoveryTime + (elapsedHours * oneHour);
+    // 更新上次回复时间（只计算完整的分钟）
+    this.lastSpiritRecoveryTime = this.lastSpiritRecoveryTime + (elapsedMinutes * oneMinute);
 
     if (actualRecovered > 0) {
-      this.addLog('精神恢复', `现实时间经过 ${elapsedHours} 小时，恢复 ${actualRecovered} 精神值`);
+      this.addLog('精神恢复', `现实时间经过 ${elapsedMinutes} 分钟，恢复 ${actualRecovered} 精神值`);
     }
 
-    return { recovered: actualRecovered, hoursPassed: elapsedHours };
+    return { recovered: actualRecovered, minutesPassed: elapsedMinutes, dailyRecovered };
   }
 
   // 初始化任务
@@ -169,11 +154,6 @@ export class GameManager {
       const quest = new Quest(questData);
       this.quests.set(quest.id, quest);
     });
-  }
-
-  // 初始化技能
-  initSkills(): void {
-    this.availableSkills = ['skill_power_strike', 'skill_first_aid', 'passive_toughness', 'passive_agility'];
   }
 
   // 初始化商店
@@ -198,10 +178,7 @@ export class GameManager {
     this.trainCoins = 100000; // 测试：10万列车币
 
     this.quests.clear();
-    this.activeSkills.clear();
-    this.passiveSkills.clear();
     this.initQuests();
-    this.initSkills();
     this.initShop();
     this.lastShopRefreshDay = 1;
 
@@ -209,10 +186,7 @@ export class GameManager {
     this.inventory.addItem('weapon_001', 1);
     this.inventory.addItem('consumable_001', 3);
     this.inventory.addItem('consumable_002', 5);
-
-    // 测试物品
-    this.initTestItems();
-    this.inventory.addItem('mat_001', 5);
+    this.inventory.addItem('mat_001_stardust', 10); // 给予星尘级材料
 
     // 装备初始武器
     this.inventory.equipItem('weapon_001');
@@ -267,6 +241,8 @@ export class GameManager {
       progress.bossDefeated = updates.bossDefeated;
       if (updates.bossDefeated) {
         progress.lastBossDefeatDay = this.day;
+        // 记录击败的boss，增加挂机收益
+        this.autoCollectSystem.recordDefeatedBoss(locationId);
         // 检查是否击败了站台5的Boss，解锁神话站台
         if (locationId === 'loc_005') {
           this.unlockMythologyLocations();
@@ -331,12 +307,14 @@ export class GameManager {
     // 判断白天/黑夜 (6:00 - 18:00 为白天)
     const newTime = dayTime >= 360 && dayTime < 1080 ? 'day' : 'night';
 
-    // 天数变化时检查商店刷新
+    // 天数变化时检查
     if (newDay > this.day) {
       this.day = newDay;
-      this.checkShopRefresh();
       this.resetDailyQuests();
     }
+
+    // 检查商店刷新（基于现实时间）
+    this.checkShopRefresh();
 
     // 时间切换时触发事件
     if (newTime !== this.time) {
@@ -349,13 +327,14 @@ export class GameManager {
     }
   }
 
-  // 检查商店刷新
+  // 检查商店刷新（基于现实时间每天刷新）
   checkShopRefresh(): void {
-    if (this.day > this.lastShopRefreshDay) {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD格式
+    if (today !== this.lastShopRefreshDate) {
       this.shopItems.forEach(item => {
         item.stock = item.dailyLimit;
       });
-      this.lastShopRefreshDay = this.day;
+      this.lastShopRefreshDate = today;
       this.addLog('商店', '商店已刷新，限购重置');
     }
   }
@@ -445,48 +424,6 @@ export class GameManager {
     if (reward.trainCoins > 0) rewardMsg += `、${reward.trainCoins} 列车币`;
 
     return { success: true, message: `领取奖励成功！${rewardMsg}` };
-  }
-
-  // 学习技能
-  learnSkill(skillId: string): { success: boolean; message: string } {
-    if (!this.availableSkills.includes(skillId)) {
-      return { success: false, message: '该技能尚未解锁' };
-    }
-
-    if (this.activeSkills.has(skillId) || this.passiveSkills.has(skillId)) {
-      return { success: false, message: '已学习该技能' };
-    }
-
-    const template = SKILL_TEMPLATES[skillId];
-    if (!template) {
-      return { success: false, message: '技能不存在' };
-    }
-
-    const skill = new Skill({ skillId, ...template });
-
-    if (skill.skillType === SkillType.ACTIVE) {
-      if (this.activeSkills.size >= 4) {
-        return { success: false, message: '主动技能槽已满（最多4个）' };
-      }
-      this.activeSkills.set(skillId, skill);
-    } else {
-      this.passiveSkills.set(skillId, skill);
-    }
-
-    // 解锁相关技能
-    const unlocked = SKILL_UNLOCK_CHAINS[skillId] || [];
-    unlocked.forEach(newSkillId => {
-      if (!this.availableSkills.includes(newSkillId)) {
-        this.availableSkills.push(newSkillId);
-        const newTemplate = SKILL_TEMPLATES[newSkillId];
-        if (newTemplate) {
-          this.addLog('技能解锁', `解锁了新技能：${newTemplate.name}`);
-        }
-      }
-    });
-
-    this.addLog('技能', `学会了 ${skill.name}！`);
-    return { success: true, message: `学会了 ${skill.name}！` };
   }
 
   // 购买物品
@@ -817,13 +754,13 @@ export class GameManager {
       return { success: false, message: '列车不需要修复' };
     }
 
-    // 检查材料
-    const material = this.inventory.getItem('mat_001');
+    // 检查材料 - 使用星尘级材料
+    const material = this.inventory.getItem('mat_001_stardust');
     if (!material || material.quantity < 2) {
-      return { success: false, message: '材料不足（需要2个废铁）' };
+      return { success: false, message: '材料不足（需要2个星铁基础构件(星尘)）' };
     }
 
-    this.inventory.removeItem('mat_001', 2);
+    this.inventory.removeItem('mat_001_stardust', 2);
     const repairAmount = 20;
     this.train.durability = Math.min(this.train.maxDurability, this.train.durability + repairAmount);
 
@@ -944,27 +881,28 @@ export class GameManager {
     return true;
   }
 
-  // 休息
+  // 休息（休整）
+  // 消耗：能量x10，冷却x10
   rest(): { success: boolean; message: string; logs: string[] } {
     const logs: string[] = [];
 
-    // 检查饥饿和口渴值是否足够
-    const hungerCost = 20;
-    const thirstCost = 10;
+    // 检查能量和冷却是否足够
+    const energyCost = 10;  // 能量消耗
+    const coolantCost = 10; // 冷却消耗
 
-    if (this.player.hunger < hungerCost) {
+    if (this.player.hunger < energyCost) {
       return {
         success: false,
-        message: '饥饿值不足，无法休息（需要20点饥饿值）',
-        logs: ['饥饿值不足，无法休息'],
+        message: `能量不足，无法休整（需要${energyCost}点）`,
+        logs: ['能量不足，无法休整'],
       };
     }
 
-    if (this.player.thirst < thirstCost) {
+    if (this.player.thirst < coolantCost) {
       return {
         success: false,
-        message: '口渴值不足，无法休息（需要10点口渴值）',
-        logs: ['口渴值不足，无法休息'],
+        message: `冷却不足，无法休整（需要${coolantCost}点）`,
+        logs: ['冷却不足，无法休整'],
       };
     }
 
@@ -984,9 +922,9 @@ export class GameManager {
     this.player.heal(hpRecovery);
     this.player.recoverStamina(staminaRecovery);
 
-    // 消耗饥饿和口渴
-    this.player.consumeHunger(hungerCost);
-    this.player.consumeThirst(thirstCost);
+    // 消耗能量和冷却
+    this.player.consumeHunger(energyCost);
+    this.player.consumeThirst(coolantCost);
 
     const hpRestored = this.player.hp - oldHp;
     const staminaRestored = this.player.stamina - oldStamina;
@@ -997,20 +935,20 @@ export class GameManager {
 
     logs.push(`恢复 ${hpRestored} 生命 (${Math.floor(hpRecoveryPercent * 100)}%)`);
     logs.push(`恢复 ${staminaRestored} 体力 (${Math.floor(staminaRecoveryPercent * 100)}%)`);
-    logs.push(`消耗 ${hungerConsumed} 饥饿值`);
-    logs.push(`消耗 ${thirstConsumed} 口渴值`);
+    logs.push(`消耗 ${hungerConsumed} 能量`);
+    logs.push(`消耗 ${thirstConsumed} 冷却`);
 
     this.updateQuestProgress(QuestConditionType.REST, 'train', 1);
-    this.addLog('休息', `休息了一段时间，恢复${hpRestored}生命、${staminaRestored}体力，消耗${hungerConsumed}饥饿、${thirstConsumed}口渴`);
+    this.addLog('休整', `休整完成，恢复${hpRestored}生命、${staminaRestored}体力，消耗${hungerConsumed}能量、${thirstConsumed}冷却`);
 
     return {
       success: true,
-      message: '休息完成',
+      message: '休整完成',
       logs,
     };
   }
 
-  // 探索（增强版）
+  // 探索（增强版）- 已更新为使用星球系统
   explore(locationId: string, exploreType: 'search' | 'hunt' | 'chest' = 'search'): {
     success: boolean;
     message: string;
@@ -1021,11 +959,6 @@ export class GameManager {
     treasureCoins?: number;
   } {
     const logs: string[] = [];
-    const location = LOCATIONS.find(l => l.id === locationId);
-
-    if (!location) {
-      return { success: false, message: '地点不存在', logs };
-    }
 
     // 根据探索类型消耗体力
     const staminaCost = exploreType === 'chest' ? 20 : 10;
@@ -1040,16 +973,27 @@ export class GameManager {
     let treasureFound = false;
     let treasureCoins = 0;
 
+    // 获取星球等级（从 planet_xxx 提取）
+    let dangerLevel = 1;
+    if (locationId.startsWith('planet_')) {
+      const planetLevels: Record<string, number> = {
+        'planet_alpha': 1, 'planet_eta': 2, 'planet_beta': 3, 'planet_gamma': 4,
+        'planet_delta': 5, 'planet_epsilon': 6, 'planet_zeta': 7, 'planet_theta': 8,
+      };
+      dangerLevel = planetLevels[locationId] || 1;
+    }
+
     if (exploreType === 'search') {
-      // 搜寻物资
+      // 搜寻物资 - 掉落带品质的基础材料
       if (Math.random() < 0.6) {
-        const itemId = getRandomLoot(locationId);
-        if (itemId) {
-          const itemTemplate = getItemTemplate(itemId);
-          if (itemTemplate && this.inventory.addItem(itemId, 1)) {
-            foundItems.push({ itemId, name: itemTemplate.name, quantity: 1 });
-            logs.push(`发现了 ${itemTemplate.name}`);
-          }
+        // 随机掉落星尘级材料
+        const basicMaterials = ['mat_001', 'mat_002', 'mat_003', 'mat_004'];
+        const baseId = basicMaterials[Math.floor(Math.random() * basicMaterials.length)];
+        const itemId = `${baseId}_stardust`;
+        const itemTemplate = getItemTemplate(itemId);
+        if (itemTemplate && this.inventory.addItem(itemId, 1)) {
+          foundItems.push({ itemId, name: itemTemplate.name, quantity: 1 });
+          logs.push(`发现了 ${itemTemplate.name}`);
         }
       }
       if (foundItems.length === 0) {
@@ -1059,35 +1003,24 @@ export class GameManager {
       // 寻找宝箱
       if (Math.random() < 0.4) {
         treasureFound = true;
-        if (Math.random() < 0.5) {
-          // 技能书
-          const skillBooks = [
-            'skill_book_power_strike', 'skill_book_first_aid', 'skill_book_toughness',
-            'skill_book_heavy_slash', 'skill_book_blood_thirst', 'skill_book_stun_blow',
-          ];
-          const bookId = skillBooks[Math.floor(Math.random() * skillBooks.length)];
-          this.inventory.addItem(bookId, 1);
-          logs.push(`发现宝箱！获得技能书！`);
-        } else {
-          // 列车币
-          treasureCoins = Math.floor(Math.random() * 21) + 10;
-          this.trainCoins += treasureCoins;
-          logs.push(`发现宝箱！获得 ${treasureCoins} 列车币！`);
-        }
+        // 列车币
+        treasureCoins = Math.floor(Math.random() * 21) + 10;
+        this.trainCoins += treasureCoins;
+        logs.push(`发现宝箱！获得 ${treasureCoins} 列车币！`);
       } else {
         logs.push('没有找到宝箱...');
       }
     }
 
     // 列车可能受到环境伤害
-    if (Math.random() < location.dangerLevel * 0.05) {
+    if (Math.random() < dangerLevel * 0.05) {
       const damage = Math.floor(Math.random() * 6) + 5;
       this.train.durability = Math.max(0, this.train.durability - damage);
       logs.push(`列车在恶劣环境中受到${damage}点损伤！`);
     }
 
     // 获得经验
-    const expGain = location.dangerLevel * 10 + Math.floor(Math.random() * 10);
+    const expGain = dangerLevel * 10 + Math.floor(Math.random() * 10);
     this.player.addExp(expGain);
     logs.push(`获得 ${expGain} 经验值`);
 
@@ -1102,7 +1035,7 @@ export class GameManager {
       this.updateQuestProgress(QuestConditionType.COLLECT_ITEM, item.itemId, 1);
     });
 
-    this.addLog('探索', `探索${location.name}，获得${expGain}经验`);
+    this.addLog('探索', `探索完成，获得${expGain}经验`);
 
     return {
       success: true,
@@ -1120,19 +1053,6 @@ export class GameManager {
     const item = this.inventory.getItem(itemId);
     if (!item) {
       return { success: false, message: '物品不存在' };
-    }
-
-    // 技能书
-    if (item.type === 'skill_book') {
-      const skillId = itemId.replace('skill_book_', 'skill_');
-      if (this.activeSkills.has(skillId) || this.passiveSkills.has(skillId)) {
-        return { success: false, message: '已学习该技能' };
-      }
-      const result = this.learnSkill(skillId);
-      if (result.success) {
-        this.inventory.removeItem(itemId, 1);
-      }
-      return result;
     }
 
     const result = this.inventory.useItem(itemId);
@@ -1187,9 +1107,26 @@ export class GameManager {
     return result;
   }
 
-  // 获取当前地点
-  getCurrentLocation(): Location | undefined {
-    return LOCATIONS.find(l => l.id === this.currentLocation);
+  // 获取当前地点 - 已更新为使用星球系统
+  getCurrentLocation(): { id: string; name: string } | undefined {
+    // 如果是星球ID，返回星球名称
+    if (this.currentLocation.startsWith('planet_')) {
+      const planetNames: Record<string, string> = {
+        'planet_alpha': '阿尔法宜居星',
+        'planet_eta': '伊塔农业星',
+        'planet_beta': '贝塔工业星',
+        'planet_gamma': '伽马研究星',
+        'planet_delta': '德尔塔军事星',
+        'planet_epsilon': '艾普西隆贸易星',
+        'planet_zeta': '泽塔能源星',
+        'planet_theta': '西塔医疗星',
+      };
+      return {
+        id: this.currentLocation,
+        name: planetNames[this.currentLocation] || this.currentLocation,
+      };
+    }
+    return { id: this.currentLocation, name: this.currentLocation };
   }
 
   // 获取进行中的任务
@@ -1215,9 +1152,6 @@ export class GameManager {
       logs: this.logs,
       trainCoins: this.trainCoins,
       quests: Array.from(this.quests.values()).map(q => q.serialize()),
-      activeSkills: Array.from(this.activeSkills.values()).map(s => s.serialize()),
-      passiveSkills: Array.from(this.passiveSkills.values()).map(s => s.serialize()),
-      availableSkills: this.availableSkills,
       shopItems: Array.from(this.shopItems.values()).map(i => i.serialize()),
       lastShopRefreshDay: this.lastShopRefreshDay,
       playerName: this.playerName,
@@ -1262,24 +1196,15 @@ export class GameManager {
       this.quests.set(quest.id, quest);
     });
 
-    // 加载技能
-    this.activeSkills.clear();
-    state.activeSkills?.forEach(s => {
-      const skill = Skill.fromDict(s);
-      this.activeSkills.set(skill.skillId, skill);
-    });
-    this.passiveSkills.clear();
-    state.passiveSkills?.forEach(s => {
-      const skill = Skill.fromDict(s);
-      this.passiveSkills.set(skill.skillId, skill);
-    });
-    this.availableSkills = state.availableSkills || [];
-
-    // 加载商店
+    // 加载商店 - 同步最新名称和描述，但保留库存数据
     this.shopItems.clear();
-    state.shopItems?.forEach(i => {
-      const item = ShopItem.fromDict(i);
-      this.shopItems.set(item.itemId, item);
+    SHOP_ITEMS.forEach(itemData => {
+      const savedItem = state.shopItems?.find((i: any) => i.itemId === itemData.itemId);
+      const item = new ShopItem({
+        ...itemData,
+        stock: savedItem?.stock ?? itemData.stock,
+      });
+      this.shopItems.set(itemData.itemId, item);
     });
 
     // 加载地点探索进度
@@ -1310,16 +1235,11 @@ export class GameManager {
     this.lastShopRefreshDay = 1;
 
     this.quests.clear();
-    this.activeSkills.clear();
-    this.passiveSkills.clear();
-    this.availableSkills = [];
     this.shopItems.clear();
     this.locationProgress.clear();
 
     this.initQuests();
-    this.initSkills();
     this.initShop();
-    this.initTestItems();
 
     // 重置自动采集系统
     this.autoCollectSystem.reset();
@@ -1328,11 +1248,11 @@ export class GameManager {
   // ========== 自动采集系统 ==========
 
   // 开始自动采集
-  startAutoCollect(locationId: string, mode: AutoCollectMode): { success: boolean; message: string } {
-    const result = this.autoCollectSystem.startCollect(locationId, mode);
+  startAutoCollect(robotId: string, mode: AutoCollectMode): { success: boolean; message: string } {
+    const result = this.autoCollectSystem.startCollect(robotId, mode);
     if (result.success) {
-      const location = getCollectLocation(locationId);
-      this.addLog('自动采集', `开始在${location?.name || '未知地点'}进行自动资源采集`);
+      const robot = getCollectRobot(robotId);
+      this.addLog('自动采集', `开始派遣${robot?.name || '机器人'}进行自动资源采集`);
     }
     return result;
   }
@@ -1370,10 +1290,10 @@ export class GameManager {
       this.inventory.addItem(mat.itemId, mat.quantity);
     });
 
-    // 添加装备到背包
-    rewards.equipments.forEach(equip => {
-      this.inventory.addItem(equip.itemId, 1);
-    });
+    // 添加强化石到背包
+    if (rewards.enhanceStones > 0) {
+      this.inventory.addItem('enhance_stone', rewards.enhanceStones);
+    }
   }
 
   // 获取自动采集系统状态
@@ -1423,53 +1343,20 @@ export class GameManager {
       return this.startMythologyBattle(mythLocation, isBoss, isElite);
     }
 
-    // 普通站台战斗（旧系统）
-    const location = LOCATIONS.find(l => l.id === locationId);
-    if (!location) {
-      return { success: false, message: '地点不存在' };
+    // 旧站台系统已弃用，尝试使用星球系统
+    // 将 loc_xxx 格式的ID映射到对应的星球
+    const locationToPlanetMap: Record<string, string> = {
+      'loc_001': 'planet_alpha', 'loc_002': 'planet_eta', 'loc_003': 'planet_beta',
+      'loc_004': 'planet_gamma', 'loc_005': 'planet_delta', 'loc_006': 'planet_epsilon',
+      'loc_007': 'planet_zeta', 'loc_008': 'planet_theta',
+    };
+    const planetId = locationToPlanetMap[locationId];
+    if (planetId) {
+      return this.startPlanetBattle(planetId, isBoss, isElite);
     }
 
-    if (isBoss) {
-      // BOSS战 - 使用地点配置的BOSS
-      const bossEnemy = Object.values(ENEMIES).find(e => e.name === location.bossName);
-      if (!bossEnemy) {
-        return { success: false, message: 'BOSS数据不存在' };
-      }
-      const enemyInstance = createEnemyInstance(bossEnemy.id);
-      if (!enemyInstance) {
-        return { success: false, message: '创建BOSS失败' };
-      }
-      this.addLog('战斗', `挑战BOSS ${enemyInstance.name}！`);
-      return { success: true, message: `挑战BOSS ${enemyInstance.name}！`, enemy: enemyInstance };
-    }
-
-    if (isElite) {
-      // 精英敌人
-      const enemy = getRandomEnemyByLocation(locationId, 'elite');
-      if (!enemy) {
-        return { success: false, message: '这个区域没有精英敌人' };
-      }
-      const enemyInstance = createEnemyInstance(enemy.id);
-      if (!enemyInstance) {
-        return { success: false, message: '创建精英敌人失败' };
-      }
-      this.addLog('战斗', `遭遇了精英 ${enemyInstance.name}！`);
-      return { success: true, message: `遭遇了精英 ${enemyInstance.name}！`, enemy: enemyInstance };
-    }
-
-    // 根据地点获取随机普通敌人
-    const enemy = getRandomEnemyByLocation(locationId, 'normal');
-    if (!enemy) {
-      return { success: false, message: '这个区域没有敌人' };
-    }
-
-    const enemyInstance = createEnemyInstance(enemy.id);
-    if (!enemyInstance) {
-      return { success: false, message: '创建敌人失败' };
-    }
-
-    this.addLog('战斗', `遭遇了 ${enemyInstance.name}！`);
-    return { success: true, message: `遭遇了 ${enemyInstance.name}！`, enemy: enemyInstance };
+    // 无法识别的地点
+    return { success: false, message: '地点不存在或已弃用' };
   }
 
   // 新星球战斗系统
@@ -1478,6 +1365,11 @@ export class GameManager {
     let enemy: Enemy | null = null;
 
     if (isBoss) {
+      // 检查今天是否已经挑战过
+      if (!this.isBossRefreshed(planetId)) {
+        return { success: false, message: '今日已挑战过该首领，请明天再来' };
+      }
+
       enemy = getBossEnemyForPlanet(planetId);
       if (!enemy) {
         // 如果新系统没有BOSS，尝试使用旧系统
@@ -1487,6 +1379,8 @@ export class GameManager {
       if (!enemyInstance) {
         return { success: false, message: '创建首领失败' };
       }
+      // 记录挑战日期（失败不扣除次数，所以在这里记录）
+      this.recordBossChallenge(planetId);
       this.addLog('战斗', `💀 挑战虚空首领 ${enemyInstance.name}！`);
       return { success: true, message: `💀 挑战虚空首领 ${enemyInstance.name}！`, enemy: enemyInstance };
     }
@@ -1517,6 +1411,173 @@ export class GameManager {
 
     this.addLog('战斗', `👾 遭遇了 ${enemyInstance.name}！`);
     return { success: true, message: `👾 遭遇了 ${enemyInstance.name}！`, enemy: enemyInstance };
+  }
+
+  // 扫荡功能：首次击败boss后解锁，收获等于战胜一次精英敌人，消耗10体力
+  sweepPlanet(planetId: string): { success: boolean; message: string; rewards?: { exp: number; loot: { itemId: string; name: string; quantity: number }[] }; logs: string[] } {
+    const logs: string[] = [];
+
+    // 检查是否已击败该星球的boss
+    const progress = this.getLocationProgress(planetId);
+    if (!progress.bossDefeated) {
+      return { success: false, message: '需要先击败该星球首领才能解锁扫荡', logs };
+    }
+
+    // 检查体力
+    const staminaCost = 10;
+    if (this.player.stamina < staminaCost) {
+      return { success: false, message: `体力不足（需要${staminaCost}点）`, logs };
+    }
+
+    // 消耗体力
+    this.player.consumeStamina(staminaCost);
+    logs.push(`消耗 ${staminaCost} 体力`);
+
+    // 生成精英敌人收益
+    const enemy = getEliteEnemyForPlanet(planetId);
+    if (!enemy) {
+      return { success: false, message: '该星球没有精英虚空生物', logs };
+    }
+
+    const enemyInstance = createEnemyInstance(enemy.id);
+    if (!enemyInstance) {
+      return { success: false, message: '创建精英虚空生物失败', logs };
+    }
+
+    // 获得经验
+    const expGain = enemyInstance.expReward;
+    const levelUpLogs = this.player.addExp(expGain);
+    logs.push(`获得 ${expGain} 经验值`);
+    logs.push(...levelUpLogs);
+
+    // 掉落物品
+    const loot: { itemId: string; name: string; quantity: number }[] = [];
+    enemyInstance.lootTable.forEach(lootItem => {
+      if (Math.random() < lootItem.chance) {
+        const itemTemplate = getItemTemplate(lootItem.itemId);
+        if (itemTemplate && this.inventory.addItem(lootItem.itemId, 1)) {
+          loot.push({ itemId: lootItem.itemId, name: itemTemplate.name, quantity: 1 });
+          logs.push(`获得 ${itemTemplate.name}`);
+        }
+      }
+    });
+
+    // 掉落制造材料（带品质版本）
+    const materialIds = ['mat_001', 'mat_002', 'mat_003', 'mat_004', 'mat_005', 'mat_006', 'mat_007', 'mat_008', 'mat_009', 'mat_010'];
+    const materialCount = 3 + Math.floor(Math.random() * 3); // 3-5个
+
+    // 品质后缀映射
+    const QUALITY_SUFFIX: Record<ArmorQuality, string> = {
+      [ArmorQuality.STARDUST]: '_stardust',
+      [ArmorQuality.ALLOY]: '_alloy',
+      [ArmorQuality.CRYSTAL]: '_crystal',
+      [ArmorQuality.QUANTUM]: '_quantum',
+      [ArmorQuality.VOID]: '_void',
+    };
+
+    for (let i = 0; i < materialCount; i++) {
+      const matId = materialIds[Math.floor(Math.random() * materialIds.length)];
+      // 扫荡产出星尘级材料
+      const qualityId = `${matId}${QUALITY_SUFFIX[ArmorQuality.STARDUST]}`;
+      const itemTemplate = getItemTemplate(qualityId);
+      if (itemTemplate && this.inventory.addItem(qualityId, 1)) {
+        const existing = loot.find(l => l.itemId === qualityId);
+        if (existing) {
+          existing.quantity++;
+        } else {
+          loot.push({ itemId: qualityId, name: itemTemplate.name, quantity: 1 });
+        }
+      }
+    }
+
+    // 推进时间
+    this.advanceTime(30);
+
+    this.addLog('扫荡', `扫荡完成，获得${expGain}经验`);
+
+    return { success: true, message: '扫荡完成', rewards: { exp: expGain, loot }, logs };
+  }
+
+  // ========== 材料合成系统 ==========
+
+  // 合成材料
+  synthesizeMaterial(materialId: string, sourceQuality: ArmorQuality): { success: boolean; message: string } {
+    // 创建临时库存映射
+    const inventoryMap = new Map<string, number>();
+    this.inventory.items.forEach(item => {
+      inventoryMap.set(item.id, item.quantity);
+    });
+
+    const result = synthesize(inventoryMap, materialId, sourceQuality);
+
+    if (result.success) {
+      // 更新实际库存
+      const sourceItemId = `${materialId}${this.getQualitySuffix(sourceQuality)}`;
+      const targetItemId = result.produced;
+
+      // 消耗源材料
+      const sourceItem = this.inventory.getItem(sourceItemId);
+      if (sourceItem) {
+        this.inventory.removeItem(sourceItemId, result.consumed);
+      }
+
+      // 添加目标材料
+      this.inventory.addItem(targetItemId, result.producedCount);
+
+      this.addLog('合成', result.message);
+    }
+
+    return result;
+  }
+
+  // 批量合成材料
+  synthesizeMaterialBatch(materialId: string, sourceQuality: ArmorQuality, batchCount: number): { success: boolean; message: string } {
+    // 创建临时库存映射
+    const inventoryMap = new Map<string, number>();
+    this.inventory.items.forEach(item => {
+      inventoryMap.set(item.id, item.quantity);
+    });
+
+    const result = synthesizeBatch(inventoryMap, materialId, sourceQuality, batchCount);
+
+    if (result.success && result.targetQuality !== undefined) {
+      // 更新实际库存
+      const sourceItemId = `${materialId}${this.getQualitySuffix(sourceQuality)}`;
+      const targetItemId = `${materialId}${this.getQualitySuffix(result.targetQuality)}`;
+
+      // 消耗源材料
+      this.inventory.removeItem(sourceItemId, result.totalConsumed);
+
+      // 添加目标材料
+      this.inventory.addItem(targetItemId, result.totalProduced);
+
+      this.addLog('合成', result.message);
+    }
+
+    return result;
+  }
+
+  // 获取可合成的材料列表
+  getSynthesizableMaterialsList(): ReturnType<typeof getSynthesizableMaterials> {
+    // 创建库存映射
+    const inventoryMap = new Map<string, number>();
+    this.inventory.items.forEach(item => {
+      inventoryMap.set(item.id, item.quantity);
+    });
+
+    return getSynthesizableMaterials(inventoryMap);
+  }
+
+  // 辅助方法：获取品质后缀
+  private getQualitySuffix(quality: ArmorQuality): string {
+    const suffixes: Record<ArmorQuality, string> = {
+      [ArmorQuality.STARDUST]: '_stardust',
+      [ArmorQuality.ALLOY]: '_alloy',
+      [ArmorQuality.CRYSTAL]: '_crystal',
+      [ArmorQuality.QUANTUM]: '_quantum',
+      [ArmorQuality.VOID]: '_void',
+    };
+    return suffixes[quality] || '';
   }
 
   // 神话站台战斗
@@ -1651,77 +1712,6 @@ export class GameManager {
     return { damage, playerDefeated, logs };
   }
 
-  // 使用技能攻击
-  useSkillInBattle(skillId: string, enemy: Enemy): {
-    success: boolean;
-    message: string;
-    damage?: number;
-    enemyDefeated?: boolean;
-    logs: string[];
-  } {
-    const logs: string[] = [];
-    const skill = this.activeSkills.get(skillId);
-
-    if (!skill) {
-      return { success: false, message: '技能不存在', logs };
-    }
-
-    if (!skill.canUse()) {
-      return { success: false, message: '技能冷却中', logs };
-    }
-
-    if (this.player.stamina < skill.staminaCost) {
-      return { success: false, message: '体力不足', logs };
-    }
-
-    // 消耗体力和使用技能
-    this.player.consumeStamina(skill.staminaCost);
-    skill.use();
-
-    const effect = skill.getCurrentEffect();
-    let damage = 0;
-    let isCrit = false;
-
-    // 计算技能伤害
-    if (effect.damagePercent) {
-      damage = Math.floor(this.player.totalAttack * (1 + effect.damagePercent));
-    } else {
-      damage = this.player.totalAttack;
-    }
-
-    // 暴击判定
-    const critChance = Math.min(0.3, this.player.totalAgility * 0.01) + (effect.critBoost || 0);
-    if (Math.random() < critChance) {
-      damage = Math.floor(damage * 1.5);
-      isCrit = true;
-    }
-
-    // 防御减免
-    damage = Math.max(1, damage - enemy.defense);
-
-    // 应用伤害
-    enemy.hp = Math.max(0, enemy.hp - damage);
-
-    logs.push(`使用 ${skill.name}！`);
-    if (isCrit) logs.push('暴击！');
-    logs.push(`对 ${enemy.name} 造成 ${damage} 点伤害`);
-
-    // 生命偷取
-    if (effect.drainHp && damage > 0) {
-      const healAmount = Math.floor(damage * effect.drainHp);
-      this.player.heal(healAmount);
-      logs.push(`吸取 ${healAmount} 点生命`);
-    }
-
-    const enemyDefeated = enemy.hp <= 0;
-
-    if (enemyDefeated) {
-      logs.push(`击败了 ${enemy.name}！`);
-    }
-
-    return { success: true, message: '技能使用成功', damage, enemyDefeated, logs };
-  }
-
   // 结束战斗（胜利）
   endBattleVictory(enemy: Enemy): { exp: number; loot: { itemId: string; name: string; quantity: number }[]; logs: string[] } {
     const logs: string[] = [];
@@ -1744,49 +1734,160 @@ export class GameManager {
       }
     });
 
-    // 掉落制造材料 - 使用 mat_001~mat_010
-    // 根据敌人类型决定掉落数量：普通3种，精英6种，BOSS6种3份
+    // 掉落制造材料 - 使用 mat_001~mat_010 带品质版本
+    // 根据敌人类型决定掉落数量：普通3种，精英5种，BOSS7种
     const enemyType = (enemy as any).creatureType || (enemy as any).enemyType || 'normal';
+    const enemyLevel = (enemy as any).level || 1;
+    const planetId = (enemy as any).planetId || 'planet_alpha';
+
+    // 联邦科技星映射（8个星球）
+    const FEDERAL_TECH_STAR_ORDER = [
+      'planet_alpha',   // 1: 阿尔法宜居星
+      'planet_eta',     // 2: 伊塔农业星
+      'planet_beta',    // 3: 贝塔工业星
+      'planet_gamma',   // 4: 伽马研究星
+      'planet_delta',   // 5: 德尔塔军事星
+      'planet_epsilon', // 6: 艾普西隆贸易星
+      'planet_zeta',    // 7: 泽塔能源星
+      'planet_theta',   // 8: 西塔医疗星
+    ];
+    const planetIndex = FEDERAL_TECH_STAR_ORDER.indexOf(planetId) + 1 || 1;
 
     let materialDropCount = 3; // 默认普通敌人3种
     let materialDropMultiplier = 1; // 默认1份
 
     if (enemyType === 'elite') {
-      materialDropCount = 6; // 精英6种
+      materialDropCount = 5; // 精英5种
       materialDropMultiplier = 1;
     } else if (enemyType === 'boss') {
-      materialDropCount = 6; // BOSS 6种
-      materialDropMultiplier = 3; // 3份
+      materialDropCount = 7; // BOSS 7种
+      materialDropMultiplier = 1;
     }
 
-    // 新的材料ID列表 (mat_001~mat_010)
+    // 材料品质后缀映射
+    const QUALITY_SUFFIX: Record<ArmorQuality, string> = {
+      [ArmorQuality.STARDUST]: '_stardust',
+      [ArmorQuality.ALLOY]: '_alloy',
+      [ArmorQuality.CRYSTAL]: '_crystal',
+      [ArmorQuality.QUANTUM]: '_quantum',
+      [ArmorQuality.VOID]: '_void',
+    };
+
+    // 基础掉落率配置（根据敌人类型）
+    const BASE_DROP_RATES = {
+      normal: {  // 普通敌人
+        [ArmorQuality.STARDUST]: 0.40,
+        [ArmorQuality.ALLOY]: 0.25,
+        [ArmorQuality.CRYSTAL]: 0.20,
+        [ArmorQuality.QUANTUM]: 0.10,
+        [ArmorQuality.VOID]: 0.05,
+      },
+      elite: {  // 精英敌人
+        [ArmorQuality.STARDUST]: 0.20,
+        [ArmorQuality.ALLOY]: 0.30,
+        [ArmorQuality.CRYSTAL]: 0.20,
+        [ArmorQuality.QUANTUM]: 0.20,
+        [ArmorQuality.VOID]: 0.10,
+      },
+      boss: {  // BOSS敌人
+        [ArmorQuality.STARDUST]: 0.10,
+        [ArmorQuality.ALLOY]: 0.20,
+        [ArmorQuality.CRYSTAL]: 0.30,
+        [ArmorQuality.QUANTUM]: 0.25,
+        [ArmorQuality.VOID]: 0.15,
+      },
+    };
+
+    // 星球对掉落率的影响（相对于基础概率的变化）
+    // 星球2-6：星尘-2%、合金-2%、晶核-2%、量子+4%、虚空+2%
+    // 星球7-8：星尘0%、合金-3%、晶核-3%、量子+4%、虚空+2%
+    const PLANET_DROP_MODIFIERS: Record<number, Record<ArmorQuality, number>> = {
+      1: { [ArmorQuality.STARDUST]: 0, [ArmorQuality.ALLOY]: 0, [ArmorQuality.CRYSTAL]: 0, [ArmorQuality.QUANTUM]: 0, [ArmorQuality.VOID]: 0 },
+      2: { [ArmorQuality.STARDUST]: -0.02, [ArmorQuality.ALLOY]: -0.02, [ArmorQuality.CRYSTAL]: -0.02, [ArmorQuality.QUANTUM]: 0.04, [ArmorQuality.VOID]: 0.02 },
+      3: { [ArmorQuality.STARDUST]: -0.04, [ArmorQuality.ALLOY]: -0.04, [ArmorQuality.CRYSTAL]: -0.04, [ArmorQuality.QUANTUM]: 0.08, [ArmorQuality.VOID]: 0.04 },
+      4: { [ArmorQuality.STARDUST]: -0.06, [ArmorQuality.ALLOY]: -0.06, [ArmorQuality.CRYSTAL]: -0.06, [ArmorQuality.QUANTUM]: 0.12, [ArmorQuality.VOID]: 0.06 },
+      5: { [ArmorQuality.STARDUST]: -0.08, [ArmorQuality.ALLOY]: -0.08, [ArmorQuality.CRYSTAL]: -0.08, [ArmorQuality.QUANTUM]: 0.16, [ArmorQuality.VOID]: 0.08 },
+      6: { [ArmorQuality.STARDUST]: -0.10, [ArmorQuality.ALLOY]: -0.10, [ArmorQuality.CRYSTAL]: -0.10, [ArmorQuality.QUANTUM]: 0.20, [ArmorQuality.VOID]: 0.10 },
+      7: { [ArmorQuality.STARDUST]: 0, [ArmorQuality.ALLOY]: -0.03, [ArmorQuality.CRYSTAL]: -0.03, [ArmorQuality.QUANTUM]: 0.04, [ArmorQuality.VOID]: 0.02 },
+      8: { [ArmorQuality.STARDUST]: 0, [ArmorQuality.ALLOY]: -0.06, [ArmorQuality.CRYSTAL]: -0.06, [ArmorQuality.QUANTUM]: 0.08, [ArmorQuality.VOID]: 0.04 },
+    };
+
+    // 根据敌人类型和星球决定材料品质掉落概率
+    const getBattleQualityRates = (type: string, planetIdx: number): Record<ArmorQuality, number> => {
+      const baseRates = BASE_DROP_RATES[type as keyof typeof BASE_DROP_RATES] || BASE_DROP_RATES.normal;
+      const modifiers = PLANET_DROP_MODIFIERS[planetIdx] || PLANET_DROP_MODIFIERS[1];
+
+      // 应用星球修正
+      const adjustedRates: Record<ArmorQuality, number> = {
+        [ArmorQuality.STARDUST]: Math.max(0.01, Math.min(0.95, baseRates[ArmorQuality.STARDUST] + modifiers[ArmorQuality.STARDUST])),
+        [ArmorQuality.ALLOY]: Math.max(0.01, Math.min(0.95, baseRates[ArmorQuality.ALLOY] + modifiers[ArmorQuality.ALLOY])),
+        [ArmorQuality.CRYSTAL]: Math.max(0.01, Math.min(0.95, baseRates[ArmorQuality.CRYSTAL] + modifiers[ArmorQuality.CRYSTAL])),
+        [ArmorQuality.QUANTUM]: Math.max(0.01, Math.min(0.95, baseRates[ArmorQuality.QUANTUM] + modifiers[ArmorQuality.QUANTUM])),
+        [ArmorQuality.VOID]: Math.max(0.01, Math.min(0.95, baseRates[ArmorQuality.VOID] + modifiers[ArmorQuality.VOID])),
+      };
+
+      return adjustedRates;
+    };
+
+    // 随机决定材料品质
+    const rollMaterialQuality = (type: string, planetIdx: number): ArmorQuality => {
+      const rates = getBattleQualityRates(type, planetIdx);
+      const roll = Math.random();
+      let cumulative = 0;
+
+      for (const [quality, rate] of Object.entries(rates)) {
+        cumulative += rate;
+        if (roll <= cumulative) {
+          return Number(quality) as ArmorQuality;
+        }
+      }
+      return ArmorQuality.STARDUST;
+    };
+
+    // 新的材料ID列表 (mat_001~mat_010) - 纳米战甲制造材料
     const NEW_MATERIAL_IDS = [
-      { id: 'mat_001', name: '铁矿碎片' },
-      { id: 'mat_002', name: '铜矿碎片' },
-      { id: 'mat_003', name: '钛合金碎片' },
-      { id: 'mat_004', name: '能量晶体' },
-      { id: 'mat_005', name: '稀土元素' },
-      { id: 'mat_006', name: '虚空核心' },
-      { id: 'mat_007', name: '星际燃料' },
-      { id: 'mat_008', name: '纳米纤维' },
-      { id: 'mat_009', name: '陨石碎片' },
-      { id: 'mat_010', name: '量子螺丝' },
+      { id: 'mat_001', name: '星铁基础构件' },
+      { id: 'mat_002', name: '星铜传导组件' },
+      { id: 'mat_003', name: '钛钢外甲坯料' },
+      { id: 'mat_004', name: '战甲能量晶核' },
+      { id: 'mat_005', name: '稀土传感基质' },
+      { id: 'mat_006', name: '虚空防护核心' },
+      { id: 'mat_007', name: '推进模块燃料' },
+      { id: 'mat_008', name: '纳米韧化纤维' },
+      { id: 'mat_009', name: '陨铁缓冲衬垫' },
+      { id: 'mat_010', name: '量子紧固组件' },
     ];
 
     // 随机选择材料类型
     const shuffledMaterials = [...NEW_MATERIAL_IDS].sort(() => Math.random() - 0.5);
     const selectedMaterials = shuffledMaterials.slice(0, materialDropCount);
 
-    // 掉落材料
+    // 掉落材料（带品质）
     selectedMaterials.forEach(material => {
       for (let i = 0; i < materialDropMultiplier; i++) {
+        // 根据敌人类型和星球决定品质
+        const quality = rollMaterialQuality(enemyType, planetIndex);
+        const qualitySuffix = QUALITY_SUFFIX[quality];
+        const qualityId = `${material.id}${qualitySuffix}`;
+        const qualityName = ARMOR_QUALITY_NAMES[quality];
+        const displayName = `${qualityName}${material.name}`;
+
         // 添加到背包
-        if (this.inventory.addItem(material.id, 1)) {
-          loot.push({ itemId: material.id, name: material.name, quantity: 1 });
-          logs.push(`获得 ${material.name}`);
+        if (this.inventory.addItem(qualityId, 1)) {
+          loot.push({ itemId: qualityId, name: displayName, quantity: 1 });
+          logs.push(`获得 ${displayName}`);
         }
       }
     });
+
+    // 掉落强化石 - 根据敌人类型
+    const enhanceStoneCount = enemyType === 'boss' ? 5 : enemyType === 'elite' ? 2 : 1;
+    const enhanceStoneId = 'enhance_stone';
+    const enhanceStoneTemplate = getItemTemplate(enhanceStoneId);
+    if (enhanceStoneTemplate && this.inventory.addItem(enhanceStoneId, enhanceStoneCount)) {
+      loot.push({ itemId: enhanceStoneId, name: enhanceStoneTemplate.name, quantity: enhanceStoneCount });
+      logs.push(`获得 ${enhanceStoneTemplate.name}x${enhanceStoneCount}`);
+    }
 
     // 更新任务进度
     this.updateQuestProgress(QuestConditionType.KILL_ENEMY, enemy.id, 1);

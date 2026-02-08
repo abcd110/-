@@ -1,12 +1,11 @@
 import {
-  MythologyEquipment,
   EquipmentEffect,
   EquipmentStats,
   EffectTrigger,
   EffectType,
-  EquipmentSlot
+  EquipmentSlot,
+  MythologyEquipment
 } from '../data/equipmentTypes';
-import { getEquipmentById, getSetBonus } from '../data/mythologyEquipmentIndex';
 import { calculateEquipmentStats } from './EquipmentStatCalculator';
 
 export interface CalculatedStats {
@@ -113,21 +112,23 @@ export class EquipmentSystem {
       baseStats.luck += calculatedStats.luck;
     });
 
-    const equipmentIds = equippedItems.filter(i => i.equipped).map(i => i.id);
-    const setBonuses = getSetBonus(equipmentIds);
+    // 套装效果计算（简化版）
+    // 根据装备数量计算套装加成
+    const equippedCount = equippedItems.filter(i => i.equipped).length;
 
-    setBonuses.forEach(bonus => {
-      bonus.effects.forEach(effect => {
-        if (effect.type === 'attack_percent') percentBonuses.attack += effect.value;
-        if (effect.type === 'defense_percent') percentBonuses.defense += effect.value;
-        if (effect.type === 'hp_percent') percentBonuses.hp += effect.value;
-        if (effect.type === 'all_stats_percent') {
-          Object.keys(percentBonuses).forEach(key => {
-            percentBonuses[key] += effect.value;
-          });
-        }
-      });
-    });
+    // 纳米战甲套装效果
+    if (equippedCount >= 2) {
+      percentBonuses.attack += 0.10; // 2件套：攻击+10%
+    }
+    if (equippedCount >= 4) {
+      percentBonuses.attack += 0.20; // 4件套：攻击+20%
+      percentBonuses.crit += 0.05;   // 4件套：暴击+5%
+    }
+    if (equippedCount >= 6) {
+      percentBonuses.attack += 0.35; // 6件套：攻击+35%
+      percentBonuses.crit += 0.10;   // 6件套：暴击+10%
+      // 6件套护盾效果在战斗中处理
+    }
 
     return {
       attack: Math.floor(baseStats.attack * (1 + percentBonuses.attack)),

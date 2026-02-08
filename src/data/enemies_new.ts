@@ -1,3 +1,0 @@
-// 敌人数据已合并到 enemies.ts 文件中
-// 此文件保留用于兼容性
-export * from './enemies';

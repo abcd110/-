@@ -36,7 +36,71 @@ const SLOT_ICONS: Record<EquipmentSlot, string> = {
   [EquipmentSlot.FEET]: '靴',
   [EquipmentSlot.WEAPON]: '武',
   [EquipmentSlot.ACCESSORY]: '饰',
+  [EquipmentSlot.SHOULDER]: '肩',
+  [EquipmentSlot.ARM]: '臂',
 };
+
+// 品质配置
+const QUALITY_CONFIG: Record<string, { name: string; color: string; borderWidth: string; boxShadow: string }> = {
+  '星尘级': {
+    name: '星尘',
+    color: '#9ca3af',
+    borderWidth: '0px',
+    boxShadow: 'inset 0 0 10px rgba(156, 163, 175, 0.2)',
+  },
+  '合金级': {
+    name: '合金',
+    color: '#4ade80',
+    borderWidth: '1px',
+    boxShadow: 'inset 0 0 8px rgba(74, 222, 128, 0.3), 0 0 5px rgba(74, 222, 128, 0.2)',
+  },
+  '晶核级': {
+    name: '晶核',
+    color: '#60a5fa',
+    borderWidth: '2px',
+    boxShadow: 'inset 0 0 12px rgba(96, 165, 250, 0.4), 0 0 8px rgba(96, 165, 250, 0.3)',
+  },
+  '量子级': {
+    name: '量子',
+    color: '#c084fc',
+    borderWidth: '2px',
+    boxShadow: 'inset 0 0 15px rgba(192, 132, 252, 0.5), 0 0 10px rgba(192, 132, 252, 0.4)',
+  },
+  '虚空级': {
+    name: '虚空',
+    color: '#f59e0b',
+    borderWidth: '3px',
+    boxShadow: 'inset 0 0 20px rgba(245, 158, 11, 0.6), 0 0 15px rgba(245, 158, 11, 0.5), 0 0 30px rgba(245, 158, 11, 0.2)',
+  },
+};
+
+// 提取装备名称（移除品质前缀或括号内的品质标记）
+function extractEquipmentName(fullName: string): { quality: string; name: string } {
+  // 检查前缀格式：星尘级/合金级/晶核级/量子级/虚空级
+  const qualityPrefixes = ['星尘级', '合金级', '晶核级', '量子级', '虚空级'];
+  for (const prefix of qualityPrefixes) {
+    if (fullName.startsWith(prefix)) {
+      return { quality: prefix, name: fullName.slice(prefix.length) };
+    }
+  }
+  
+  // 检查括号格式：(星尘)/(合金)/(晶核)/(量子)/(虚空)
+  const bracketMatch = fullName.match(/\((星尘|合金|晶核|量子|虚空)\)$/);
+  if (bracketMatch) {
+    const qualityMap: Record<string, string> = {
+      '星尘': '星尘级',
+      '合金': '合金级',
+      '晶核': '晶核级',
+      '量子': '量子级',
+      '虚空': '虚空级',
+    };
+    const quality = qualityMap[bracketMatch[1]] || '';
+    const name = fullName.slice(0, fullName.length - bracketMatch[0].length);
+    return { quality, name };
+  }
+  
+  return { quality: '', name: fullName };
+}
 
 // 合并后的分类
 const CATEGORIES = [
@@ -84,7 +148,7 @@ export default function InventoryScreen({ onBack, onNavigate }: InventoryScreenP
   const totalItems = inventory.items.length + inventory.equipment.length;
   const emptySlots = Math.max(0, inventory.maxSlots - totalItems);
 
-  const handleItemAction = async (action: string) => {
+  const handleItemAction = async (action: string, quantity?: number) => {
     if (!selectedItem) return;
 
     if (action === 'use') {
@@ -97,7 +161,8 @@ export default function InventoryScreen({ onBack, onNavigate }: InventoryScreenP
       await unequipItem(selectedItem.id);
       setSelectedItem(null);
     } else if (action === 'discard') {
-      inventory.removeItem(selectedItem.id, 1);
+      const discardCount = quantity || 1;
+      inventory.removeItem(selectedItem.id, discardCount);
       setSelectedItem(null);
     } else if (action === 'sublimate') {
       if (onNavigate) {
@@ -153,7 +218,7 @@ export default function InventoryScreen({ onBack, onNavigate }: InventoryScreenP
             <span>返回</span>
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <h1 style={{ color: 'white', fontWeight: 'bold', fontSize: '18px' }}>背包</h1>
+            <h1 style={{ color: 'white', fontWeight: 'bold', fontSize: '18px' }}>货舱</h1>
             <span style={{ color: '#a1a1aa', fontSize: '14px' }}>({inventory.usedSlots}/{inventory.maxSlots})</span>
           </div>
           <div style={{ width: '48px' }} />
@@ -223,7 +288,7 @@ export default function InventoryScreen({ onBack, onNavigate }: InventoryScreenP
         {filteredItems.length === 0 && filteredEquipment.length === 0 && (
           <div style={{ textAlign: 'center', padding: '48px 0', color: '#6b7280' }}>
             <div style={{ fontSize: '48px', marginBottom: '8px' }}>📦</div>
-            <p>背包是空的</p>
+            <p>货舱是空的</p>
           </div>
         )}
       </main>
@@ -276,8 +341,11 @@ export default function InventoryScreen({ onBack, onNavigate }: InventoryScreenP
 
 // 物品格子
 function ItemSlot({ item, onClick }: { item: InventoryItem; onClick: () => void }) {
-  const rarityColor = RARITY_COLORS_MAP[item.rarity];
-  const borderColor = RARITY_BORDERS[item.rarity];
+  // 检查名称中是否有品质前缀
+  const { quality: itemQuality } = extractEquipmentName(item.name);
+  const qualityConfig = itemQuality ? QUALITY_CONFIG[itemQuality] : null;
+  const rarityColor = qualityConfig ? qualityConfig.color : RARITY_COLORS_MAP[item.rarity];
+  const borderColor = qualityConfig ? qualityConfig.color : RARITY_BORDERS[item.rarity];
 
   return (
     <button
@@ -360,10 +428,15 @@ function ItemSlot({ item, onClick }: { item: InventoryItem; onClick: () => void 
   );
 }
 
-// 神话装备格子
+// 神话装备格子（带品质样式，与战甲档案一致）
 function EquipmentSlotComponent({ equipment, onClick }: { equipment: EquipmentInstance; onClick: () => void }) {
-  const rarityColor = RARITY_COLORS_MAP[equipment.rarity];
-  const borderColor = RARITY_BORDERS[equipment.rarity];
+  const { quality, name } = extractEquipmentName(equipment.name);
+  const qualityConfig = quality ? QUALITY_CONFIG[quality] : null;
+  const borderColor = qualityConfig ? qualityConfig.color : RARITY_BORDERS[equipment.rarity];
+  const borderWidth = qualityConfig ? qualityConfig.borderWidth : '2px';
+  const boxShadow = qualityConfig ? qualityConfig.boxShadow : 'none';
+  // 完整名称：品质前缀 + 装备名
+  const fullDisplayName = quality ? `${quality}${name}` : equipment.name;
 
   return (
     <button
@@ -371,7 +444,7 @@ function EquipmentSlotComponent({ equipment, onClick }: { equipment: EquipmentIn
       style={{
         aspectRatio: '1',
         backgroundColor: '#1f2937',
-        border: `2px solid ${borderColor}`,
+        border: `${borderWidth} solid ${borderColor}`,
         borderRadius: '8px',
         padding: '4px',
         display: 'flex',
@@ -379,55 +452,39 @@ function EquipmentSlotComponent({ equipment, onClick }: { equipment: EquipmentIn
         alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
-        cursor: 'pointer'
+        cursor: 'pointer',
+        boxShadow,
       }}
     >
-      {/* 槽位图标 */}
-      <span style={{ fontSize: '20px', marginBottom: '2px' }}>
-        {SLOT_ICONS[equipment.slot]}
-      </span>
-
-      {/* 装备名称 */}
+      {/* 装备名称（包含品质前缀，占满格子） */}
       <span style={{
         fontSize: '9px',
-        color: rarityColor,
+        color: borderColor,
         textAlign: 'center',
+        fontWeight: 'bold',
         lineHeight: '1.2',
-        maxHeight: '24px',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         display: '-webkit-box',
         WebkitLineClamp: 2,
         WebkitBoxOrient: 'vertical',
-        padding: '0 2px'
+        padding: '0 1px',
+        wordBreak: 'break-all',
+        width: '100%',
       }}>
-        {equipment.name}
+        {fullDisplayName}
       </span>
 
-      {/* 强化等级 */}
-      {equipment.enhanceLevel > 0 && (
+      {/* 已装备标记 */}
+      {equipment.equipped && (
         <span style={{
           position: 'absolute',
           top: '2px',
           right: '2px',
-          fontSize: '9px',
-          color: '#00d4ff',
-          fontWeight: 'bold'
-        }}>
-          +{equipment.enhanceLevel}
-        </span>
+          fontSize: '10px',
+          color: '#4ade80',
+        }}>✓</span>
       )}
-
-      {/* 星球标记 */}
-      <span style={{
-        position: 'absolute',
-        bottom: '2px',
-        left: '2px',
-        fontSize: '8px',
-        color: '#a1a1aa'
-      }}>
-        {equipment.stationNumber}站
-      </span>
     </button>
   );
 }
@@ -454,11 +511,13 @@ function ItemDetailModal({
 }: {
   item: InventoryItem;
   onClose: () => void;
-  onAction: (action: string) => Promise<void>;
+  onAction: (action: string, quantity?: number) => Promise<void>;
   isEquipment: boolean;
   isConsumable: boolean;
 }) {
   const rarityColor = RARITY_COLORS_MAP[item.rarity];
+  const [discardQuantity, setDiscardQuantity] = useState(1);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
 
   return (
     <div style={{
@@ -668,7 +727,13 @@ function ItemDetailModal({
           )}
 
           <button
-            onClick={() => onAction('discard')}
+            onClick={() => {
+              if (item.quantity > 1) {
+                setShowDiscardConfirm(true);
+              } else {
+                onAction('discard', 1);
+              }
+            }}
             style={{
               padding: '12px',
               backgroundColor: 'rgba(220, 38, 38, 0.6)',
@@ -697,6 +762,173 @@ function ItemDetailModal({
             关闭
           </button>
         </div>
+
+        {/* 丢弃数量选择弹窗 */}
+        {showDiscardConfirm && (
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: '16px',
+          }}>
+            <div style={{
+              backgroundColor: '#1f2937',
+              borderRadius: '12px',
+              padding: '20px',
+              width: '80%',
+              maxWidth: '280px',
+            }}>
+              <h3 style={{ color: 'white', fontSize: '16px', margin: '0 0 16px 0', textAlign: 'center' }}>
+                选择丢弃数量
+              </h3>
+              <div style={{ color: '#a1a1aa', fontSize: '14px', textAlign: 'center', marginBottom: '16px' }}>
+                拥有: <span style={{ color: 'white', fontWeight: 'bold' }}>{item.quantity}</span>
+              </div>
+
+              {/* 数量选择 */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '20px' }}>
+                <button
+                  onClick={() => setDiscardQuantity(Math.max(1, discardQuantity - 1))}
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    backgroundColor: '#374151',
+                    color: 'white',
+                    fontSize: '18px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  -
+                </button>
+                <input
+                  type="number"
+                  value={discardQuantity}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value) || 1;
+                    setDiscardQuantity(Math.max(1, Math.min(item.quantity, val)));
+                  }}
+                  style={{
+                    width: '60px',
+                    height: '36px',
+                    textAlign: 'center',
+                    backgroundColor: '#0f172a',
+                    border: '1px solid #374151',
+                    borderRadius: '8px',
+                    color: 'white',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                  }}
+                />
+                <button
+                  onClick={() => setDiscardQuantity(Math.min(item.quantity, discardQuantity + 1))}
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    backgroundColor: '#374151',
+                    color: 'white',
+                    fontSize: '18px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  +
+                </button>
+              </div>
+
+              {/* 快捷按钮 */}
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                <button
+                  onClick={() => setDiscardQuantity(1)}
+                  style={{
+                    flex: 1,
+                    padding: '8px',
+                    backgroundColor: discardQuantity === 1 ? '#0099cc' : '#374151',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  1个
+                </button>
+                <button
+                  onClick={() => setDiscardQuantity(Math.floor(item.quantity / 2))}
+                  style={{
+                    flex: 1,
+                    padding: '8px',
+                    backgroundColor: discardQuantity === Math.floor(item.quantity / 2) ? '#0099cc' : '#374151',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  一半
+                </button>
+                <button
+                  onClick={() => setDiscardQuantity(item.quantity)}
+                  style={{
+                    flex: 1,
+                    padding: '8px',
+                    backgroundColor: discardQuantity === item.quantity ? '#ef4444' : '#374151',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  全部
+                </button>
+              </div>
+
+              {/* 确认按钮 */}
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={() => setShowDiscardConfirm(false)}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    backgroundColor: '#374151',
+                    color: '#d1d5db',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                  }}
+                >
+                  取消
+                </button>
+                <button
+                  onClick={() => {
+                    onAction('discard', discardQuantity);
+                    setShowDiscardConfirm(false);
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    backgroundColor: '#dc2626',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                  }}
+                >
+                  确认丢弃
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

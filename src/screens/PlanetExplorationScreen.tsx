@@ -1,9 +1,10 @@
 // 《星航荒宇》星球探索界面 - 使用新星球数据
 import { useState, useEffect, useCallback } from 'react';
 import { useGameStore } from '../stores/gameStore';
-import { ALL_PLANETS_FULL, getAccessiblePlanets, getPlanetById } from '../data/planets_full';
+import { ALL_PLANETS_FULL, getPlanetById } from '../data/planets_full';
 import { Planet, PlanetType } from '../data/types_new';
-import { FactionType, getFactionName } from '../data/factions';
+
+import { ArmorQuality, ARMOR_QUALITY_NAMES } from '../data/nanoArmorRecipes';
 
 interface PlanetExplorationScreenProps {
   onBack: () => void;
@@ -14,7 +15,7 @@ interface PlanetExplorationScreenProps {
   planetTypeFilter?: string | null;
 }
 
-type ExplorationPhase = 'galaxy_map' | 'planet_detail' | 'traveling' | 'exploring';
+type ExplorationPhase = 'galaxy_map' | 'exploring';
 
 export default function PlanetExplorationScreen({
   onBack,
@@ -32,7 +33,6 @@ export default function PlanetExplorationScreen({
     initialPlanetId ? getPlanetById(initialPlanetId) : null
   );
   const [logs, setLogs] = useState<string[]>([]);
-  const [isTraveling, setIsTraveling] = useState(false);
 
   // 处理从战斗返回的情况
   useEffect(() => {
@@ -47,10 +47,7 @@ export default function PlanetExplorationScreen({
     }
   }, [returnToActionSelect, initialPlanetId, onActionSelectHandled]);
 
-  // 获取当前航船等级
-  const shipLevel = gameManager.train?.level || 1;
-
-  // 获取所有星球（显示所有但标记不可达的）
+  // 获取所有星球
   const allPlanets = ALL_PLANETS_FULL;
 
   // 根据筛选条件过滤星球
@@ -63,15 +60,12 @@ export default function PlanetExplorationScreen({
     })
     : allPlanets;
 
-  // 按类型分组（只在有对应类型时显示）
-  const techStars = filteredPlanets.filter(p => p.type === PlanetType.TECH_STAR);
-  const godDomains = filteredPlanets.filter(p => p.type === PlanetType.GOD_DOMAIN);
-  const wastelands = filteredPlanets.filter(p => p.type === PlanetType.WASTELAND);
+  // 按类型分组并按等级排序（只在有对应类型时显示）
+  const techStars = filteredPlanets.filter(p => p.type === PlanetType.TECH_STAR).sort((a, b) => a.level - b.level);
+  const godDomains = filteredPlanets.filter(p => p.type === PlanetType.GOD_DOMAIN).sort((a, b) => a.level - b.level);
+  const wastelands = filteredPlanets.filter(p => p.type === PlanetType.WASTELAND).sort((a, b) => a.level - b.level);
 
-  // 检查星球是否可达
-  const isPlanetAccessible = (planet: Planet) => {
-    return (planet.requiredShipLevel || 1) <= shipLevel;
-  };
+
 
   // 获取筛选后的标题
   const getFilterTitle = () => {
@@ -88,13 +82,6 @@ export default function PlanetExplorationScreen({
   // 选择星球 - 直接跳转到探索界面
   const selectPlanet = (planet: Planet) => {
     setSelectedPlanet(planet);
-    setPhase('exploring');
-  };
-
-  // 跃迁到星球 - 直接完成
-  const travelToPlanet = () => {
-    if (!selectedPlanet) return;
-    // 直接跳转到探索界面
     setPhase('exploring');
   };
 
@@ -119,29 +106,114 @@ export default function PlanetExplorationScreen({
     onStartBattle(selectedPlanet.id, true, false);
   };
 
+  // 扫荡功能
+  const handleSweep = async () => {
+    if (!selectedPlanet) return;
+
+    addLog(`⚡ 开始扫荡 ${selectedPlanet.name}...`);
+
+    // 调用扫荡
+    const result = gameManager.sweepPlanet(selectedPlanet.id);
+
+    if (result.success) {
+      // 显示收获
+      const lootSummary = result.rewards?.loot.map(l => `${l.name}x${l.quantity}`).join('、') || '无';
+      addLog(`✅ 扫荡完成！获得 ${result.rewards?.exp || 0} 经验`);
+      addLog(`📦 掉落：${lootSummary}`);
+
+      // 记录收集的资源
+      if (result.rewards?.loot) {
+        setCollectedResources(prev => {
+          const newResources = [...prev];
+          result.rewards!.loot.forEach(item => {
+            const existing = newResources.find(r => r.name === item.name);
+            if (existing) {
+              existing.count += item.quantity;
+            } else {
+              newResources.push({ name: item.name, count: item.quantity });
+            }
+          });
+          return newResources;
+        });
+      }
+
+      saveGame();
+    } else {
+      addLog(`❌ ${result.message}`);
+    }
+  };
+
   // 收集资源
   const [isCollecting, setIsCollecting] = useState(false);
   const [collectedResources, setCollectedResources] = useState<{ name: string, count: number }[]>([]);
 
-  // 新的材料ID列表 (mat_001~mat_010)
+  // 材料品质后缀映射
+  const QUALITY_SUFFIX: Record<ArmorQuality, string> = {
+    [ArmorQuality.STARDUST]: '_stardust',
+    [ArmorQuality.ALLOY]: '_alloy',
+    [ArmorQuality.CRYSTAL]: '_crystal',
+    [ArmorQuality.QUANTUM]: '_quantum',
+    [ArmorQuality.VOID]: '_void',
+  };
+
+  // 新的材料ID列表 (mat_001~mat_010) - 纳米战甲制造材料
   const NEW_MATERIAL_IDS = [
-    { id: 'mat_001', name: '铁矿碎片', dropRate: 0.6, minAmount: 2, maxAmount: 5 },
-    { id: 'mat_002', name: '铜矿碎片', dropRate: 0.5, minAmount: 1, maxAmount: 4 },
-    { id: 'mat_003', name: '钛合金碎片', dropRate: 0.4, minAmount: 1, maxAmount: 3 },
-    { id: 'mat_004', name: '能量晶体', dropRate: 0.35, minAmount: 1, maxAmount: 3 },
-    { id: 'mat_005', name: '稀土元素', dropRate: 0.3, minAmount: 1, maxAmount: 2 },
-    { id: 'mat_006', name: '虚空核心', dropRate: 0.25, minAmount: 1, maxAmount: 2 },
-    { id: 'mat_007', name: '星际燃料', dropRate: 0.5, minAmount: 2, maxAmount: 4 },
-    { id: 'mat_008', name: '纳米纤维', dropRate: 0.4, minAmount: 1, maxAmount: 3 },
-    { id: 'mat_009', name: '陨石碎片', dropRate: 0.35, minAmount: 1, maxAmount: 2 },
-    { id: 'mat_010', name: '量子螺丝', dropRate: 0.3, minAmount: 1, maxAmount: 2 },
+    { id: 'mat_001', name: '星铁基础构件', dropRate: 0.6, minAmount: 2, maxAmount: 5 },
+    { id: 'mat_002', name: '星铜传导组件', dropRate: 0.5, minAmount: 1, maxAmount: 4 },
+    { id: 'mat_003', name: '钛钢外甲坯料', dropRate: 0.4, minAmount: 1, maxAmount: 3 },
+    { id: 'mat_004', name: '战甲能量晶核', dropRate: 0.35, minAmount: 1, maxAmount: 3 },
+    { id: 'mat_005', name: '稀土传感基质', dropRate: 0.3, minAmount: 1, maxAmount: 2 },
+    { id: 'mat_006', name: '虚空防护核心', dropRate: 0.25, minAmount: 1, maxAmount: 2 },
+    { id: 'mat_007', name: '推进模块燃料', dropRate: 0.5, minAmount: 2, maxAmount: 4 },
+    { id: 'mat_008', name: '纳米韧化纤维', dropRate: 0.4, minAmount: 1, maxAmount: 3 },
+    { id: 'mat_009', name: '陨铁缓冲衬垫', dropRate: 0.35, minAmount: 1, maxAmount: 2 },
+    { id: 'mat_010', name: '量子紧固组件', dropRate: 0.3, minAmount: 1, maxAmount: 2 },
   ];
+
+  // 根据星球等级决定材料品质掉落概率
+  const getQualityDropRates = (planetLevel: number): Record<ArmorQuality, number> => {
+    // 基础概率
+    const baseRates: Record<ArmorQuality, number> = {
+      [ArmorQuality.STARDUST]: 0.50,
+      [ArmorQuality.ALLOY]: 0.30,
+      [ArmorQuality.CRYSTAL]: 0.15,
+      [ArmorQuality.QUANTUM]: 0.04,
+      [ArmorQuality.VOID]: 0.01,
+    };
+
+    // 根据星球等级调整概率
+    // 等级越高，高品质概率越高
+    const levelBonus = Math.min(planetLevel * 0.02, 0.20); // 最多+20%
+
+    return {
+      [ArmorQuality.STARDUST]: Math.max(0.10, baseRates[ArmorQuality.STARDUST] - levelBonus),
+      [ArmorQuality.ALLOY]: baseRates[ArmorQuality.ALLOY],
+      [ArmorQuality.CRYSTAL]: baseRates[ArmorQuality.CRYSTAL] + levelBonus * 0.5,
+      [ArmorQuality.QUANTUM]: baseRates[ArmorQuality.QUANTUM] + levelBonus * 0.3,
+      [ArmorQuality.VOID]: baseRates[ArmorQuality.VOID] + levelBonus * 0.1,
+    };
+  };
+
+  // 随机决定材料品质
+  const rollMaterialQuality = (planetLevel: number): ArmorQuality => {
+    const rates = getQualityDropRates(planetLevel);
+    const roll = Math.random();
+    let cumulative = 0;
+
+    for (const [quality, rate] of Object.entries(rates)) {
+      cumulative += rate;
+      if (roll <= cumulative) {
+        return Number(quality) as ArmorQuality;
+      }
+    }
+    return ArmorQuality.STARDUST;
+  };
 
   const collectResources = async () => {
     if (!selectedPlanet || isCollecting) return;
 
-    // 检查体力
-    if (gameManager.player.stamina < 10) {
+    // 检查体力 - 采集消耗5体力
+    if (gameManager.player.stamina < 5) {
       addLog('⚠️ 体力不足，无法采集资源');
       return;
     }
@@ -149,44 +221,40 @@ export default function PlanetExplorationScreen({
     setIsCollecting(true);
     addLog(`📦 开始采集 ${selectedPlanet.name} 的资源...`);
 
-    // 消耗体力
-    gameManager.player.stamina -= 10;
+    // 消耗体力 - 采集消耗5体力
+    gameManager.player.stamina -= 5;
 
     // 模拟采集时间
     await new Promise(resolve => setTimeout(resolve, 1500));
 
-    // 随机选择3种材料进行掉落判定
-    const shuffledMaterials = [...NEW_MATERIAL_IDS].sort(() => Math.random() - 0.5);
-    const selectedMaterials = shuffledMaterials.slice(0, 3);
+    // 必定有收获 - 随机选择1种材料
+    const randomMaterial = NEW_MATERIAL_IDS[Math.floor(Math.random() * NEW_MATERIAL_IDS.length)];
 
-    let hasLoot = false;
+    // 随机数量
+    const count = Math.floor(Math.random() * (randomMaterial.maxAmount - randomMaterial.minAmount + 1)) + randomMaterial.minAmount;
 
-    selectedMaterials.forEach(material => {
-      // 判断是否掉落
-      if (Math.random() < material.dropRate) {
-        const count = Math.floor(Math.random() * (material.maxAmount - material.minAmount + 1)) + material.minAmount;
+    // 根据星球等级决定材料品质（与普通狩猎概率一致）
+    const planetLevel = selectedPlanet?.level || 1;
+    const quality = rollMaterialQuality(planetLevel);
+    const qualitySuffix = QUALITY_SUFFIX[quality];
+    const qualityId = `${randomMaterial.id}${qualitySuffix}`;
+    const qualityName = ARMOR_QUALITY_NAMES[quality];
 
-        // 添加到背包
-        const added = gameManager.inventory.addItem(material.id, count);
+    // 添加到背包
+    const added = gameManager.inventory.addItem(qualityId, count);
 
-        if (added) {
-          hasLoot = true;
-          // 记录收集的资源
-          setCollectedResources(prev => {
-            const existing = prev.find(r => r.name === material.name);
-            if (existing) {
-              return prev.map(r => r.name === material.name ? { ...r, count: r.count + count } : r);
-            }
-            return [...prev, { name: material.name, count }];
-          });
-
-          addLog(`✅ 获得 ${material.name} x${count}`);
+    if (added) {
+      // 记录收集的资源
+      const displayName = `${qualityName}${randomMaterial.name}`;
+      setCollectedResources(prev => {
+        const existing = prev.find(r => r.name === displayName);
+        if (existing) {
+          return prev.map(r => r.name === displayName ? { ...r, count: r.count + count } : r);
         }
-      }
-    });
+        return [...prev, { name: displayName, count }];
+      });
 
-    if (!hasLoot) {
-      addLog('❌ 本次采集没有收获');
+      addLog(`✅ 获得 ${displayName} x${count}`);
     }
 
     // 保存游戏
@@ -279,27 +347,9 @@ export default function PlanetExplorationScreen({
     }
   };
 
-  // 获取星球类型名称
-  const getPlanetTypeName = (type: PlanetType) => {
-    switch (type) {
-      case PlanetType.TECH_STAR: return '科技星';
-      case PlanetType.GOD_DOMAIN: return '神域星';
-      case PlanetType.WASTELAND: return '废土星';
-      default: return '未知';
-    }
-  };
 
-  // 获取危险等级颜色
-  const getDangerColor = (level: string) => {
-    switch (level) {
-      case 'low': return '#10b981';
-      case 'medium': return '#fbbf24';
-      case 'high': return '#f59e0b';
-      case 'very_high': return '#ef4444';
-      case 'extreme': return '#dc2626';
-      default: return '#71717a';
-    }
-  };
+
+
 
   return (
     <div className="space-theme" style={{
@@ -320,8 +370,7 @@ export default function PlanetExplorationScreen({
           <button
             onClick={() => {
               if (phase === 'galaxy_map') onBack();
-              else if (phase === 'planet_detail') setPhase('galaxy_map');
-              else setPhase('planet_detail');
+              else setPhase('galaxy_map');
             }}
             style={{
               display: 'flex',
@@ -344,8 +393,6 @@ export default function PlanetExplorationScreen({
             textShadow: '0 0 10px rgba(0, 212, 255, 0.3)'
           }}>
             {phase === 'galaxy_map' && getFilterTitle()}
-            {phase === 'planet_detail' && '🪐 星球详情'}
-            {phase === 'traveling' && '🚀 跃迁中'}
             {phase === 'exploring' && '🔍 探索中'}
           </h1>
           <div style={{ width: '60px' }} />
@@ -372,31 +419,8 @@ export default function PlanetExplorationScreen({
                     <PlanetCard
                       key={planet.id}
                       planet={planet}
-                      onClick={() => isPlanetAccessible(planet) && selectPlanet(planet)}
+                      onClick={() => selectPlanet(planet)}
                       typeColor={getPlanetTypeColor(planet.type)}
-                      isAccessible={isPlanetAccessible(planet)}
-                      requiredLevel={planet.requiredShipLevel || 1}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* 神域星区域 */}
-            {godDomains.length > 0 && (
-              <div>
-                <h3 style={{ color: '#8b5cf6', fontSize: '16px', marginBottom: '12px' }}>
-                  ⭐ 神域星 ({godDomains.length})
-                </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-                  {godDomains.map(planet => (
-                    <PlanetCard
-                      key={planet.id}
-                      planet={planet}
-                      onClick={() => isPlanetAccessible(planet) && selectPlanet(planet)}
-                      typeColor={getPlanetTypeColor(planet.type)}
-                      isAccessible={isPlanetAccessible(planet)}
-                      requiredLevel={planet.requiredShipLevel || 1}
                     />
                   ))}
                 </div>
@@ -414,172 +438,32 @@ export default function PlanetExplorationScreen({
                     <PlanetCard
                       key={planet.id}
                       planet={planet}
-                      onClick={() => isPlanetAccessible(planet) && selectPlanet(planet)}
+                      onClick={() => selectPlanet(planet)}
                       typeColor={getPlanetTypeColor(planet.type)}
-                      isAccessible={isPlanetAccessible(planet)}
-                      requiredLevel={planet.requiredShipLevel || 1}
                     />
                   ))}
                 </div>
               </div>
             )}
-          </div>
-        )}
 
-        {/* 星球详情模式 */}
-        {phase === 'planet_detail' && selectedPlanet && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {/* 星球信息卡片 */}
-            <div style={{
-              background: 'linear-gradient(145deg, rgba(26, 31, 58, 0.9) 0%, rgba(10, 14, 39, 0.9) 100%)',
-              borderRadius: '16px',
-              padding: '20px',
-              border: `2px solid ${getPlanetTypeColor(selectedPlanet.type)}`,
-              boxShadow: `0 0 20px ${getPlanetTypeColor(selectedPlanet.type)}40`
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-                <div style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '50%',
-                  background: `radial-gradient(circle, ${getPlanetTypeColor(selectedPlanet.type)}40 0%, transparent 70%)`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '32px',
-                  border: `2px solid ${getPlanetTypeColor(selectedPlanet.type)}`
-                }}>
-                  🪐
-                </div>
-                <div>
-                  <h2 style={{
-                    color: getPlanetTypeColor(selectedPlanet.type),
-                    fontSize: '20px',
-                    fontWeight: 'bold',
-                    margin: '0 0 4px 0'
-                  }}>
-                    {selectedPlanet.name}
-                  </h2>
-                  <p style={{ color: '#a1a1aa', fontSize: '14px', margin: 0 }}>
-                    {getPlanetTypeName(selectedPlanet.type)} | 等级 {selectedPlanet.level}
-                  </p>
+            {/* 神域星区域 */}
+            {godDomains.length > 0 && (
+              <div>
+                <h3 style={{ color: '#8b5cf6', fontSize: '16px', marginBottom: '12px' }}>
+                  ⭐ 神域星 ({godDomains.length})
+                </h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+                  {godDomains.map(planet => (
+                    <PlanetCard
+                      key={planet.id}
+                      planet={planet}
+                      onClick={() => selectPlanet(planet)}
+                      typeColor={getPlanetTypeColor(planet.type)}
+                    />
+                  ))}
                 </div>
               </div>
-
-              <p style={{ color: '#d1d5db', fontSize: '14px', lineHeight: '1.6', marginBottom: '16px' }}>
-                {selectedPlanet.description}
-              </p>
-
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-                fontSize: '13px'
-              }}>
-                <div style={{
-                  background: 'rgba(0,0,0,0.3)',
-                  padding: '10px',
-                  borderRadius: '8px'
-                }}>
-                  <span style={{ color: '#71717a' }}>危险等级: </span>
-                  <span style={{ color: getDangerColor(selectedPlanet.dangerLevel), fontWeight: 'bold' }}>
-                    {selectedPlanet.dangerLevel.toUpperCase()}
-                  </span>
-                </div>
-                <div style={{
-                  background: 'rgba(0,0,0,0.3)',
-                  padding: '10px',
-                  borderRadius: '8px'
-                }}>
-                  <span style={{ color: '#71717a' }}>控制势力: </span>
-                  <span style={{ color: '#00d4ff' }}>
-                    {getFactionName(selectedPlanet.factionControl)}
-                  </span>
-                </div>
-                <div style={{
-                  background: 'rgba(0,0,0,0.3)',
-                  padding: '10px',
-                  borderRadius: '8px'
-                }}>
-                  <span style={{ color: '#71717a' }}>探索时间: </span>
-                  <span style={{ color: '#fbbf24' }}>{selectedPlanet.explorationTime}分钟</span>
-                </div>
-                <div style={{
-                  background: 'rgba(0,0,0,0.3)',
-                  padding: '10px',
-                  borderRadius: '8px'
-                }}>
-                  <span style={{ color: '#71717a' }}>资源种类: </span>
-                  <span style={{ color: '#10b981' }}>{selectedPlanet.resources.length}种</span>
-                </div>
-              </div>
-            </div>
-
-            {/* 跃迁按钮 */}
-            <button
-              onClick={travelToPlanet}
-              disabled={isTraveling}
-              style={{
-                width: '100%',
-                padding: '16px',
-                background: 'linear-gradient(135deg, #0099cc 0%, #00d4ff 100%)',
-                border: 'none',
-                borderRadius: '12px',
-                color: 'white',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                cursor: isTraveling ? 'not-allowed' : 'pointer',
-                opacity: isTraveling ? 0.6 : 1,
-                boxShadow: '0 0 20px rgba(0, 212, 255, 0.3)'
-              }}
-            >
-              {isTraveling ? '跃迁中...' : '🚀 启动跃迁'}
-            </button>
-          </div>
-        )}
-
-        {/* 跃迁中模式 */}
-        {phase === 'traveling' && (
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: '100%',
-            gap: '24px'
-          }}>
-            <div style={{
-              fontSize: '80px',
-              animation: 'pulse 1.5s ease-in-out infinite',
-              filter: 'drop-shadow(0 0 30px rgba(0, 212, 255, 0.8))'
-            }}>
-              🚀
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <p style={{ color: '#00d4ff', fontSize: '20px', fontWeight: 'bold', marginBottom: '8px' }}>
-                空间跃迁进行中
-              </p>
-              <p style={{ color: '#a1a1aa', fontSize: '14px' }}>
-                正在穿越星际空间...
-              </p>
-            </div>
-            {/* 跃迁进度条 */}
-            <div style={{
-              width: '250px',
-              height: '8px',
-              backgroundColor: 'rgba(10, 14, 39, 0.8)',
-              borderRadius: '4px',
-              overflow: 'hidden',
-              border: '1px solid rgba(0, 212, 255, 0.3)'
-            }}>
-              <div style={{
-                height: '100%',
-                background: 'linear-gradient(90deg, #0099cc 0%, #00d4ff 100%)',
-                width: '100%',
-                animation: 'progress 2s ease-out',
-                boxShadow: '0 0 10px rgba(0, 212, 255, 0.5)'
-              }} />
-            </div>
+            )}
           </div>
         )}
 
@@ -605,28 +489,39 @@ export default function PlanetExplorationScreen({
               <ActionButton
                 icon="👾"
                 label="普通狩猎"
-                description="击败普通虚空生物"
+                description={`消耗10体力 | 击败普通虚空生物`}
                 color="#10b981"
                 onClick={() => onStartBattle(selectedPlanet.id, false, false)}
               />
               <ActionButton
                 icon="👹"
                 label="困难狩猎"
-                description="击败精英虚空生物"
+                description={`消耗10体力 | 击败精英虚空生物`}
                 color="#8b5cf6"
                 onClick={() => onStartBattle(selectedPlanet.id, false, true)}
               />
               <ActionButton
                 icon="💀"
                 label="挑战首领"
-                description="高风险高回报"
+                description={`每日1次 | 消耗10体力`}
                 color="#ef4444"
                 onClick={() => onStartBattle(selectedPlanet.id, true, false)}
+                disabled={!gameManager.isBossRefreshed(selectedPlanet.id)}
               />
+              {/* 扫荡按钮：首次击败boss后解锁 */}
+              {gameManager.getLocationProgress(selectedPlanet.id).bossDefeated && (
+                <ActionButton
+                  icon="⚡"
+                  label="快速扫荡"
+                  description={`消耗10体力 | 精英收益`}
+                  color="#f59e0b"
+                  onClick={handleSweep}
+                />
+              )}
               <ActionButton
                 icon="📦"
                 label={isCollecting ? "采集中..." : "采集资源"}
-                description={`消耗10体力 | 剩余: ${gameManager.player.stamina}`}
+                description={`消耗5体力 | 剩余: ${gameManager.player.stamina}`}
                 color="#f59e0b"
                 onClick={collectResources}
               />
@@ -686,51 +581,38 @@ export default function PlanetExplorationScreen({
 function PlanetCard({
   planet,
   onClick,
-  typeColor,
-  isAccessible,
-  requiredLevel
+  typeColor
 }: {
   planet: Planet;
   onClick: () => void;
   typeColor: string;
-  isAccessible: boolean;
-  requiredLevel: number;
 }) {
   return (
     <button
       onClick={onClick}
-      disabled={!isAccessible}
       style={{
         padding: '12px',
-        background: isAccessible
-          ? 'linear-gradient(145deg, rgba(26, 31, 58, 0.8) 0%, rgba(10, 14, 39, 0.8) 100%)'
-          : 'linear-gradient(145deg, rgba(40, 40, 40, 0.8) 0%, rgba(20, 20, 20, 0.8) 100%)',
-        border: `1px solid ${isAccessible ? typeColor + '60' : '#4b5563'}`,
+        background: 'linear-gradient(145deg, rgba(26, 31, 58, 0.8) 0%, rgba(10, 14, 39, 0.8) 100%)',
+        border: `1px solid ${typeColor}60`,
         borderRadius: '12px',
         textAlign: 'left',
-        cursor: isAccessible ? 'pointer' : 'not-allowed',
+        cursor: 'pointer',
         color: 'white',
-        transition: 'all 0.3s ease',
-        opacity: isAccessible ? 1 : 0.6
+        transition: 'all 0.3s ease'
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-        <span style={{ fontSize: '20px' }}>{isAccessible ? '🪐' : '🔒'}</span>
+        <span style={{ fontSize: '20px' }}>🪐</span>
         <span style={{
           fontSize: '14px',
           fontWeight: 'bold',
-          color: isAccessible ? typeColor : '#6b7280'
+          color: typeColor
         }}>
           {planet.name}
         </span>
       </div>
       <div style={{ fontSize: '11px', color: '#71717a' }}>
         等级 {planet.level} | {planet.dangerLevel}
-        {!isAccessible && (
-          <span style={{ color: '#ef4444', marginLeft: '8px' }}>
-            (需航船等级 {requiredLevel})
-          </span>
-        )}
       </div>
     </button>
   );

@@ -1,6 +1,5 @@
 import { CoreItemEffectType } from '../data/types';
-import type { CoreItem, MythologyLocation } from '../data/types';
-import { MYTHOLOGY_LOCATIONS } from '../data/mythologyLocations';
+import type { CoreItem } from '../data/types';
 
 // 核心道具收集状态
 export interface CoreItemCollectionState {

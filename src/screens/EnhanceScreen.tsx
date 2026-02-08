@@ -16,7 +16,19 @@ const SLOT_NAMES: Record<EquipmentSlot, string> = {
   [EquipmentSlot.FEET]: '脚部',
   [EquipmentSlot.WEAPON]: '武器',
   [EquipmentSlot.ACCESSORY]: '饰品',
+  [EquipmentSlot.SHOULDER]: '肩甲',
+  [EquipmentSlot.ARM]: '臂甲',
 };
+
+// 战甲槽位（6个）
+const ARMOR_SLOTS: EquipmentSlot[] = [
+  EquipmentSlot.HEAD,
+  EquipmentSlot.BODY,
+  EquipmentSlot.SHOULDER,
+  EquipmentSlot.ARM,
+  EquipmentSlot.LEGS,
+  EquipmentSlot.FEET,
+];
 
 export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
   const { gameManager, getEnhancePreview, enhanceItem, getInventory } = useGameStore();
@@ -262,7 +274,7 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
           marginBottom: '16px'
         }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-            {Object.values(EquipmentSlot).map(slot => {
+            {ARMOR_SLOTS.map(slot => {
               const equipment = getEquipmentInSlot(slot);
               const isSelected = selectedSlot === slot;
               const hasEquipment = !!equipment;
