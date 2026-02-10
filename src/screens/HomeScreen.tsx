@@ -1012,71 +1012,85 @@ function ActionButton({
       onClick={onClick}
       disabled={disabled}
       style={{
-        background: 'rgba(0, 0, 0, 0.4)',
-        border: `1px solid ${disabled ? 'rgba(255,255,255,0.1)' : color + '60'}`,
-        borderRadius: '12px',
-        padding: '12px 8px',
+        background: 'rgba(0, 0, 0, 0.5)',
+        border: `1px solid ${disabled ? 'rgba(255,255,255,0.1)' : color + '50'}`,
+        borderRadius: '10px',
+        padding: '8px 4px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
-        gap: '8px',
+        justifyContent: 'flex-start',
+        gap: '4px',
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: mounted ? (disabled ? 0.5 : 1) : 0,
         transform: mounted ? 'translateY(0)' : 'translateY(20px)',
         transition: `all 0.4s ease ${delay}ms`,
         position: 'relative',
         overflow: 'hidden',
-        minHeight: '80px',
-        boxShadow: `0 0 20px ${disabled ? 'transparent' : color + '20'}`
+        minHeight: '90px',
+        boxShadow: `0 0 15px ${disabled ? 'transparent' : color + '15'}`,
+      }}
+      onMouseEnter={(e) => {
+        if (!disabled) {
+          e.currentTarget.style.boxShadow = `0 0 25px ${color}40`;
+          e.currentTarget.style.borderColor = color + '80';
+        }
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = `0 0 15px ${disabled ? 'transparent' : color + '15'}`;
+        e.currentTarget.style.borderColor = disabled ? 'rgba(255,255,255,0.1)' : color + '50';
       }}
     >
       {/* 顶部发光条 */}
       <div style={{
         position: 'absolute',
         top: 0,
-        left: '10%',
-        right: '10%',
+        left: '15%',
+        right: '15%',
         height: '2px',
-        background: disabled ? 'transparent' : `linear-gradient(90deg, transparent 0%, ${color} 50%, transparent 100%)`
+        background: disabled ? 'transparent' : `linear-gradient(90deg, transparent 0%, ${color} 50%, transparent 100%)`,
+        boxShadow: disabled ? 'none' : `0 0 6px ${color}`,
       }} />
 
-      {/* 图标 */}
+      {/* 图标区域 - 占据大部分空间 */}
       <div style={{
-        width: '44px',
-        height: '44px',
+        width: '56px',
+        height: '56px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: iconImage ? 'rgba(255, 255, 255, 0.05)' : `${color}20`,
-        borderRadius: '12px',
-        border: iconImage ? `1px solid ${color}40` : `1px solid ${color}50`,
-        fontSize: '24px',
-        filter: disabled ? 'grayscale(100%)' : 'none',
-        boxShadow: iconImage ? `0 0 15px ${color}30` : 'none',
-        overflow: 'hidden',
+        background: iconImage ? `radial-gradient(circle, ${color}15 0%, transparent 70%)` : `${color}15`,
+        borderRadius: '10px',
+        border: `1px solid ${disabled ? 'rgba(255,255,255,0.1)' : color + '40'}`,
+        fontSize: '28px',
+        filter: disabled ? 'grayscale(100%) brightness(0.6)' : 'none',
+        marginTop: '2px',
       }}>
         {iconImage ? (
           <img
             src={iconImage}
             alt={label}
             style={{
-              width: '80%',
-              height: '80%',
+              width: '90%',
+              height: '90%',
               objectFit: 'contain',
-              filter: disabled ? 'grayscale(100%) brightness(0.7)' : 'none',
+              filter: disabled ? 'grayscale(100%) brightness(0.7)' : 'drop-shadow(0 0 4px ' + color + '50)',
             }}
           />
         ) : (
-          icon
+          <span style={{ filter: disabled ? 'none' : `drop-shadow(0 0 4px ${color})` }}>{icon}</span>
         )}
       </div>
 
+      {/* 文字标签 */}
       <span style={{
         color: disabled ? '#71717a' : color,
-        fontSize: '11px',
+        fontSize: '10px',
         fontWeight: 'bold',
-        textAlign: 'center'
+        textAlign: 'center',
+        lineHeight: '1.2',
+        textShadow: disabled ? 'none' : `0 0 4px ${color}40`,
+        marginTop: '2px',
       }}>{label}</span>
     </button>
   );
