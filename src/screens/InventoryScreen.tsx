@@ -5,7 +5,7 @@ import type { InventoryItem } from '../data/types';
 import type { EquipmentInstance } from '../core/EquipmentSystem';
 import { EquipmentSlot } from '../data/equipmentTypes';
 import { calculateEquipmentStats } from '../core/EquipmentStatCalculator';
-import 货舱背景 from '../assets/images/货舱背景.png';
+import 货舱背景 from '../assets/images/货舱背景.jpg';
 
 interface InventoryScreenProps {
   onBack: () => void;

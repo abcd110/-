@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import 联邦科技星Img from '../assets/images/联邦科技星.png';
 import 神域星Img from '../assets/images/神域星.png';
 import 废土星Img from '../assets/images/废土星.png';
-import 探索背景Img from '../assets/images/探索背景.png';
+import 探索背景Img from '../assets/images/探索背景.jpg';
 
 interface ExplorationSelectScreenProps {
   onBack: () => void;

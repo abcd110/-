@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useGameStore } from '../stores/gameStore';
-import 基地背景 from '../assets/images/基地背景.png';
+import 基地背景 from '../assets/images/基地背景.jpg';
 
 interface BaseScreenProps {
   onNavigate: (screen: string, params?: unknown) => void;
@@ -41,8 +41,8 @@ const FACILITIES: BaseFacility[] = [
   // 预留功能（锁定状态）
   { id: 'mining', name: '采矿平台', icon: '⛏️', description: '自动采集矿物资源', color: '#6b7280', status: 'locked' },
   { id: 'chip', name: '芯片研发', icon: '💾', description: '研发战斗芯片', color: '#6b7280', status: 'locked' },
-  { id: 'alliance', name: '联盟', icon: '🤝', description: '加入或创建联盟', color: '#6b7280', status: 'locked' },
-  { id: 'arena', name: '竞技场', icon: '⚔️', description: '挑战其他玩家', color: '#6b7280', status: 'locked' },
+  { id: 'alliance', name: '基因工程', icon: '🧬', description: '基因改造与强化', color: '#6b7280', status: 'locked' },
+  { id: 'arena', name: '机械飞升', icon: '🦾', description: '机械义体改造', color: '#6b7280', status: 'locked' },
   { id: 'market', name: '星际市场', icon: '🏪', description: '玩家间交易', color: '#6b7280', status: 'locked' },
   { id: 'relic', name: '遗迹探索', icon: '🏛️', description: '探索古代遗迹', color: '#6b7280', status: 'locked' },
 ];
@@ -68,7 +68,7 @@ export default function BaseScreen({ onNavigate, onBack }: BaseScreenProps) {
         backgroundPosition: 'center',
         zIndex: 0,
       }} />
-      
+
       {/* 扫描线效果 */}
       <div style={{
         position: 'absolute',
@@ -203,7 +203,7 @@ function BaseHeader({ onBack }: { onBack: () => void }) {
 // 基地概览 - 科幻风格
 function BaseOverview() {
   const { gameManager } = useGameStore();
-  
+
   const activeFacilities = FACILITIES.filter(f => f.status === 'active').length;
   const totalFacilities = FACILITIES.length;
   const baseLevel = 1;
@@ -233,7 +233,7 @@ function BaseOverview() {
 
 function OverviewItem({ label, value, color, icon }: { label: string; value: string; color: string; icon: string }) {
   return (
-    <div style={{ 
+    <div style={{
       textAlign: 'center',
       background: 'rgba(0, 0, 0, 0.4)',
       padding: '10px 16px',
@@ -276,16 +276,16 @@ function FacilityCard({ facility, onClick }: { facility: BaseFacility; onClick: 
         alignItems: 'center',
         justifyContent: 'center',
         padding: '16px 8px',
-        background: isLocked 
-          ? 'rgba(107, 114, 128, 0.15)' 
+        background: isLocked
+          ? 'linear-gradient(135deg, rgba(30, 30, 40, 0.9) 0%, rgba(20, 20, 30, 0.95) 100%)'
           : 'rgba(0, 20, 40, 0.7)',
-        border: `1px solid ${isLocked ? 'rgba(107, 114, 128, 0.3)' : facility.color + '60'}`,
+        border: `2px solid ${isLocked ? 'rgba(100, 100, 110, 0.5)' : facility.color + '60'}`,
         borderRadius: '12px',
         cursor: isLocked ? 'not-allowed' : 'pointer',
-        opacity: isLocked ? 0.5 : 1,
+        opacity: isLocked ? 0.75 : 1,
         position: 'relative',
         minHeight: '100px',
-        boxShadow: isLocked ? 'none' : `0 0 15px ${facility.color}20`,
+        boxShadow: isLocked ? 'inset 0 0 20px rgba(0, 0, 0, 0.5)' : `0 0 15px ${facility.color}20`,
         transition: 'all 0.3s ease',
       }}
       onMouseEnter={(e) => {
@@ -295,18 +295,30 @@ function FacilityCard({ facility, onClick }: { facility: BaseFacility; onClick: 
         }
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = isLocked ? 'none' : `0 0 15px ${facility.color}20`;
+        e.currentTarget.style.boxShadow = isLocked ? 'inset 0 0 20px rgba(0, 0, 0, 0.5)' : `0 0 15px ${facility.color}20`;
         e.currentTarget.style.transform = 'translateY(0)';
       }}
     >
+      {/* 未解锁遮罩层 */}
+      {isLocked && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(100, 100, 100, 0.05) 8px, rgba(100, 100, 100, 0.05) 16px)',
+          borderRadius: '10px',
+          pointerEvents: 'none',
+        }} />
+      )}
+
       {/* 状态图标 */}
       {isLocked && (
         <div style={{
           position: 'absolute',
-          top: '8px',
-          right: '8px',
-          fontSize: '14px',
-          opacity: 0.7,
+          top: '6px',
+          right: '6px',
+          fontSize: '16px',
+          filter: 'drop-shadow(0 0 4px rgba(0, 0, 0, 0.8))',
+          zIndex: 2,
         }}>
           🔒
         </div>
@@ -322,19 +334,41 @@ function FacilityCard({ facility, onClick }: { facility: BaseFacility; onClick: 
         </div>
       )}
 
+      {/* 未解锁标签 */}
+      {isLocked && (
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          background: 'rgba(0, 0, 0, 0.7)',
+          border: '1px solid rgba(150, 150, 150, 0.4)',
+          borderRadius: '4px',
+          padding: '2px 8px',
+          fontSize: '10px',
+          color: '#888',
+          fontWeight: 'bold',
+          letterSpacing: '1px',
+          zIndex: 2,
+        }}>
+          未解锁
+        </div>
+      )}
+
       {/* 图标 */}
       <div style={{
         fontSize: '32px',
         marginBottom: '8px',
-        filter: isLocked ? 'grayscale(100%)' : 'none',
+        filter: isLocked ? 'grayscale(100%) brightness(0.5)' : 'none',
         textShadow: isLocked ? 'none' : `0 0 10px ${facility.color}50`,
+        opacity: isLocked ? 0.4 : 1,
       }}>
         {facility.icon}
       </div>
 
       {/* 名称 */}
       <div style={{
-        color: isLocked ? '#6b7280' : facility.color,
+        color: isLocked ? '#555' : facility.color,
         fontSize: '13px',
         fontWeight: 'bold',
         textAlign: 'center',
@@ -359,7 +393,7 @@ function FacilityCard({ facility, onClick }: { facility: BaseFacility; onClick: 
 
       {/* 描述 */}
       <div style={{
-        color: '#71717a',
+        color: isLocked ? '#444' : '#71717a',
         fontSize: '9px',
         textAlign: 'center',
         marginTop: '4px',
@@ -427,7 +461,7 @@ function FacilityDetailModal({ facility, onClose }: { facility: BaseFacility; on
           justifyContent: 'space-between',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ 
+            <span style={{
               fontSize: '28px',
               textShadow: `0 0 10px ${facility.color}`,
             }}>{facility.icon}</span>
@@ -615,7 +649,7 @@ function WarehouseContent() {
       <div style={{ marginBottom: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
           <span style={{ color: '#a1a1aa', fontSize: '12px' }}>已使用</span>
-          <span style={{ color: '#10b981', fontSize: '12px' }}>{Math.round((current/max)*100)}%</span>
+          <span style={{ color: '#10b981', fontSize: '12px' }}>{Math.round((current / max) * 100)}%</span>
         </div>
         <div style={{
           height: '8px',
@@ -781,7 +815,7 @@ function ResearchContent() {
             </span>
           </div>
           <div style={{ color: '#a1a1aa', fontSize: '12px', marginBottom: '8px' }}>{project.desc}</div>
-          
+
           {project.status === 'researching' && (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>

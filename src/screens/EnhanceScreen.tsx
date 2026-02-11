@@ -4,7 +4,7 @@ import { ItemType, RARITY_COLORS } from '../data/types';
 import type { InventoryItem } from '../data/types';
 import { EquipmentSlot } from '../data/equipmentTypes';
 import { EnhanceResultType, type EnhancePreview, type EnhanceResult } from '../core/EnhanceSystem';
-import 舰桥背景 from '../assets/images/舰桥背景.png';
+import 舰桥背景 from '../assets/images/舰桥背景.jpg';
 
 interface EnhanceScreenProps {
   onBack: () => void;
@@ -181,7 +181,7 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
         backgroundPosition: 'center',
         zIndex: 0,
       }} />
-      
+
       {/* 扫描线效果 */}
       <div style={{
         position: 'absolute',
@@ -206,9 +206,9 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <SciFiButton onClick={onBack} label="◀ 返回" variant="default" />
-          <h1 style={{ 
-            color: '#f43f5e', 
-            fontWeight: 'bold', 
+          <h1 style={{
+            color: '#f43f5e',
+            fontWeight: 'bold',
             fontSize: '18px',
             textShadow: '0 0 15px rgba(244, 63, 94, 0.6)',
           }}>🔨 强化中心</h1>
@@ -234,9 +234,9 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
           marginBottom: '16px',
           boxShadow: '0 0 20px rgba(244, 63, 94, 0.1)',
         }}>
-          <h3 style={{ 
-            color: '#f43f5e', 
-            fontSize: '14px', 
+          <h3 style={{
+            color: '#f43f5e',
+            fontSize: '14px',
             marginBottom: '12px',
             textShadow: '0 0 8px rgba(244, 63, 94, 0.4)',
           }}>
@@ -254,8 +254,8 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
                   onClick={() => setSelectedSlot(slot)}
                   style={{
                     aspectRatio: '1',
-                    background: isSelected 
-                      ? 'linear-gradient(135deg, rgba(244, 63, 94, 0.3), rgba(244, 63, 94, 0.1))' 
+                    background: isSelected
+                      ? 'linear-gradient(135deg, rgba(244, 63, 94, 0.3), rgba(244, 63, 94, 0.1))'
                       : 'rgba(0, 0, 0, 0.5)',
                     border: `2px solid ${isSelected ? '#f43f5e' : (hasEquipment ? RARITY_COLORS[equipment.rarity] : 'rgba(255,255,255,0.1)')}`,
                     borderRadius: '12px',
@@ -269,9 +269,9 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
                     transition: 'all 0.3s ease',
                   }}
                 >
-                  <span style={{ 
-                    fontSize: '13px', 
-                    color: isSelected ? '#f43f5e' : '#a1a1aa', 
+                  <span style={{
+                    fontSize: '13px',
+                    color: isSelected ? '#f43f5e' : '#a1a1aa',
                     fontWeight: 'bold',
                     textShadow: isSelected ? '0 0 5px rgba(244, 63, 94, 0.5)' : 'none',
                   }}>
@@ -288,9 +288,9 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
                       }}>
                         {equipment.name || '未知装备'}
                       </span>
-                      <span style={{ 
-                        fontSize: '9px', 
-                        color: '#00d4ff', 
+                      <span style={{
+                        fontSize: '9px',
+                        color: '#00d4ff',
                         marginTop: '2px',
                         textShadow: '0 0 5px rgba(0, 212, 255, 0.5)',
                       }}>
@@ -350,8 +350,8 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
                   {(selectedEquipment as any).rarity || '普通'} · 星球{(selectedEquipment as any).stationNumber || 0}
                 </p>
                 <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-                  <span style={{ 
-                    color: '#00d4ff', 
+                  <span style={{
+                    color: '#00d4ff',
                     fontSize: '12px',
                     textShadow: '0 0 5px rgba(0, 212, 255, 0.5)',
                   }}>
@@ -474,8 +474,8 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
                 style={{
                   width: '100%',
                   padding: '16px',
-                  background: isEnhancing || !preview.hasEnoughStones 
-                    ? 'rgba(100, 100, 100, 0.3)' 
+                  background: isEnhancing || !preview.hasEnoughStones
+                    ? 'rgba(100, 100, 100, 0.3)'
                     : 'linear-gradient(135deg, rgba(244, 63, 94, 0.8), rgba(244, 63, 94, 0.4))',
                   color: isEnhancing || !preview.hasEnoughStones ? '#6b7280' : 'white',
                   fontWeight: 'bold',
@@ -647,13 +647,13 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
 }
 
 // 科幻按钮组件
-function SciFiButton({ 
-  onClick, 
-  label, 
-  variant = 'default' 
-}: { 
-  onClick: () => void; 
-  label: string; 
+function SciFiButton({
+  onClick,
+  label,
+  variant = 'default'
+}: {
+  onClick: () => void;
+  label: string;
   variant?: 'primary' | 'default';
 }) {
   return (

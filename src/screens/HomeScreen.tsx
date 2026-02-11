@@ -9,7 +9,7 @@ import 材料合成Img from '../assets/images/材料合成.png';
 import 星骸解构Img from '../assets/images/星骸解构.png';
 import 战甲档案Img from '../assets/images/战甲档案.png';
 import 商店Img from '../assets/images/商店.png';
-import 舰桥背景Img from '../assets/images/舰桥背景.png';
+import 舰桥背景Img from '../assets/images/舰桥背景.jpg';
 
 interface HomeScreenProps {
   onNavigate: (screen: string) => void;

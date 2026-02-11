@@ -4,7 +4,7 @@ import { EquipmentSlot, EquipmentRarity } from '../data/equipmentTypes';
 import { equipmentSystem } from '../core/EquipmentSystem';
 import { ItemRarity } from '../data/types';
 import { calculateEquipmentStats } from '../core/EquipmentStatCalculator';
-import 舰桥背景 from '../assets/images/舰桥背景.png';
+import 舰桥背景 from '../assets/images/舰桥背景.jpg';
 
 interface SublimationScreenProps {
   onBack: () => void;
@@ -153,7 +153,7 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
         backgroundPosition: 'center',
         zIndex: 0,
       }} />
-      
+
       {/* 扫描线效果 - 金色主题 */}
       <div style={{
         position: 'absolute',
@@ -178,9 +178,9 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <SciFiButton onClick={onBack} label="◀ 返回" variant="default" />
-          <h1 style={{ 
-            color: '#fbbf24', 
-            fontWeight: 'bold', 
+          <h1 style={{
+            color: '#fbbf24',
+            fontWeight: 'bold',
             fontSize: '18px',
             textShadow: '0 0 15px rgba(251, 191, 36, 0.6)',
           }}>✨ 升华圣殿</h1>
@@ -210,9 +210,9 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
           boxShadow: '0 0 15px rgba(192, 132, 252, 0.1)',
         }}>
           <span style={{ color: '#a1a1aa', fontSize: '14px' }}>当前神能值</span>
-          <span style={{ 
-            color: '#c084fc', 
-            fontWeight: 'bold', 
+          <span style={{
+            color: '#c084fc',
+            fontWeight: 'bold',
             fontSize: '18px',
             textShadow: '0 0 10px rgba(192, 132, 252, 0.5)',
           }}>
@@ -230,9 +230,9 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
           marginBottom: '16px',
           boxShadow: '0 0 20px rgba(251, 191, 36, 0.1)',
         }}>
-          <h3 style={{ 
-            color: '#fbbf24', 
-            fontSize: '14px', 
+          <h3 style={{
+            color: '#fbbf24',
+            fontSize: '14px',
             marginBottom: '12px',
             textShadow: '0 0 8px rgba(251, 191, 36, 0.4)',
           }}>
@@ -249,8 +249,8 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
                   onClick={() => setSelectedSlot(slot)}
                   style={{
                     aspectRatio: '1',
-                    background: isSelected 
-                      ? 'linear-gradient(135deg, rgba(251, 191, 36, 0.3), rgba(251, 191, 36, 0.1))' 
+                    background: isSelected
+                      ? 'linear-gradient(135deg, rgba(251, 191, 36, 0.3), rgba(251, 191, 36, 0.1))'
                       : 'rgba(0, 0, 0, 0.5)',
                     border: `2px solid ${isSelected ? '#fbbf24' : (equippedItem ? RARITY_COLORS[equippedItem.rarity] : 'rgba(255,255,255,0.1)')}`,
                     borderRadius: '12px',
@@ -264,9 +264,9 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
                     transition: 'all 0.3s ease',
                   }}
                 >
-                  <span style={{ 
-                    fontSize: '13px', 
-                    color: isSelected ? '#fbbf24' : '#a1a1aa', 
+                  <span style={{
+                    fontSize: '13px',
+                    color: isSelected ? '#fbbf24' : '#a1a1aa',
                     fontWeight: 'bold',
                     textShadow: isSelected ? '0 0 5px rgba(251, 191, 36, 0.5)' : 'none',
                   }}>
@@ -282,8 +282,8 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
                       }}>
                         {equippedItem.name}
                       </span>
-                      <span style={{ 
-                        fontSize: '8px', 
+                      <span style={{
+                        fontSize: '8px',
                         color: '#c084fc',
                         textShadow: '0 0 5px rgba(192, 132, 252, 0.5)',
                       }}>
@@ -343,15 +343,15 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
                   {RARITY_NAMES[selectedEquipment.rarity]} · 星球{selectedEquipment.stationNumber}
                 </p>
                 <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-                  <span style={{ 
-                    color: '#00d4ff', 
+                  <span style={{
+                    color: '#00d4ff',
                     fontSize: '12px',
                     textShadow: '0 0 5px rgba(0, 212, 255, 0.5)',
                   }}>
                     强化 +{selectedEquipment.enhanceLevel}
                   </span>
-                  <span style={{ 
-                    color: '#c084fc', 
+                  <span style={{
+                    color: '#c084fc',
                     fontSize: '12px',
                     textShadow: '0 0 5px rgba(192, 132, 252, 0.5)',
                   }}>
@@ -454,8 +454,8 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: '#a1a1aa', fontSize: '14px' }}>升华费用</span>
-                <span style={{ 
-                  color: '#c084fc', 
+                <span style={{
+                  color: '#c084fc',
                   fontWeight: 'bold',
                   textShadow: '0 0 5px rgba(192, 132, 252, 0.5)',
                 }}>
@@ -470,16 +470,16 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
               style={{
                 width: '100%',
                 padding: '16px',
-                background: isProcessing 
-                  ? 'rgba(100, 100, 100, 0.3)' 
-                  : selectedEquipment.sublimationLevel >= 10 
-                    ? 'rgba(100, 100, 100, 0.3)' 
+                background: isProcessing
+                  ? 'rgba(100, 100, 100, 0.3)'
+                  : selectedEquipment.sublimationLevel >= 10
+                    ? 'rgba(100, 100, 100, 0.3)'
                     : 'linear-gradient(135deg, rgba(251, 191, 36, 0.8), rgba(251, 191, 36, 0.4))',
                 color: isProcessing || selectedEquipment.sublimationLevel >= 10 ? '#6b7280' : 'white',
                 fontWeight: 'bold',
                 borderRadius: '12px',
-                border: isProcessing || selectedEquipment.sublimationLevel >= 10 
-                  ? '1px solid rgba(100,100,100,0.3)' 
+                border: isProcessing || selectedEquipment.sublimationLevel >= 10
+                  ? '1px solid rgba(100,100,100,0.3)'
                   : '1px solid rgba(251, 191, 36, 0.6)',
                 cursor: isProcessing || selectedEquipment.sublimationLevel >= 10 ? 'not-allowed' : 'pointer',
                 fontSize: '16px',
@@ -487,8 +487,8 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
-                boxShadow: isProcessing || selectedEquipment.sublimationLevel >= 10 
-                  ? 'none' 
+                boxShadow: isProcessing || selectedEquipment.sublimationLevel >= 10
+                  ? 'none'
                   : '0 0 20px rgba(251, 191, 36, 0.4)',
                 transition: 'all 0.3s ease',
               }}
@@ -615,13 +615,13 @@ export default function SublimationScreen({ onBack }: SublimationScreenProps) {
 }
 
 // 科幻按钮组件
-function SciFiButton({ 
-  onClick, 
-  label, 
-  variant = 'default' 
-}: { 
-  onClick: () => void; 
-  label: string; 
+function SciFiButton({
+  onClick,
+  label,
+  variant = 'default'
+}: {
+  onClick: () => void;
+  label: string;
   variant?: 'primary' | 'default';
 }) {
   return (
