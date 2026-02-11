@@ -4,7 +4,7 @@ import { ItemType, RARITY_COLORS } from '../data/types';
 import type { InventoryItem } from '../data/types';
 import { EquipmentSlot } from '../data/equipmentTypes';
 import { EnhanceResultType, type EnhancePreview, type EnhanceResult } from '../core/EnhanceSystem';
-import 舰桥背景 from '../assets/images/舰桥背景.jpg';
+import 强化背景 from '../assets/images/强化背景.jpg';
 
 interface EnhanceScreenProps {
   onBack: () => void;
@@ -176,7 +176,7 @@ export default function EnhanceScreen({ onBack }: EnhanceScreenProps) {
       <div style={{
         position: 'absolute',
         inset: 0,
-        backgroundImage: `url(${舰桥背景})`,
+        backgroundImage: `url(${强化背景})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         zIndex: 0,

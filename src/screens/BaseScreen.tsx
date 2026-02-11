@@ -38,13 +38,13 @@ const FACILITIES: BaseFacility[] = [
   { id: 'medical', name: '医疗舱', icon: '🏥', description: '提升恢复效率', color: '#ef4444', level: 1, maxLevel: 5, status: 'active' },
   { id: 'comm', name: '通讯阵列', icon: '📡', description: '接收特殊事件', color: '#8b5cf6', level: 1, maxLevel: 3, status: 'active' },
   { id: 'research', name: '科研实验室', icon: '🔬', description: '解锁新配方', color: '#c084fc', level: 1, maxLevel: 5, status: 'active' },
-  // 预留功能（锁定状态）
-  { id: 'mining', name: '采矿平台', icon: '⛏️', description: '自动采集矿物资源', color: '#6b7280', status: 'locked' },
-  { id: 'chip', name: '芯片研发', icon: '💾', description: '研发战斗芯片', color: '#6b7280', status: 'locked' },
-  { id: 'alliance', name: '基因工程', icon: '🧬', description: '基因改造与强化', color: '#6b7280', status: 'locked' },
-  { id: 'arena', name: '机械飞升', icon: '🦾', description: '机械义体改造', color: '#6b7280', status: 'locked' },
-  { id: 'market', name: '星际市场', icon: '🏪', description: '玩家间交易', color: '#6b7280', status: 'locked' },
-  { id: 'relic', name: '遗迹探索', icon: '🏛️', description: '探索古代遗迹', color: '#6b7280', status: 'locked' },
+  // 扩展功能
+  { id: 'mining', name: '采矿平台', icon: '⛏️', description: '自动采集矿物资源', color: '#f59e0b', level: 1, maxLevel: 5, status: 'active' },
+  { id: 'chip', name: '芯片研发', icon: '💾', description: '研发战斗芯片', color: '#00d4ff', level: 1, maxLevel: 5, status: 'active' },
+  { id: 'alliance', name: '基因工程', icon: '🧬', description: '基因改造与强化', color: '#22c55e', level: 1, maxLevel: 5, status: 'active' },
+  { id: 'arena', name: '机械飞升', icon: '🦾', description: '机械义体改造', color: '#a855f7', level: 1, maxLevel: 5, status: 'active' },
+  { id: 'market', name: '星际市场', icon: '🏪', description: '玩家间交易', color: '#ec4899', level: 1, maxLevel: 3, status: 'active' },
+  { id: 'relic', name: '遗迹探索', icon: '🏛️', description: '探索古代遗迹', color: '#f97316', level: 1, maxLevel: 5, status: 'active' },
 ];
 
 export default function BaseScreen({ onNavigate, onBack }: BaseScreenProps) {
