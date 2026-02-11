@@ -12,14 +12,32 @@ interface BattleScreenProps {
 
 type BattleState = 'start' | 'fighting' | 'victory' | 'defeat' | 'escaped';
 
+// 战斗单位接口（玩家方或敌方）
+interface BattleUnit {
+  id: string;
+  name: string;
+  hp: number;
+  maxHp: number;
+  attack: number;
+  defense: number;
+  speed: number;
+  icon?: string;
+  isPlayer: boolean;
+  isAlive: boolean;
+}
+
 export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBattleEnd }: BattleScreenProps) {
   const [battleState, setBattleState] = useState<BattleState>('start');
   const [enemy, setEnemy] = useState<Enemy | null>(null);
   const [battleLog, setBattleLog] = useState<string[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
   const [escapeCooldown, setEscapeCooldown] = useState(false);
-  // 用于逃跑失败后重启自动战斗
   const [battleResumeFlag, setBattleResumeFlag] = useState(0);
+  const [gainedExp, setGainedExp] = useState(0);
+
+  // 玩家队伍和敌方队伍（各6个位置）
+  const [playerTeam, setPlayerTeam] = useState<BattleUnit[]>([]);
+  const [enemyTeam, setEnemyTeam] = useState<BattleUnit[]>([]);
 
   // 战斗计时器
   const playerAttackTimer = useRef<number | null>(null);
@@ -28,6 +46,10 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
   // 使用 ref 存储 player 和 enemy，避免依赖项变化导致定时器重建
   const playerRef = useRef(useGameStore.getState().gameManager.player);
   const enemyRef = useRef<Enemy | null>(null);
+
+  // 使用 ref 存储最新的队伍状态，避免 stale closure
+  const playerTeamRef = useRef<BattleUnit[]>([]);
+  const enemyTeamRef = useRef<BattleUnit[]>([]);
 
   const gameManager = useGameStore(state => state.gameManager);
   const player = useGameStore(state => state.getPlayer());
@@ -45,12 +67,105 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
     enemyRef.current = enemy;
   }, [enemy]);
 
+  // 同步队伍状态到 ref
+  useEffect(() => {
+    playerTeamRef.current = playerTeam;
+  }, [playerTeam]);
+
+  useEffect(() => {
+    enemyTeamRef.current = enemyTeam;
+  }, [enemyTeam]);
+
   // 添加战斗日志
   const addLog = useCallback((message: string) => {
     setBattleLog(prev => [...prev.slice(-6), message]);
   }, []);
 
-  // 初始化战斗 - 只在组件挂载时执行一次
+  // 初始化玩家队伍（6个位置，目前只有主角）
+  const initPlayerTeam = useCallback((): BattleUnit[] => {
+    const team: BattleUnit[] = [];
+    // 主角占据第一个位置（1号位）
+    team.push({
+      id: 'player_0',
+      name: gameManager.playerName || '主角',
+      hp: player.hp,
+      maxHp: player.totalMaxHp,
+      attack: player.totalAttack,
+      defense: player.totalDefense,
+      speed: player.totalAgility,
+      icon: '我',
+      isPlayer: true,
+      isAlive: player.hp > 0,
+    });
+    // 其余5个位置为空（占位符）
+    for (let i = 1; i < 6; i++) {
+      team.push({
+        id: `player_${i}`,
+        name: '',
+        hp: 0,
+        maxHp: 0,
+        attack: 0,
+        defense: 0,
+        speed: 0,
+        isPlayer: true,
+        isAlive: false,
+      });
+    }
+    return team;
+  }, [gameManager.playerName, player.hp, player.totalMaxHp, player.totalAttack, player.totalDefense, player.totalAgility]);
+
+  // 初始化敌方队伍（6个位置）
+  const initEnemyTeam = useCallback((enemyData: Enemy): BattleUnit[] => {
+    const team: BattleUnit[] = [];
+    // 主要敌人占据第一个位置（1号位）
+    team.push({
+      id: `enemy_0`,
+      name: enemyData.name,
+      hp: enemyData.hp,
+      maxHp: enemyData.maxHp,
+      attack: enemyData.attack,
+      defense: enemyData.defense,
+      speed: enemyData.speed,
+      icon: enemyData.icon || '敌',
+      isPlayer: false,
+      isAlive: enemyData.hp > 0,
+    });
+    // 其余5个位置为普通小怪（根据难度生成）
+    const minionCount = isBoss ? 5 : isElite ? 3 : 2;
+    for (let i = 1; i < 6; i++) {
+      if (i <= minionCount) {
+        const minionHp = Math.floor(enemyData.maxHp * (0.3 + Math.random() * 0.2));
+        const minionAttack = Math.floor(enemyData.attack * (0.4 + Math.random() * 0.2));
+        team.push({
+          id: `enemy_${i}`,
+          name: `${enemyData.name}仆从`,
+          hp: minionHp,
+          maxHp: minionHp,
+          attack: minionAttack,
+          defense: Math.floor(enemyData.defense * 0.5),
+          speed: Math.floor(enemyData.speed * 0.8),
+          icon: '小',
+          isPlayer: false,
+          isAlive: true,
+        });
+      } else {
+        team.push({
+          id: `enemy_${i}`,
+          name: '',
+          hp: 0,
+          maxHp: 0,
+          attack: 0,
+          defense: 0,
+          speed: 0,
+          isPlayer: false,
+          isAlive: false,
+        });
+      }
+    }
+    return team;
+  }, [isBoss, isElite]);
+
+  // 初始化战斗
   useEffect(() => {
     if (isInitialized) return;
 
@@ -59,6 +174,15 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
       const enemyInstance = result.enemy;
       setEnemy(enemyInstance);
       enemyRef.current = enemyInstance;
+      
+      // 初始化双方队伍
+      const initialPlayerTeam = initPlayerTeam();
+      const initialEnemyTeam = initEnemyTeam(enemyInstance);
+      setPlayerTeam(initialPlayerTeam);
+      setEnemyTeam(initialEnemyTeam);
+      playerTeamRef.current = initialPlayerTeam;
+      enemyTeamRef.current = initialEnemyTeam;
+      
       setBattleLog([result.message, '战斗开始！']);
       setBattleState('fighting');
       setIsInitialized(true);
@@ -71,13 +195,14 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
       clearAllTimers();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locationId]); // 只在 locationId 变化时执行
+  }, [locationId]);
 
   // 处理胜利
   useEffect(() => {
     if (battleState === 'victory' && enemy && isInitialized) {
       const victoryResult = endBattleVictory(enemy);
       victoryResult.logs.forEach(log => addLog(log));
+      setGainedExp(victoryResult.exp);
     }
   }, [battleState, enemy, isInitialized, endBattleVictory, addLog]);
 
@@ -93,113 +218,213 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
     }
   }, []);
 
-  // 玩家普通攻击 - 使用 ref 避免依赖项变化
+  // 获取攻击优先级顺序（根据攻击者位置）
+  // 1号/4号位: 1->2->3->4->5->6
+  // 2号/5号位: 2->1->3->4->5->6
+  // 3号/6号位: 3->2->1->6->5->4
+  const getAttackOrder = (attackerPosition: number): number[] => {
+    // 将位置(1-6)转换为数组索引(0-5)
+    const pos = attackerPosition - 1;
+    if (pos === 0 || pos === 3) {
+      // 1号位或4号位: 1->2->3->4->5->6
+      return [0, 1, 2, 3, 4, 5];
+    } else if (pos === 1 || pos === 4) {
+      // 2号位或5号位: 2->1->3->4->5->6
+      return [1, 0, 2, 3, 4, 5];
+    } else {
+      // 3号位或6号位: 3->2->1->6->5->4
+      return [2, 1, 0, 5, 4, 3];
+    }
+  };
+
+  // 玩家攻击 - 每个存活的玩家单位根据自己的位置选择目标
   const doPlayerAttack = useCallback(() => {
     const currentEnemy = enemyRef.current;
     const currentPlayer = playerRef.current;
 
-    if (!currentEnemy) return;
-    if (battleState !== 'fighting') return;
+    if (!currentEnemy || battleState !== 'fighting') return;
+  
+    // 使用 ref 获取最新的队伍状态
+    const currentEnemyTeam = enemyTeamRef.current;
+    const currentPlayerTeam = playerTeamRef.current;
 
-    let damage = currentPlayer.totalAttack;
-    let isCrit = false;
+    // 获取存活的玩家单位
+    const alivePlayers = currentPlayerTeam.filter(u => u.isAlive);
+    if (alivePlayers.length === 0) return;
 
-    // 暴击判定 - 新公式：暴击概率 = (我方会心 - 敌人护心) / (敌人护心 * 1.5)
-    const attackerCrit = currentPlayer.totalCrit;
-    const defenderGuard = (currentEnemy as any).guardRate || 5;
-    let critChance = 0;
-    if (attackerCrit > defenderGuard) {
-      critChance = (attackerCrit - defenderGuard) / (defenderGuard * 1.5);
-    }
-    critChance = Math.max(0, Math.min(1, critChance)); // 限制在0-100%
-    if (Math.random() < critChance) {
-      const critDamage = currentPlayer.totalCritDamage / 100;
-      damage = Math.floor(damage * (1 + critDamage));
-      isCrit = true;
-    }
+    // 每个存活的玩家单位攻击一次
+    alivePlayers.forEach(attacker => {
+      // 获取攻击者的位置（从id中提取，如'player_0'表示1号位）
+      const attackerIndex = parseInt(attacker.id.split('_')[1]);
+      const attackOrder = getAttackOrder(attackerIndex + 1);
 
-    // 最终减伤比计算
-    const enemyDefense = currentEnemy.defense;
-    const playerPenetration = currentPlayer.totalPenetration;
-    const playerPenetrationPercent = currentPlayer.totalPenetrationPercent;
+      // 根据攻击优先级查找目标
+      let target: BattleUnit | null = null;
+      let targetIndex = -1;
 
-    // 计算穿透后的实际防御 = 敌人防御 * (1 - 穿透百分比) - 穿透固定值
-    const defenseAfterPenetrationPercent = enemyDefense * (1 - playerPenetrationPercent / 100);
-    const actualDefense = Math.max(0, defenseAfterPenetrationPercent - playerPenetration);
-    // 计算最终减伤比
-    const finalReduction = (actualDefense / (enemyDefense + 600)) * 100;
-    // 计算实际伤害（伤害 * (1 - 减伤比)）
-    damage = Math.floor(damage * (1 - finalReduction / 100));
-    damage = Math.max(1, damage); // 最低1点伤害
-
-    const newHp = Math.max(0, currentEnemy.hp - damage);
-
-    addLog(isCrit ? `暴击！造成 ${damage} 伤害` : `造成 ${damage} 伤害`);
-
-    // 更新敌人状态
-    setEnemy({ ...currentEnemy, hp: newHp });
-    enemyRef.current = { ...currentEnemy, hp: newHp };
-
-    // 检查胜利
-    if (newHp <= 0) {
-      clearAllTimers();
-      setBattleState('victory');
-      addLog('战斗胜利！');
-      if (!isBoss) {
-        const progressGain = isElite ? 15 : 10;
-        addLog(`狩猎进度 +${progressGain}%`);
+      for (const index of attackOrder) {
+        const unit = currentEnemyTeam[index];
+        if (unit && unit.isAlive) {
+          target = unit;
+          targetIndex = index;
+          break;
+        }
       }
-    }
+
+      if (!target) return;
+
+      let damage = attacker.attack;
+      let isCrit = false;
+
+      // 暴击判定（只有主角有暴击属性）
+      if (attackerIndex === 0) {
+        const attackerCrit = currentPlayer.totalCrit;
+        const defenderGuard = (currentEnemy as any).guardRate || 5;
+        let critChance = 0;
+        if (attackerCrit > defenderGuard) {
+          critChance = (attackerCrit - defenderGuard) / (defenderGuard * 1.5);
+        }
+        critChance = Math.max(0, Math.min(1, critChance));
+        if (Math.random() < critChance) {
+          const critDamage = currentPlayer.totalCritDamage / 100;
+          damage = Math.floor(damage * (1 + critDamage));
+          isCrit = true;
+        }
+      }
+
+      // 最终减伤比计算
+      const enemyDefense = target.defense;
+      const playerPenetration = currentPlayer.totalPenetration;
+      const playerPenetrationPercent = currentPlayer.totalPenetrationPercent;
+
+      const defenseAfterPenetrationPercent = enemyDefense * (1 - playerPenetrationPercent / 100);
+      const actualDefense = Math.max(0, defenseAfterPenetrationPercent - playerPenetration);
+      const finalReduction = (actualDefense / (enemyDefense + 600)) * 100;
+      damage = Math.floor(damage * (1 - finalReduction / 100));
+      damage = Math.max(1, damage);
+
+      // 目标新血量
+      const targetNewHp = Math.max(0, target.hp - damage);
+      const targetIsAlive = targetNewHp > 0;
+
+      // 更新敌方单位血量
+      setEnemyTeam(prev => {
+        const newTeam = prev.map((u, idx) => {
+          if (idx === targetIndex) {
+            return { ...u, hp: targetNewHp, isAlive: targetIsAlive };
+          }
+          return u;
+        });
+        enemyTeamRef.current = newTeam;
+
+        // 检查胜利
+        const remainingEnemies = newTeam.filter(u => u.isAlive);
+        if (remainingEnemies.length === 0) {
+          clearAllTimers();
+          setBattleState('victory');
+          addLog('战斗胜利！');
+          if (!isBoss) {
+            const progressGain = isElite ? 15 : 10;
+            addLog(`狩猎进度 +${progressGain}%`);
+          }
+        }
+
+        return newTeam;
+      });
+
+      addLog(isCrit ? `暴击！${attacker.name}对${target.name}造成 ${damage} 伤害` : `${attacker.name}对${target.name}造成 ${damage} 伤害`);
+    });
   }, [battleState, isBoss, isElite, addLog, clearAllTimers]);
 
-  // 敌人攻击 - 使用 ref 避免依赖项变化
+  // 敌人攻击 - 每个存活的敌人根据自己的位置选择目标
   const doEnemyAttack = useCallback(() => {
     const currentEnemy = enemyRef.current;
     const currentPlayer = playerRef.current;
 
     if (!currentEnemy || battleState !== 'fighting') return;
 
-    let damage = currentEnemy.attack;
+    // 用 ref 获取最新的队伍状态
+    const currentEnemyTeam = enemyTeamRef.current;
+    const currentPlayerTeam = playerTeamRef.current;
 
-    // 敌人攻击时，使用玩家的防御计算减伤
-    const playerDefense = currentPlayer.totalDefense;
-    const damageReduction = (playerDefense / (playerDefense + 600)) * 100;
-    damage = Math.floor(damage * (1 - damageReduction / 100));
-    damage = Math.max(1, damage); // 最低1点伤害
+    // 取存活的敌方单位
+    const aliveEnemies = currentEnemyTeam.filter(u => u.isAlive);
+    if (aliveEnemies.length === 0) return;
 
-    currentPlayer.takeDamage(damage);
-    addLog(`${currentEnemy.name} 造成 ${damage} 伤害`);
+    // 每个存活的敌人攻击一次
+    aliveEnemies.forEach(attacker => {
+      // 获取攻击者的位置（从id中提取，如'enemy_0'表示1号位）
+      const attackerIndex = parseInt(attacker.id.split('_')[1]);
+      const attackOrder = getAttackOrder(attackerIndex + 1);
 
-    // 检查失败
-    if (currentPlayer.isDead) {
-      clearAllTimers();
-      setBattleState('defeat');
-      addLog('你被击败了！');
-      gameManager.isGameOver = true;
-      gameManager.player.stamina = 0;
-      // 战斗失败后将生命值设置为1点
-      gameManager.player.hp = 1;
-      // 保存游戏状态
-      saveGame();
-    }
+      // 根据攻击优先级查找目标
+      let target: BattleUnit | null = null;
+      let targetIndex = -1;
+
+      for (const index of attackOrder) {
+        const unit = currentPlayerTeam[index];
+        if (unit && unit.isAlive) {
+          target = unit;
+          targetIndex = index;
+          break;
+        }
+      }
+
+      if (!target) return;
+
+      let damage = attacker.attack;
+
+      // 敌人攻击时，使用玩家的防御计算减伤
+      const playerDefense = currentPlayer.totalDefense;
+      const damageReduction = (playerDefense / (playerDefense + 600)) * 100;
+      damage = Math.floor(damage * (1 - damageReduction / 100));
+      damage = Math.max(1, damage);
+
+      // 应用伤害
+      if (targetIndex === 0) {
+        currentPlayer.takeDamage(damage);
+      }
+
+      addLog(`${attacker.name} 对${targetIndex === 0 ? '主角' : target.name}造成 ${damage} 伤害`);
+
+      // 更新玩家队伍显示
+      setPlayerTeam(prev => {
+        const newTeam = prev.map((u, idx) => {
+          if (idx === targetIndex && targetIndex === 0) {
+            return { ...u, hp: currentPlayer.hp, isAlive: !currentPlayer.isDead };
+          }
+          return u;
+        });
+        playerTeamRef.current = newTeam;
+        return newTeam;
+      });
+
+      // 检查失败
+      if (currentPlayer.isDead) {
+        clearAllTimers();
+        setBattleState('defeat');
+        addLog('你被击败了！');
+        gameManager.isGameOver = true;
+        gameManager.player.stamina = 0;
+        gameManager.player.hp = 1;
+        saveGame();
+      }
+    });
   }, [battleState, addLog, clearAllTimers, gameManager, saveGame]);
 
-  // 启动自动战斗 - 在 battleState、isInitialized 或 battleResumeFlag 变化时执行
+  // 启动自动战斗
   useEffect(() => {
     if (battleState !== 'fighting' || !isInitialized) return;
 
-    // 计算攻击间隔 - 攻速1表示1秒攻击1次
     const attackSpeed = player.totalAttackSpeed || 1;
     const playerInterval = Math.max(500, 1000 / attackSpeed);
     const enemyAttackSpeed = (enemy as any)?.attackSpeed || 1;
     const enemyInterval = Math.max(500, 1000 / enemyAttackSpeed);
 
-    // 玩家攻击计时器
     playerAttackTimer.current = window.setInterval(() => {
       doPlayerAttack();
     }, playerInterval);
 
-    // 敌人攻击计时器
     enemyAttackTimer.current = window.setInterval(() => {
       doEnemyAttack();
     }, enemyInterval);
@@ -207,7 +432,6 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
     return () => {
       clearAllTimers();
     };
-    // 注意：这里不依赖 doPlayerAttack 和 doEnemyAttack，因为它们使用 ref
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [battleState, isInitialized, battleResumeFlag, player.totalAttackSpeed, enemy?.speed]);
 
@@ -215,7 +439,6 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
   const handleEscape = () => {
     if (!enemy || battleState !== 'fighting' || escapeCooldown) return;
 
-    // 设置逃跑按钮冷却
     setEscapeCooldown(true);
     setTimeout(() => setEscapeCooldown(false), 2000);
 
@@ -227,48 +450,47 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
       setBattleState('escaped');
       setTimeout(() => onBack(), 1500);
     } else {
-      // 逃跑失败，战斗继续
-      // 通过改变 battleResumeFlag 来触发 useEffect 重启自动战斗计时器
       addLog('逃跑失败！战斗继续！');
       setBattleResumeFlag(prev => prev + 1);
     }
   };
 
-  // 继续狩猎 - 直接开始新战斗
+  // 继续狩猎
   const handleContinueHunt = async () => {
-    // 检查体力
     if (gameManager.player.stamina < 10) {
       addLog('体力不足，无法继续狩猎');
       return;
     }
-    // 消耗时间和体力
     gameManager.advanceTime(15);
     gameManager.player.stamina -= 10;
 
-    // 更新狩猎进度
     const progress = gameManager.getLocationProgress(locationId);
     const progressGain = isElite ? 15 : 10;
     const newHuntProgress = Math.min(80, progress.huntProgress + progressGain);
     gameManager.updateLocationProgress(locationId, { huntProgress: newHuntProgress });
 
-    // 保存游戏
     await saveGame();
 
-    // 重置状态并重新开始战斗
     clearAllTimers();
     setIsInitialized(false);
     setBattleState('start');
     setEnemy(null);
     enemyRef.current = null;
     setBattleLog([]);
+    setGainedExp(0);
 
-    // 延迟一点再初始化新战斗
     setTimeout(() => {
-      const result = startBattle(locationId);
+      const result = startBattle(locationId, isBoss, isElite);
       if (result.success && result.enemy) {
         const enemyInstance = result.enemy;
         setEnemy(enemyInstance);
         enemyRef.current = enemyInstance;
+        const newPlayerTeam = initPlayerTeam();
+        const newEnemyTeam = initEnemyTeam(enemyInstance);
+        setPlayerTeam(newPlayerTeam);
+        setEnemyTeam(newEnemyTeam);
+        playerTeamRef.current = newPlayerTeam;
+        enemyTeamRef.current = newEnemyTeam;
         setBattleLog([result.message, '战斗开始！']);
         setBattleState('fighting');
         setIsInitialized(true);
@@ -278,13 +500,11 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
 
   // 返回采集资源
   const handleReturnCollect = async () => {
-    // 更新狩猎进度
     const progress = gameManager.getLocationProgress(locationId);
     const progressGain = isElite ? 15 : 10;
     const newHuntProgress = Math.min(80, progress.huntProgress + progressGain);
     gameManager.updateLocationProgress(locationId, { huntProgress: newHuntProgress });
 
-    // 保存游戏
     await saveGame();
 
     if (onBattleEnd) {
@@ -296,10 +516,7 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
 
   // BOSS击败后返回
   const handleBossDefeated = async () => {
-    // 标记BOSS已击败
     gameManager.updateLocationProgress(locationId, { bossDefeated: true });
-
-    // 保存游戏
     await saveGame();
 
     if (onBattleEnd) {
@@ -309,7 +526,198 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
     }
   };
 
-  // 渲染战斗界面
+  const renderUnitCard = (unit: BattleUnit, position: number) => {
+    if (!unit.isAlive && unit.name === '') {
+      // 空位置 - 返回透明占位符
+      return (
+        <div
+          key={unit.id}
+          style={{
+            width: '100px',
+            height: '55px',
+            backgroundColor: 'transparent',
+          }}
+        />
+      );
+    }
+        
+    const hpPercent = unit.maxHp > 0 ? (unit.hp / unit.maxHp) * 100 : 0;
+    const hpColor = hpPercent > 50 ? '#22c55e' : hpPercent > 25 ? '#eab308' : '#ef4444';
+
+    return (
+      <div
+        key={unit.id}
+        style={{
+          width: '100px',
+          height: '55px',
+          backgroundColor: unit.isAlive ? '#1e2235' : '#151825',
+          border: `1px solid ${unit.isAlive ? (unit.isPlayer ? '#3b82f6' : '#ef4444') : '#2a2f3f'}`,
+          borderRadius: '8px',
+          padding: '6px 8px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          opacity: unit.isAlive ? 1 : 0.6,
+        }}
+      >
+        <div style={{
+          fontSize: '11px',
+          color: unit.isPlayer ? '#60a5fa' : '#f87171',
+          fontWeight: 'bold',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          lineHeight: '1.2',
+          display: 'flex',
+          justifyContent: 'space-between',
+        }}>
+          <span>{unit.name}</span>
+          <span style={{ fontSize: '9px', color: '#6b7280' }}>{position}号</span>
+        </div>
+        {unit.isAlive ? (
+          <>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              fontSize: '10px',
+              color: '#9ca3af',
+              lineHeight: '1.2',
+            }}>
+              <span>{unit.hp}</span>
+              <span>/{unit.maxHp}</span>
+            </div>
+            <div style={{
+              backgroundColor: '#2a2f3f',
+              borderRadius: '3px',
+              height: '5px',
+              overflow: 'hidden',
+            }}>
+              <div style={{
+                height: '100%',
+                backgroundColor: hpColor,
+                transition: 'width 0.3s',
+                width: `${hpPercent}%`,
+              }} />
+            </div>
+          </>
+        ) : (
+          <div style={{
+            fontSize: '11px',
+            color: '#6b7280',
+            textAlign: 'center',
+            lineHeight: '1.2',
+          }}>
+            已阵亡
+          </div>
+        )}
+      </div>
+    );
+  };
+      
+  // 渲染战斗区域（6个位置）
+  const renderBattleField = () => {
+    // 上方敌方队伍（3x2布局）
+    // 第一行：4、5、6号位（后排）
+    // 第二行：1、2、3号位（前排）
+    const enemyRow1 = [3, 4, 5].map(index => {
+      const unit = enemyTeam[index] || { id: `enemy_${index}`, name: '', hp: 0, maxHp: 0, attack: 0, defense: 0, speed: 0, isPlayer: false, isAlive: false };
+      return renderUnitCard(unit, index + 1);
+    });
+        
+    const enemyRow2 = [0, 1, 2].map(index => {
+      const unit = enemyTeam[index] || { id: `enemy_${index}`, name: '', hp: 0, maxHp: 0, attack: 0, defense: 0, speed: 0, isPlayer: false, isAlive: false };
+      return renderUnitCard(unit, index + 1);
+    });
+        
+    // 下方玩家队伍（3x2布局）
+    // 第一行：1、2、3号位（前排）
+    // 第二行：4、5、6号位（后排）
+    const playerRow1 = [0, 1, 2].map(index => {
+      const unit = playerTeam[index] || { id: `player_${index}`, name: '', hp: 0, maxHp: 0, attack: 0, defense: 0, speed: 0, isPlayer: true, isAlive: false };
+      return renderUnitCard(unit, index + 1);
+    });
+          
+    const playerRow2 = [3, 4, 5].map(index => {
+      const unit = playerTeam[index] || { id: `player_${index}`, name: '', hp: 0, maxHp: 0, attack: 0, defense: 0, speed: 0, isPlayer: true, isAlive: false };
+      return renderUnitCard(unit, index + 1);
+    });
+      
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '30px',
+        padding: '20px 16px',
+      }}>
+        {/* 敌方队伍 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
+          <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>敌方后排</div>
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+            {enemyRow1}
+          </div>
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+            {enemyRow2}
+          </div>
+          <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>敌方前排</div>
+        </div>
+
+        {/* 战斗状态显示 */}
+        {battleState === 'fighting' && (
+          <div style={{
+            fontSize: '24px',
+            color: '#0099cc',
+            fontWeight: 'bold',
+          }}>
+            VS
+          </div>
+        )}
+
+        {/* 胜利时显示获得经验 */}
+        {battleState === 'victory' && (
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '8px',
+          }}>
+            <div style={{
+              width: '70px',
+              height: '70px',
+              borderRadius: '50%',
+              backgroundColor: '#065f46',
+              border: '2px solid #4ade80',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '14px',
+              color: '#4ade80',
+              fontWeight: 'bold',
+              textAlign: 'center',
+            }}>
+              获得<br/>经验
+            </div>
+            <div style={{ color: '#4ade80', fontSize: '16px', fontWeight: 'bold' }}>
+              +{gainedExp}
+            </div>
+          </div>
+        )}
+
+        {/* 玩家队伍 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
+          <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>我方前排</div>
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+            {playerRow1}
+          </div>
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+            {playerRow2}
+          </div>
+          <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>我方后排</div>
+        </div>
+      </div>
+    );
+  };
+            
   return (
     <div style={{
       height: '100vh',
@@ -322,217 +730,56 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
         flexShrink: 0,
         backgroundColor: '#1a1f3a',
         borderBottom: '1px solid #2a3050',
-        padding: '12px 16px'
+        padding: '12px 16px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <h1 style={{ color: 'white', fontWeight: 'bold', fontSize: '18px' }}>
-            {battleState === 'fighting' && (isBoss ? 'BOSS战' : '自动战斗')}
-            {battleState === 'victory' && '胜利！'}
-            {battleState === 'defeat' && '失败...'}
-            {battleState === 'escaped' && '已逃跑'}
-          </h1>
-        </div>
+        <h1 style={{ color: 'white', fontWeight: 'bold', fontSize: '18px', margin: 0 }}>
+          {battleState === 'fighting' && (isBoss ? 'BOSS战' : '自动战斗')}
+          {battleState === 'victory' && '胜利！'}
+          {battleState === 'defeat' && '失败...'}
+          {battleState === 'escaped' && '已逃跑'}
+        </h1>
+        {battleState === 'fighting' && (
+          <button
+            onClick={handleEscape}
+            disabled={escapeCooldown}
+            style={{
+              padding: '8px 20px',
+              backgroundColor: escapeCooldown ? '#1f2937' : '#374151',
+              color: escapeCooldown ? '#6b7280' : '#a1a1aa',
+              borderRadius: '6px',
+              border: 'none',
+              cursor: escapeCooldown ? 'not-allowed' : 'pointer',
+              fontWeight: 'bold',
+              fontSize: '14px'
+            }}
+          >
+            {escapeCooldown ? '冷却中...' : '逃跑'}
+          </button>
+        )}
       </header>
 
-      {/* 战斗区域 */}
+      {/* 主内容区 */}
       <main style={{
         flex: 1,
         overflowY: 'auto',
-        padding: '16px',
         display: 'flex',
         flexDirection: 'column'
       }}>
-        {/* 敌人信息 - 胜利/失败时隐藏 */}
-        {enemy && battleState === 'fighting' && (
-          <div style={{
-            backgroundColor: '#1a1f3a',
-            borderRadius: '12px',
-            padding: '16px',
-            border: '1px solid #374151',
-            marginBottom: '16px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-              <div style={{
-                width: '48px',
-                height: '48px',
-                backgroundColor: '#374151',
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '24px'
-              }}>
-                {enemy.icon}
-              </div>
-              <div style={{ flex: 1 }}>
-                <h3 style={{ color: 'white', fontWeight: 'bold', margin: '0 0 4px 0' }}>{enemy.name}</h3>
-                <p style={{ color: '#a1a1aa', fontSize: '12px', margin: 0 }}>{enemy.description}</p>
-              </div>
-            </div>
+        {/* 6v6 战斗场地 */}
+        {renderBattleField()}
 
-            {/* 敌人生命值 */}
-            <div style={{ marginBottom: '8px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <span style={{ color: '#a1a1aa', fontSize: '12px' }}>生命值</span>
-                <span style={{ color: 'white', fontSize: '12px' }}>{enemy.hp}/{enemy.maxHp}</span>
-              </div>
-              <div style={{
-                backgroundColor: '#1f2937',
-                borderRadius: '9999px',
-                height: '8px',
-                overflow: 'hidden'
-              }}>
-                <div style={{
-                  height: '100%',
-                  backgroundColor: '#22c55e',
-                  transition: 'width 0.3s',
-                  width: `${(enemy.hp / enemy.maxHp) * 100}%`
-                }} />
-              </div>
-            </div>
-
-            {/* 敌人属性 */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '8px',
-              fontSize: '12px'
-            }}>
-              <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#1f2937', borderRadius: '6px' }}>
-                <div style={{ color: '#ef4444', fontWeight: 'bold' }}>{enemy.attack}</div>
-                <div style={{ color: '#a1a1aa' }}>攻击</div>
-              </div>
-              <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#1f2937', borderRadius: '6px' }}>
-                <div style={{ color: '#3b82f6', fontWeight: 'bold' }}>{enemy.defense}</div>
-                <div style={{ color: '#a1a1aa' }}>防御</div>
-              </div>
-              <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#1f2937', borderRadius: '6px' }}>
-                <div style={{ color: '#22c55e', fontWeight: 'bold' }}>{enemy.speed}</div>
-                <div style={{ color: '#a1a1aa' }}>跃迁速度</div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* VS 标识 - 胜利/失败时隐藏 */}
-        {battleState === 'fighting' && (
-          <div style={{
-            textAlign: 'center',
-            color: '#0099cc',
-            fontSize: '24px',
-            fontWeight: 'bold',
-            marginBottom: '16px'
-          }}>
-            VS
-          </div>
-        )}
-
-        {/* 玩家信息 - 胜利时简化显示 */}
+        {/* 战斗记录 */}
         <div style={{
           backgroundColor: '#1a1f3a',
           borderRadius: '12px',
-          padding: battleState === 'victory' ? '12px' : '16px',
+          padding: '12px',
           border: '1px solid #374151',
-          marginBottom: battleState === 'victory' ? '12px' : '16px'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: battleState === 'victory' ? '8px' : '12px' }}>
-            <div style={{
-              width: battleState === 'victory' ? '40px' : '48px',
-              height: battleState === 'victory' ? '40px' : '48px',
-              backgroundColor: '#374151',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: battleState === 'victory' ? '20px' : '24px'
-            }}>
-              我
-            </div>
-            <div style={{ flex: 1 }}>
-              <h3 style={{ color: 'white', fontWeight: 'bold', margin: '0 0 4px 0', fontSize: battleState === 'victory' ? '14px' : '16px' }}>{gameManager.playerName}</h3>
-              <p style={{ color: '#a1a1aa', fontSize: '12px', margin: 0 }}>Lv.{player.level}</p>
-            </div>
-          </div>
-
-          {/* 玩家生命值 */}
-          <div style={{ marginBottom: '8px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-              <span style={{ color: '#a1a1aa', fontSize: '12px' }}>生命值</span>
-              <span style={{ color: 'white', fontSize: '12px' }}>{player.hp}/{player.totalMaxHp}</span>
-            </div>
-            <div style={{
-              backgroundColor: '#1f2937',
-              borderRadius: '9999px',
-              height: '8px',
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                height: '100%',
-                backgroundColor: player.hp < player.totalMaxHp * 0.3 ? '#ef4444' : '#22c55e',
-                transition: 'width 0.3s',
-                width: `${(player.hp / player.totalMaxHp) * 100}%`
-              }} />
-            </div>
-          </div>
-
-          {/* 玩家体力 */}
-          <div style={{ marginBottom: battleState === 'victory' ? '0' : '12px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-              <span style={{ color: '#a1a1aa', fontSize: '12px' }}>体力</span>
-              <span style={{ color: 'white', fontSize: '12px' }}>{player.stamina}/{player.maxStamina}</span>
-            </div>
-            <div style={{
-              backgroundColor: '#1f2937',
-              borderRadius: '9999px',
-              height: '6px',
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                height: '100%',
-                backgroundColor: '#3b82f6',
-                transition: 'width 0.3s',
-                width: `${(player.stamina / player.maxStamina) * 100}%`
-              }} />
-            </div>
-          </div>
-
-          {/* 玩家属性 - 胜利时隐藏 */}
-          {battleState !== 'victory' && (
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '8px',
-              fontSize: '12px'
-            }}>
-              <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#1f2937', borderRadius: '6px' }}>
-                <div style={{ color: '#ef4444', fontWeight: 'bold' }}>{player.totalAttack}</div>
-                <div style={{ color: '#a1a1aa' }}>攻击</div>
-              </div>
-              <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#1f2937', borderRadius: '6px' }}>
-                <div style={{ color: '#3b82f6', fontWeight: 'bold' }}>{player.totalDefense}</div>
-                <div style={{ color: '#a1a1aa' }}>防御</div>
-              </div>
-              <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#1f2937', borderRadius: '6px' }}>
-                <div style={{ color: '#22c55e', fontWeight: 'bold' }}>{player.totalAgility}</div>
-                <div style={{ color: '#a1a1aa' }}>敏捷</div>
-              </div>
-              <div style={{ textAlign: 'center', padding: '8px', backgroundColor: '#1f2937', borderRadius: '6px' }}>
-                <div style={{ color: '#00d4ff', fontWeight: 'bold' }}>{player.totalAttackSpeed.toFixed(1)}</div>
-                <div style={{ color: '#a1a1aa' }}>攻速</div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* 战斗记录 - 胜利时减小高度 */}
-        <div style={{
-          backgroundColor: '#1a1f3a',
-          borderRadius: '12px',
-          padding: battleState === 'victory' ? '10px' : '12px',
-          border: '1px solid #374151',
-          marginBottom: battleState === 'victory' ? '12px' : '16px',
-          flex: battleState === 'victory' ? '1' : 'none',
-          minHeight: battleState === 'victory' ? '80px' : 'auto'
+          margin: '16px',
+          flex: 1,
+          minHeight: '120px'
         }}>
           <h3 style={{ color: '#a1a1aa', fontSize: '12px', margin: '0 0 8px 0' }}>战斗记录</h3>
           <div style={{
@@ -540,9 +787,8 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
             flexDirection: 'column',
             gap: '4px',
             fontSize: '12px',
-            maxHeight: battleState === 'victory' ? 'none' : '120px',
+            maxHeight: '200px',
             overflowY: 'auto',
-            height: battleState === 'victory' ? 'calc(100% - 20px)' : 'auto'
           }}>
             {battleLog.map((log, index) => (
               <div key={index} style={{ color: log.includes('造成') && !log.includes('敌人') ? '#00d4ff' : '#9ca3af' }}>
@@ -551,14 +797,14 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
             ))}
           </div>
         </div>
-
+                
         {/* 普通战斗胜利 - 继续狩猎或返回 */}
         {battleState === 'victory' && !isBoss && (
           <div style={{
             backgroundColor: '#065f46',
             borderRadius: '12px',
             padding: '16px',
-            marginBottom: '16px'
+            margin: '0 16px 16px'
           }}>
             <div style={{ display: 'flex', gap: '12px' }}>
               <button
@@ -598,14 +844,14 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
           </div>
         )}
 
-        {/* BOSS战胜利 - 紧凑布局 */}
+        {/* BOSS战胜利 */}
         {battleState === 'victory' && isBoss && (
           <div style={{
             backgroundColor: '#065f46',
             borderRadius: '12px',
             padding: '12px',
             textAlign: 'center',
-            marginBottom: '12px'
+            margin: '0 16px 16px'
           }}>
             <h3 style={{ color: '#4ade80', margin: '0 0 4px 0', fontSize: '16px' }}>BOSS击败！</h3>
             <p style={{ color: '#a1a1aa', fontSize: '12px', margin: '0 0 10px 0' }}>
@@ -628,14 +874,14 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
             </button>
           </div>
         )}
-
+    
         {battleState === 'defeat' && (
           <div style={{
             backgroundColor: '#7f1d1d',
             borderRadius: '12px',
             padding: '16px',
             textAlign: 'center',
-            marginBottom: '16px'
+            margin: '0 16px 16px'
           }}>
             <h3 style={{ color: '#f87171', margin: '0 0 8px 0' }}>你被击败了...</h3>
             <button
@@ -655,36 +901,6 @@ export default function BattleScreen({ locationId, isBoss, isElite, onBack, onBa
           </div>
         )}
       </main>
-
-      {/* 底部操作栏 */}
-      {battleState === 'fighting' && (
-        <footer style={{
-          flexShrink: 0,
-          backgroundColor: '#1a1f3a',
-          borderTop: '1px solid #2a3050',
-          padding: '12px 16px'
-        }}>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button
-              onClick={handleEscape}
-              disabled={escapeCooldown}
-              style={{
-                width: '100%',
-                padding: '14px',
-                backgroundColor: escapeCooldown ? '#1f2937' : '#374151',
-                color: escapeCooldown ? '#6b7280' : '#a1a1aa',
-                borderRadius: '8px',
-                border: 'none',
-                cursor: escapeCooldown ? 'not-allowed' : 'pointer',
-                fontWeight: 'bold',
-                fontSize: '14px'
-              }}
-            >
-              {escapeCooldown ? '冷却中...' : '逃跑'}
-            </button>
-          </div>
-        </footer>
-      )}
     </div>
   );
 }
