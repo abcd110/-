@@ -3,8 +3,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useGameStore } from '../stores/gameStore';
 import { ALL_PLANETS_FULL, getPlanetById } from '../data/planets_full';
 import { Planet, PlanetType } from '../data/types_new';
-
 import { ArmorQuality, ARMOR_QUALITY_NAMES } from '../data/nanoArmorRecipes';
+import 探索背景Img from '../assets/images/探索背景.jpg';
 
 interface PlanetExplorationScreenProps {
   onBack: () => void;
@@ -16,6 +16,78 @@ interface PlanetExplorationScreenProps {
 }
 
 type ExplorationPhase = 'galaxy_map' | 'exploring';
+
+// 星球类型主题配置
+const PLANET_THEMES: Record<string, {
+  primary: string;
+  secondary: string;
+  glow: string;
+  gradient: string;
+  icon: string;
+  bgOverlay: string;
+}> = {
+  tech: {
+    primary: '#00d4ff',
+    secondary: '#0099cc',
+    glow: 'rgba(0, 212, 255, 0.6)',
+    gradient: 'linear-gradient(135deg, #0c4a6e 0%, #0891b2 50%, #00d4ff 100%)',
+    icon: '🏭',
+    bgOverlay: 'rgba(0, 20, 40, 0.85)'
+  },
+  god: {
+    primary: '#c084fc',
+    secondary: '#7c3aed',
+    glow: 'rgba(192, 132, 252, 0.6)',
+    gradient: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 50%, #c084fc 100%)',
+    icon: '⭐',
+    bgOverlay: 'rgba(40, 0, 60, 0.85)'
+  },
+  wasteland: {
+    primary: '#f87171',
+    secondary: '#dc2626',
+    glow: 'rgba(248, 113, 113, 0.6)',
+    gradient: 'linear-gradient(135deg, #7f1d1d 0%, #dc2626 50%, #f87171 100%)',
+    icon: '💀',
+    bgOverlay: 'rgba(40, 0, 0, 0.85)'
+  }
+};
+
+// 动画样式
+const animationStyles = `
+  @keyframes scan {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+  }
+  @keyframes pulse-glow {
+    0%, 100% { opacity: 0.5; box-shadow: 0 0 10px currentColor; }
+    50% { opacity: 1; box-shadow: 0 0 20px currentColor, 0 0 30px currentColor; }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-5px); }
+  }
+  @keyframes border-flow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes card-pulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(0,0,0,0.4); }
+    50% { box-shadow: 0 0 40px rgba(0,0,0,0.6), 0 0 60px rgba(255,255,255,0.1); }
+  }
+  @keyframes text-glow {
+    0%, 100% { text-shadow: 0 0 10px currentColor; }
+    50% { text-shadow: 0 0 20px currentColor, 0 0 30px currentColor; }
+  }
+  @keyframes arrow-bounce {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(4px); }
+  }
+  @keyframes energy-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.05); opacity: 0.8; }
+  }
+`;
 
 export default function PlanetExplorationScreen({
   onBack,
@@ -33,6 +105,10 @@ export default function PlanetExplorationScreen({
     initialPlanetId ? getPlanetById(initialPlanetId) : null
   );
   const [logs, setLogs] = useState<string[]>([]);
+  const [hoveredPlanet, setHoveredPlanet] = useState<string | null>(null);
+
+  // 获取当前主题
+  const currentTheme = PLANET_THEMES[planetTypeFilter || 'tech'] || PLANET_THEMES.tech;
 
   // 处理从战斗返回的情况
   useEffect(() => {
@@ -60,87 +136,29 @@ export default function PlanetExplorationScreen({
     })
     : allPlanets;
 
-  // 按类型分组并按等级排序（只在有对应类型时显示）
+  // 按类型分组并按等级排序
   const techStars = filteredPlanets.filter(p => p.type === PlanetType.TECH_STAR).sort((a, b) => a.level - b.level);
   const godDomains = filteredPlanets.filter(p => p.type === PlanetType.GOD_DOMAIN).sort((a, b) => a.level - b.level);
   const wastelands = filteredPlanets.filter(p => p.type === PlanetType.WASTELAND).sort((a, b) => a.level - b.level);
 
-
-
   // 获取筛选后的标题
   const getFilterTitle = () => {
-    if (planetTypeFilter === 'tech') return '🏭 联邦科技星';
-    if (planetTypeFilter === 'god') return '⭐ 神域星';
-    if (planetTypeFilter === 'wasteland') return '💀 废土星';
-    return '🌌 银河星图';
+    if (planetTypeFilter === 'tech') return { icon: '🏭', name: '联邦科技星', count: techStars.length };
+    if (planetTypeFilter === 'god') return { icon: '⭐', name: '神域星', count: godDomains.length };
+    if (planetTypeFilter === 'wasteland') return { icon: '💀', name: '废土星', count: wastelands.length };
+    return { icon: '🌌', name: '银河星图', count: filteredPlanets.length };
   };
+
+  const titleInfo = getFilterTitle();
 
   const addLog = useCallback((message: string) => {
     setLogs(prev => [message, ...prev.slice(0, 9)]);
   }, []);
 
-  // 选择星球 - 直接跳转到探索界面
+  // 选择星球
   const selectPlanet = (planet: Planet) => {
     setSelectedPlanet(planet);
     setPhase('exploring');
-  };
-
-  // 探索星球
-  const explorePlanet = () => {
-    if (!selectedPlanet) return;
-    addLog(`🔍 开始探索 ${selectedPlanet.name}...`);
-    // 这里可以添加具体的探索逻辑
-  };
-
-  // 狩猎虚空生物
-  const huntCreatures = () => {
-    if (!selectedPlanet) return;
-    addLog(`👾 开始狩猎虚空生物...`);
-    onStartBattle(selectedPlanet.id, false, false);
-  };
-
-  // 挑战首领
-  const challengeBoss = () => {
-    if (!selectedPlanet) return;
-    addLog(`💀 挑战 ${selectedPlanet.name} 的首领！`);
-    onStartBattle(selectedPlanet.id, true, false);
-  };
-
-  // 扫荡功能
-  const handleSweep = async () => {
-    if (!selectedPlanet) return;
-
-    addLog(`⚡ 开始扫荡 ${selectedPlanet.name}...`);
-
-    // 调用扫荡
-    const result = gameManager.sweepPlanet(selectedPlanet.id);
-
-    if (result.success) {
-      // 显示收获
-      const lootSummary = result.rewards?.loot.map(l => `${l.name}x${l.quantity}`).join('、') || '无';
-      addLog(`✅ 扫荡完成！获得 ${result.rewards?.exp || 0} 经验`);
-      addLog(`📦 掉落：${lootSummary}`);
-
-      // 记录收集的资源
-      if (result.rewards?.loot) {
-        setCollectedResources(prev => {
-          const newResources = [...prev];
-          result.rewards!.loot.forEach(item => {
-            const existing = newResources.find(r => r.name === item.name);
-            if (existing) {
-              existing.count += item.quantity;
-            } else {
-              newResources.push({ name: item.name, count: item.quantity });
-            }
-          });
-          return newResources;
-        });
-      }
-
-      saveGame();
-    } else {
-      addLog(`❌ ${result.message}`);
-    }
   };
 
   // 收集资源
@@ -156,7 +174,7 @@ export default function PlanetExplorationScreen({
     [ArmorQuality.VOID]: '_void',
   };
 
-  // 新的材料ID列表 (mat_001~mat_010) - 纳米战甲制造材料
+  // 新的材料ID列表
   const NEW_MATERIAL_IDS = [
     { id: 'mat_001', name: '星铁基础构件', dropRate: 0.6, minAmount: 2, maxAmount: 5 },
     { id: 'mat_002', name: '星铜传导组件', dropRate: 0.5, minAmount: 1, maxAmount: 4 },
@@ -172,7 +190,6 @@ export default function PlanetExplorationScreen({
 
   // 根据星球等级决定材料品质掉落概率
   const getQualityDropRates = (planetLevel: number): Record<ArmorQuality, number> => {
-    // 基础概率
     const baseRates: Record<ArmorQuality, number> = {
       [ArmorQuality.STARDUST]: 0.50,
       [ArmorQuality.ALLOY]: 0.30,
@@ -180,11 +197,7 @@ export default function PlanetExplorationScreen({
       [ArmorQuality.QUANTUM]: 0.04,
       [ArmorQuality.VOID]: 0.01,
     };
-
-    // 根据星球等级调整概率
-    // 等级越高，高品质概率越高
-    const levelBonus = Math.min(planetLevel * 0.02, 0.20); // 最多+20%
-
+    const levelBonus = Math.min(planetLevel * 0.02, 0.20);
     return {
       [ArmorQuality.STARDUST]: Math.max(0.10, baseRates[ArmorQuality.STARDUST] - levelBonus),
       [ArmorQuality.ALLOY]: baseRates[ArmorQuality.ALLOY],
@@ -199,7 +212,6 @@ export default function PlanetExplorationScreen({
     const rates = getQualityDropRates(planetLevel);
     const roll = Math.random();
     let cumulative = 0;
-
     for (const [quality, rate] of Object.entries(rates)) {
       cumulative += rate;
       if (roll <= cumulative) {
@@ -211,8 +223,6 @@ export default function PlanetExplorationScreen({
 
   const collectResources = async () => {
     if (!selectedPlanet || isCollecting) return;
-
-    // 检查体力 - 采集消耗5体力
     if (gameManager.player.stamina < 5) {
       addLog('⚠️ 体力不足，无法采集资源');
       return;
@@ -220,28 +230,18 @@ export default function PlanetExplorationScreen({
 
     setIsCollecting(true);
     addLog(`📦 采集 ${selectedPlanet.name} 的资源...`);
-
-    // 消耗体力 - 采集消耗5体力
     gameManager.player.stamina -= 5;
 
-    // 必定有收获 - 随机选择1种材料
     const randomMaterial = NEW_MATERIAL_IDS[Math.floor(Math.random() * NEW_MATERIAL_IDS.length)];
-
-    // 随机数量
     const count = Math.floor(Math.random() * (randomMaterial.maxAmount - randomMaterial.minAmount + 1)) + randomMaterial.minAmount;
-
-    // 根据星球等级决定材料品质（与普通狩猎概率一致）
     const planetLevel = selectedPlanet?.level || 1;
     const quality = rollMaterialQuality(planetLevel);
     const qualitySuffix = QUALITY_SUFFIX[quality];
     const qualityId = `${randomMaterial.id}${qualitySuffix}`;
     const qualityName = ARMOR_QUALITY_NAMES[quality];
 
-    // 添加到背包
     const added = gameManager.inventory.addItem(qualityId, count);
-
     if (added) {
-      // 记录收集的资源
       const displayName = `${qualityName}${randomMaterial.name}`;
       setCollectedResources(prev => {
         const existing = prev.find(r => r.name === displayName);
@@ -250,19 +250,11 @@ export default function PlanetExplorationScreen({
         }
         return [...prev, { name: displayName, count }];
       });
-
       addLog(`✅ 获得 ${displayName} x${count}`);
     }
 
-    // 保存游戏 - 确保体力状态被正确保存
     try {
-      const saveResult = await saveGame();
-      if (!saveResult) {
-        console.error('保存游戏失败');
-        addLog('⚠️ 保存游戏失败，请检查存储权限');
-      } else {
-        console.log('游戏已保存，当前体力:', gameManager.player.stamina);
-      }
+      await saveGame();
     } catch (error) {
       console.error('保存游戏出错:', error);
       addLog('⚠️ 保存游戏出错');
@@ -271,317 +263,436 @@ export default function PlanetExplorationScreen({
     setIsCollecting(false);
   };
 
-  // 获取物品名称（使用原先的物品ID，改为太空主题名称）
-  const getItemName = (itemId: string): string => {
-    const itemNames: Record<string, string> = {
-      // 基础材料 - 使用原先ID，改为太空主题名称
-      'mat_001': '铁矿碎片',
-      'mat_002': '铜矿碎片',
-      'mat_003': '钛合金碎片',
-      'mat_004': '能量晶体',
-      'mat_005': '稀土元素',
-      'mat_006': '虚空核心',
-      'mat_007': '星际燃料',
-      'mat_008': '纳米纤维',
-      'mat_009': '陨石碎片',
-      'mat_010': '量子螺丝',
-      // 新系统材料映射
-      'basic_alloy': '基础合金',
-      'star_core_fragment': '星核碎片',
-      'energy_block': '能量块',
-      'coolant': '冷却液',
-      'star_core': '星核',
-      'divine_marble': '神能大理石',
-      'thunder_stone': '雷霆石',
-      'bronze_alloy': '青铜合金',
-      'solar_essence': '太阳精华',
-      'prophecy_crystal': '预言水晶',
-      'sacred_scroll': '神圣卷轴',
-      'abyssal_pearl': '深渊珍珠',
-      'coral_alloy': '珊瑚合金',
-      'storm_crystal': '风暴水晶',
-      'valkyrie_feather': '女武神之羽',
-      'runic_stone': '符文石',
-      'warrior_soul': '战士之魂',
-      'rainbow_crystal': '彩虹水晶',
-      'mutation_sample': '突变样本',
-      'core_fragment': '核心碎片',
-      'planetary_debris': '行星碎片',
-      'gravity_crystal': '重力水晶',
-      'abandoned_goods': '遗弃货物',
-      'old_tech': '旧科技',
-      'survivor_journal': '幸存者日记',
-      'chitin_plate': '几丁质板',
-      'bug_venom': '虫毒',
-      'hive_essence': '蜂巢精华',
-      'ash_ore': '灰烬矿石',
-      'war_remnants': '战争遗迹',
-      'heat_crystal': '热能水晶',
-      'chaos_essence': '混沌精华',
-      'unstable_matter': '不稳定物质',
-      'reality_shard': '现实碎片',
-      'illusion_crystal': '幻象水晶',
-      'trickster_token': '诡计者代币',
-      'deception_essence': '欺骗精华',
-      'eternal_flame': '永恒之火',
-      'magma_core': '岩浆核心',
-      'fire_essence': '火焰精华',
-      'serpent_scale': '蛇鳞',
-      'venom_sac': '毒囊',
-      'world_essence': '世界精华',
-      'wolf_fang': '狼牙',
-      'beast_pelt': '兽皮',
-      'moon_essence': '月之精华',
-      'styx_water': '冥河水',
-      'soul_gem': '灵魂宝石',
-      'underworld_ore': '冥界矿石',
-      'dark_essence': '黑暗精华',
-      'shadow_crystal': '阴影水晶',
-      'void_heart': '虚空之心',
-      'night_essence': '黑夜精华',
-      'star_dust': '星尘',
-      'dream_fragment': '梦境碎片',
-    };
-    return itemNames[itemId] || itemId;
-  };
+  // 扫荡功能
+  const handleSweep = async () => {
+    if (!selectedPlanet) return;
+    addLog(`⚡ 开始扫荡 ${selectedPlanet.name}...`);
+    const result = gameManager.sweepPlanet(selectedPlanet.id);
 
-  // 获取星球类型颜色
-  const getPlanetTypeColor = (type: PlanetType) => {
-    switch (type) {
-      case PlanetType.TECH_STAR: return '#00d4ff';
-      case PlanetType.GOD_DOMAIN: return '#8b5cf6';
-      case PlanetType.WASTELAND: return '#ef4444';
-      default: return '#71717a';
+    if (result.success) {
+      const lootSummary = result.rewards?.loot.map(l => `${l.name}x${l.quantity}`).join('、') || '无';
+      addLog(`✅ 扫荡完成！获得 ${result.rewards?.exp || 0} 经验`);
+      addLog(`📦 掉落：${lootSummary}`);
+
+      if (result.rewards?.loot) {
+        setCollectedResources(prev => {
+          const newResources = [...prev];
+          result.rewards!.loot.forEach(item => {
+            const existing = newResources.find(r => r.name === item.name);
+            if (existing) {
+              existing.count += item.quantity;
+            } else {
+              newResources.push({ name: item.name, count: item.quantity });
+            }
+          });
+          return newResources;
+        });
+      }
+      saveGame();
+    } else {
+      addLog(`❌ ${result.message}`);
     }
   };
 
-
-
-
-
   return (
-    <div className="space-theme" style={{
-      height: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      background: 'radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%)'
-    }}>
-      {/* 顶部标题栏 */}
-      <header style={{
-        flexShrink: 0,
-        background: 'linear-gradient(180deg, rgba(26, 31, 58, 0.95) 0%, rgba(10, 14, 39, 0.95) 100%)',
-        borderBottom: '1px solid rgba(0, 212, 255, 0.3)',
-        padding: '12px 16px',
-        boxShadow: '0 2px 10px rgba(0, 212, 255, 0.1)'
+    <>
+      <style>{animationStyles}</style>
+      <div style={{
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+        overflow: 'hidden'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <button
-            onClick={() => {
-              if (phase === 'galaxy_map') onBack();
-              else setPhase('galaxy_map');
-            }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              color: '#a1a1aa',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
-          >
-            <span>←</span>
-            <span>{phase === 'galaxy_map' ? '返回' : '返回星图'}</span>
-          </button>
-          <h1 style={{
-            color: '#00d4ff',
-            fontWeight: 'bold',
-            fontSize: '18px',
-            textShadow: '0 0 10px rgba(0, 212, 255, 0.3)'
-          }}>
-            {phase === 'galaxy_map' && getFilterTitle()}
-            {phase === 'exploring' && '🔍 探索中'}
-          </h1>
-          <div style={{ width: '60px' }} />
-        </div>
-      </header>
+        {/* 背景层 */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundImage: `url(${探索背景Img})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          zIndex: 0
+        }} />
 
-      {/* 主内容区域 */}
-      <main style={{
-        flex: 1,
-        overflowY: 'auto',
-        padding: '16px'
-      }}>
-        {/* 星图模式 */}
-        {phase === 'galaxy_map' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {/* 科技星区域 */}
-            {techStars.length > 0 && (
-              <div>
-                <h3 style={{ color: '#00d4ff', fontSize: '16px', marginBottom: '12px' }}>
-                  🏭 联邦科技星 ({techStars.length})
-                </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-                  {techStars.map(planet => (
-                    <PlanetCard
-                      key={planet.id}
-                      planet={planet}
-                      onClick={() => selectPlanet(planet)}
-                      typeColor={getPlanetTypeColor(planet.type)}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
+        {/* 主题色叠加层 */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: currentTheme.bgOverlay,
+          zIndex: 1
+        }} />
 
-            {/* 废土星区域 */}
-            {wastelands.length > 0 && (
-              <div>
-                <h3 style={{ color: '#ef4444', fontSize: '16px', marginBottom: '12px' }}>
-                  💀 废土星 ({wastelands.length})
-                </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-                  {wastelands.map(planet => (
-                    <PlanetCard
-                      key={planet.id}
-                      planet={planet}
-                      onClick={() => selectPlanet(planet)}
-                      typeColor={getPlanetTypeColor(planet.type)}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
+        {/* 扫描线效果 */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: `linear-gradient(180deg, transparent 0%, ${currentTheme.glow}03 50%, transparent 100%)`,
+          backgroundSize: '100% 4px',
+          animation: 'scan 8s linear infinite',
+          pointerEvents: 'none',
+          zIndex: 2
+        }} />
 
-            {/* 神域星区域 */}
-            {godDomains.length > 0 && (
-              <div>
-                <h3 style={{ color: '#8b5cf6', fontSize: '16px', marginBottom: '12px' }}>
-                  ⭐ 神域星 ({godDomains.length})
-                </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-                  {godDomains.map(planet => (
-                    <PlanetCard
-                      key={planet.id}
-                      planet={planet}
-                      onClick={() => selectPlanet(planet)}
-                      typeColor={getPlanetTypeColor(planet.type)}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+        {/* 网格叠加 */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundImage: `
+            linear-gradient(${currentTheme.glow}05 1px, transparent 1px),
+            linear-gradient(90deg, ${currentTheme.glow}05 1px, transparent 1px)
+          `,
+          backgroundSize: '50px 50px',
+          zIndex: 1
+        }} />
 
-        {/* 探索模式 */}
-        {phase === 'exploring' && selectedPlanet && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {/* 顶部标题栏 - 玻璃拟态 */}
+        <header style={{
+          flexShrink: 0,
+          position: 'relative',
+          zIndex: 10,
+          background: 'rgba(0, 10, 20, 0.7)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: `1px solid ${currentTheme.primary}40`,
+          padding: '12px 16px',
+          boxShadow: `0 0 20px ${currentTheme.glow}20`
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <button
+              onClick={() => {
+                if (phase === 'galaxy_map') onBack();
+                else setPhase('galaxy_map');
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                color: currentTheme.primary,
+                background: `${currentTheme.glow}20`,
+                border: `1px solid ${currentTheme.primary}40`,
+                borderRadius: '8px',
+                padding: '8px 12px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: 500,
+                backdropFilter: 'blur(10px)',
+                boxShadow: `0 0 15px ${currentTheme.glow}20`,
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = `${currentTheme.glow}40`;
+                e.currentTarget.style.boxShadow = `0 0 20px ${currentTheme.glow}40`;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = `${currentTheme.glow}20`;
+                e.currentTarget.style.boxShadow = `0 0 15px ${currentTheme.glow}20`;
+              }}
+            >
+              <span style={{ fontSize: '14px' }}>◀</span>
+              <span>{phase === 'galaxy_map' ? '返回' : '返回星图'}</span>
+            </button>
+
             <div style={{
-              background: 'linear-gradient(145deg, rgba(26, 31, 58, 0.9) 0%, rgba(10, 14, 39, 0.9) 100%)',
-              borderRadius: '12px',
-              padding: '16px',
-              border: `1px solid ${getPlanetTypeColor(selectedPlanet.type)}`,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              position: 'absolute',
+              left: '50%',
+              transform: 'translateX(-50%)'
             }}>
-              <h3 style={{ color: getPlanetTypeColor(selectedPlanet.type), margin: '0 0 12px 0' }}>
-                🪐 {selectedPlanet.name}
-              </h3>
-              <p style={{ color: '#a1a1aa', fontSize: '14px', margin: 0 }}>
-                选择你要执行的行动
-              </p>
-            </div>
-
-            {/* 行动按钮 */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-              <ActionButton
-                icon="👾"
-                label="普通狩猎"
-                description={`消耗10体力 | 击败普通虚空生物`}
-                color="#10b981"
-                onClick={() => onStartBattle(selectedPlanet.id, false, false)}
-              />
-              <ActionButton
-                icon="👹"
-                label="困难狩猎"
-                description={`消耗10体力 | 击败精英虚空生物`}
-                color="#8b5cf6"
-                onClick={() => onStartBattle(selectedPlanet.id, false, true)}
-              />
-              <ActionButton
-                icon="💀"
-                label="挑战首领"
-                description={gameManager.isBossRefreshed(selectedPlanet.id) ? `每日1次 | 消耗10体力` : `今日已挑战 | 明日刷新`}
-                color="#ef4444"
-                onClick={() => onStartBattle(selectedPlanet.id, true, false)}
-                disabled={!gameManager.isBossRefreshed(selectedPlanet.id)}
-              />
-              {/* 扫荡按钮：首次击败boss后解锁 */}
-              {gameManager.getLocationProgress(selectedPlanet.id).bossDefeated && (
-                <ActionButton
-                  icon="⚡"
-                  label="快速扫荡"
-                  description={`消耗10体力 | 精英收益`}
-                  color="#f59e0b"
-                  onClick={handleSweep}
-                />
+              <h1 style={{
+                color: currentTheme.primary,
+                fontWeight: 'bold',
+                fontSize: '18px',
+                margin: 0,
+                letterSpacing: '2px',
+                textShadow: `0 0 15px ${currentTheme.glow}, 0 0 30px ${currentTheme.glow}`
+              }}>
+                {titleInfo.icon} {phase === 'galaxy_map' ? titleInfo.name : '🔍 探索中'}
+              </h1>
+              {phase === 'galaxy_map' && (
+                <span style={{
+                  color: `${currentTheme.primary}80`,
+                  fontSize: '10px',
+                  letterSpacing: '2px',
+                  marginTop: '2px'
+                }}>
+                  {titleInfo.count} 个星球
+                </span>
               )}
-              <ActionButton
-                icon="📦"
-                label={isCollecting ? "采集中..." : "采集资源"}
-                description={`消耗5体力 | 剩余: ${gameManager.player.stamina}`}
-                color="#f59e0b"
-                onClick={collectResources}
-              />
             </div>
 
-            {/* 本次收集的资源 */}
-            {collectedResources.length > 0 && (
-              <div style={{
-                background: 'rgba(16, 185, 129, 0.1)',
-                borderRadius: '8px',
-                padding: '12px',
-                border: '1px solid rgba(16, 185, 129, 0.3)'
-              }}>
-                <h4 style={{ color: '#10b981', fontSize: '12px', margin: '0 0 8px 0' }}>📦 本次收获</h4>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {collectedResources.map((resource, index) => (
-                    <span key={index} style={{
-                      fontSize: '12px',
-                      padding: '4px 10px',
-                      background: 'rgba(16, 185, 129, 0.2)',
-                      borderRadius: '4px',
-                      color: '#10b981'
-                    }}>
-                      {resource.name} x{resource.count}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* 日志显示 */}
-            {logs.length > 0 && (
-              <div style={{
-                background: 'rgba(10, 14, 39, 0.6)',
-                borderRadius: '8px',
-                padding: '12px',
-                border: '1px solid rgba(0, 212, 255, 0.2)',
-                maxHeight: '150px',
-                overflowY: 'auto'
-              }}>
-                <h4 style={{ color: '#00d4ff', fontSize: '12px', margin: '0 0 8px 0' }}>探索日志</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  {logs.map((log, index) => (
-                    <span key={index} style={{ color: '#a1a1aa', fontSize: '12px' }}>{log}</span>
-                  ))}
-                </div>
-              </div>
-            )}
+            <div style={{ width: '70px' }} />
           </div>
-        )}
-      </main>
-    </div>
+        </header>
+
+        {/* 主内容区域 */}
+        <main style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '16px',
+          position: 'relative',
+          zIndex: 10
+        }}>
+          {/* 星图模式 */}
+          {phase === 'galaxy_map' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {/* 科技星区域 */}
+              {techStars.length > 0 && (
+                <div>
+                  <h3 style={{ 
+                    color: PLANET_THEMES.tech.primary, 
+                    fontSize: '16px', 
+                    marginBottom: '12px',
+                    textShadow: `0 0 10px ${PLANET_THEMES.tech.glow}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    {PLANET_THEMES.tech.icon} 联邦科技星 ({techStars.length})
+                  </h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                    {techStars.map(planet => (
+                      <PlanetCard
+                        key={planet.id}
+                        planet={planet}
+                        onClick={() => selectPlanet(planet)}
+                        theme={PLANET_THEMES.tech}
+                        isHovered={hoveredPlanet === planet.id}
+                        onHover={() => setHoveredPlanet(planet.id)}
+                        onLeave={() => setHoveredPlanet(null)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 神域星区域 */}
+              {godDomains.length > 0 && (
+                <div>
+                  <h3 style={{ 
+                    color: PLANET_THEMES.god.primary, 
+                    fontSize: '16px', 
+                    marginBottom: '12px',
+                    textShadow: `0 0 10px ${PLANET_THEMES.god.glow}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    {PLANET_THEMES.god.icon} 神域星 ({godDomains.length})
+                  </h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                    {godDomains.map(planet => (
+                      <PlanetCard
+                        key={planet.id}
+                        planet={planet}
+                        onClick={() => selectPlanet(planet)}
+                        theme={PLANET_THEMES.god}
+                        isHovered={hoveredPlanet === planet.id}
+                        onHover={() => setHoveredPlanet(planet.id)}
+                        onLeave={() => setHoveredPlanet(null)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 废土星区域 */}
+              {wastelands.length > 0 && (
+                <div>
+                  <h3 style={{ 
+                    color: PLANET_THEMES.wasteland.primary, 
+                    fontSize: '16px', 
+                    marginBottom: '12px',
+                    textShadow: `0 0 10px ${PLANET_THEMES.wasteland.glow}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    {PLANET_THEMES.wasteland.icon} 废土星 ({wastelands.length})
+                  </h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                    {wastelands.map(planet => (
+                      <PlanetCard
+                        key={planet.id}
+                        planet={planet}
+                        onClick={() => selectPlanet(planet)}
+                        theme={PLANET_THEMES.wasteland}
+                        isHovered={hoveredPlanet === planet.id}
+                        onHover={() => setHoveredPlanet(planet.id)}
+                        onLeave={() => setHoveredPlanet(null)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 探索模式 */}
+          {phase === 'exploring' && selectedPlanet && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* 星球信息卡片 */}
+              <div style={{
+                background: 'rgba(0, 10, 20, 0.7)',
+                backdropFilter: 'blur(12px)',
+                borderRadius: '16px',
+                padding: '16px',
+                border: `2px solid ${currentTheme.primary}`,
+                boxShadow: `0 0 30px ${currentTheme.glow}40`,
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+                {/* 动态边框 */}
+                <div style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  borderRadius: '16px',
+                  padding: '2px',
+                  backgroundImage: `linear-gradient(90deg, ${currentTheme.primary}, ${currentTheme.secondary}, ${currentTheme.primary})`,
+                  backgroundSize: '200% 100%',
+                  animation: 'border-flow 3s ease infinite',
+                  WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                  WebkitMaskComposite: 'xor',
+                  maskComposite: 'exclude',
+                  pointerEvents: 'none'
+                }} />
+
+                <h3 style={{ 
+                  color: currentTheme.primary, 
+                  margin: '0 0 8px 0',
+                  fontSize: '18px',
+                  textShadow: `0 0 10px ${currentTheme.glow}`,
+                  position: 'relative',
+                  zIndex: 1
+                }}>
+                  🪐 {selectedPlanet.name}
+                </h3>
+                <p style={{ 
+                  color: 'rgba(255,255,255,0.6)', 
+                  fontSize: '13px', 
+                  margin: 0,
+                  position: 'relative',
+                  zIndex: 1
+                }}>
+                  等级 {selectedPlanet.level} | {selectedPlanet.dangerLevel} | 选择你要执行的行动
+                </p>
+              </div>
+
+              {/* 行动按钮 */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                <ActionButton
+                  icon="👾"
+                  label="普通狩猎"
+                  description="消耗10体力"
+                  color="#10b981"
+                  theme={currentTheme}
+                  onClick={() => onStartBattle(selectedPlanet.id, false, false)}
+                />
+                <ActionButton
+                  icon="👹"
+                  label="困难狩猎"
+                  description="消耗10体力"
+                  color="#8b5cf6"
+                  theme={currentTheme}
+                  onClick={() => onStartBattle(selectedPlanet.id, false, true)}
+                />
+                <ActionButton
+                  icon="💀"
+                  label="挑战首领"
+                  description={gameManager.isBossRefreshed(selectedPlanet.id) ? "每日1次" : "今日已挑战"}
+                  color="#ef4444"
+                  theme={currentTheme}
+                  onClick={() => onStartBattle(selectedPlanet.id, true, false)}
+                  disabled={!gameManager.isBossRefreshed(selectedPlanet.id)}
+                />
+                {gameManager.getLocationProgress(selectedPlanet.id).bossDefeated && (
+                  <ActionButton
+                    icon="⚡"
+                    label="快速扫荡"
+                    description="消耗10体力"
+                    color="#f59e0b"
+                    theme={currentTheme}
+                    onClick={handleSweep}
+                  />
+                )}
+                <ActionButton
+                  icon="📦"
+                  label={isCollecting ? "采集中..." : "采集资源"}
+                  description={`消耗5体力 | 剩余: ${gameManager.player.stamina}`}
+                  color="#f59e0b"
+                  theme={currentTheme}
+                  onClick={collectResources}
+                />
+              </div>
+
+              {/* 本次收集的资源 */}
+              {collectedResources.length > 0 && (
+                <div style={{
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  backdropFilter: 'blur(8px)',
+                  borderRadius: '12px',
+                  padding: '12px',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  boxShadow: '0 0 20px rgba(16, 185, 129, 0.1)'
+                }}>
+                  <h4 style={{ color: '#10b981', fontSize: '12px', margin: '0 0 8px 0' }}>📦 本次收获</h4>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {collectedResources.map((resource, index) => (
+                      <span key={index} style={{
+                        fontSize: '12px',
+                        padding: '4px 10px',
+                        background: 'rgba(16, 185, 129, 0.2)',
+                        borderRadius: '4px',
+                        color: '#10b981',
+                        border: '1px solid rgba(16, 185, 129, 0.3)'
+                      }}>
+                        {resource.name} x{resource.count}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 日志显示 */}
+              {logs.length > 0 && (
+                <div style={{
+                  background: 'rgba(0, 10, 20, 0.6)',
+                  backdropFilter: 'blur(8px)',
+                  borderRadius: '12px',
+                  padding: '12px',
+                  border: `1px solid ${currentTheme.primary}30`,
+                  maxHeight: '150px',
+                  overflowY: 'auto',
+                  boxShadow: `0 0 20px ${currentTheme.glow}10`
+                }}>
+                  <h4 style={{ color: currentTheme.primary, fontSize: '12px', margin: '0 0 8px 0' }}>探索日志</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {logs.map((log, index) => (
+                      <span key={index} style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px' }}>{log}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </main>
+      </div>
+    </>
   );
 }
 
@@ -589,39 +700,102 @@ export default function PlanetExplorationScreen({
 function PlanetCard({
   planet,
   onClick,
-  typeColor
+  theme,
+  isHovered,
+  onHover,
+  onLeave
 }: {
   planet: Planet;
   onClick: () => void;
-  typeColor: string;
+  theme: typeof PLANET_THEMES.tech;
+  isHovered: boolean;
+  onHover: () => void;
+  onLeave: () => void;
 }) {
   return (
     <button
       onClick={onClick}
+      onMouseEnter={onHover}
+      onMouseLeave={onLeave}
       style={{
-        padding: '12px',
-        background: 'linear-gradient(145deg, rgba(26, 31, 58, 0.8) 0%, rgba(10, 14, 39, 0.8) 100%)',
-        border: `1px solid ${typeColor}60`,
+        position: 'relative',
+        padding: '14px',
+        background: isHovered 
+          ? `linear-gradient(135deg, rgba(0,0,0,0.6) 0%, ${theme.glow}15 50%, rgba(0,0,0,0.6) 100%)`
+          : 'rgba(0, 10, 20, 0.5)',
+        border: `1px solid ${isHovered ? theme.primary : `${theme.primary}40`}`,
         borderRadius: '12px',
         textAlign: 'left',
         cursor: 'pointer',
         color: 'white',
-        transition: 'all 0.3s ease'
+        transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+        backdropFilter: 'blur(8px)',
+        boxShadow: isHovered 
+          ? `0 0 25px ${theme.glow}, inset 0 0 20px ${theme.glow}20`
+          : `0 0 10px ${theme.glow}20`,
+        overflow: 'hidden'
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-        <span style={{ fontSize: '20px' }}>🪐</span>
+      {/* 动态边框 */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        borderRadius: '12px',
+        padding: '1px',
+        backgroundImage: `linear-gradient(90deg, ${theme.primary}, ${theme.secondary}, ${theme.primary})`,
+        backgroundSize: '200% 100%',
+        animation: isHovered ? 'border-flow 2s ease infinite' : 'none',
+        WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+        WebkitMaskComposite: 'xor',
+        maskComposite: 'exclude',
+        opacity: isHovered ? 1 : 0.5
+      }} />
+
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: '10px', 
+        marginBottom: '8px',
+        position: 'relative',
+        zIndex: 1
+      }}>
+        <span style={{ 
+          fontSize: '22px',
+          filter: isHovered ? `drop-shadow(0 0 8px ${theme.glow})` : 'none',
+          transition: 'all 0.3s ease'
+        }}>🪐</span>
         <span style={{
           fontSize: '14px',
           fontWeight: 'bold',
-          color: typeColor
+          color: theme.primary,
+          textShadow: isHovered ? `0 0 10px ${theme.glow}` : 'none',
+          transition: 'all 0.3s ease'
         }}>
           {planet.name}
         </span>
       </div>
-      <div style={{ fontSize: '11px', color: '#71717a' }}>
+      <div style={{ 
+        fontSize: '11px', 
+        color: 'rgba(255,255,255,0.5)',
+        position: 'relative',
+        zIndex: 1
+      }}>
         等级 {planet.level} | {planet.dangerLevel}
       </div>
+
+      {/* 底部渐变条 */}
+      <div style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '2px',
+        background: theme.gradient,
+        opacity: isHovered ? 1 : 0.5
+      }} />
     </button>
   );
 }
@@ -632,6 +806,7 @@ function ActionButton({
   label,
   description,
   color,
+  theme,
   onClick,
   disabled = false
 }: {
@@ -639,31 +814,74 @@ function ActionButton({
   label: string;
   description: string;
   color: string;
+  theme: typeof PLANET_THEMES.tech;
   onClick: () => void;
   disabled?: boolean;
 }) {
+  const [isHovered, setIsHovered] = useState(false);
+
   return (
     <button
       onClick={onClick}
       disabled={disabled}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       style={{
+        position: 'relative',
         padding: '16px',
-        background: disabled ? 'rgba(42, 48, 80, 0.5)' : 'rgba(26, 31, 58, 0.8)',
-        border: `1px solid ${disabled ? '#4b5563' : color + '60'}`,
+        background: disabled 
+          ? 'rgba(50, 50, 50, 0.3)' 
+          : isHovered 
+            ? `linear-gradient(135deg, rgba(0,0,0,0.5) 0%, ${theme.glow}20 50%, rgba(0,0,0,0.5) 100%)`
+            : 'rgba(0, 10, 20, 0.5)',
+        border: `1px solid ${disabled ? 'rgba(100,100,100,0.3)' : isHovered ? color : `${color}60`}`,
         borderRadius: '12px',
-        color: disabled ? '#6b7280' : 'white',
+        color: disabled ? '#666' : 'white',
         cursor: disabled ? 'not-allowed' : 'pointer',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         gap: '6px',
         transition: 'all 0.3s ease',
-        opacity: disabled ? 0.6 : 1
+        backdropFilter: 'blur(8px)',
+        boxShadow: disabled 
+          ? 'none' 
+          : isHovered 
+            ? `0 0 20px ${theme.glow}, inset 0 0 15px ${theme.glow}20`
+            : `0 0 10px ${theme.glow}20`,
+        overflow: 'hidden'
       }}
     >
-      <span style={{ fontSize: '28px', opacity: disabled ? 0.5 : 1 }}>{icon}</span>
-      <span style={{ fontSize: '14px', fontWeight: 'bold', color: disabled ? '#6b7280' : color }}>{label}</span>
-      <span style={{ fontSize: '11px', color: disabled ? '#4b5563' : '#71717a' }}>{description}</span>
+      <span style={{ 
+        fontSize: '26px', 
+        opacity: disabled ? 0.4 : 1,
+        filter: isHovered && !disabled ? `drop-shadow(0 0 8px ${color})` : 'none',
+        transition: 'all 0.3s ease'
+      }}>{icon}</span>
+      <span style={{ 
+        fontSize: '14px', 
+        fontWeight: 'bold', 
+        color: disabled ? '#666' : color,
+        textShadow: isHovered && !disabled ? `0 0 10px ${color}` : 'none',
+        transition: 'all 0.3s ease'
+      }}>{label}</span>
+      <span style={{ 
+        fontSize: '10px', 
+        color: disabled ? '#555' : 'rgba(255,255,255,0.5)'
+      }}>{description}</span>
+
+      {/* 底部渐变条 */}
+      {!disabled && (
+        <div style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: '2px',
+          background: `linear-gradient(90deg, transparent, ${color}, transparent)`,
+          opacity: isHovered ? 1 : 0.5
+        }} />
+      )}
     </button>
   );
 }
