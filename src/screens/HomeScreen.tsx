@@ -449,8 +449,8 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
             <ActionButton
               iconImage={强化Img}
               label="强化"
-              color="#a855f7"
-              glowColor="rgba(168, 85, 247, 0.7)"
+              color="#f43f5e"
+              glowColor="rgba(244, 63, 94, 0.7)"
               onClick={() => onNavigate('equipment')}
               mounted={mounted}
               delay={50}

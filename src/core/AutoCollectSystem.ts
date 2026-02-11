@@ -345,7 +345,14 @@ export class AutoCollectSystem {
   // 获取当前采集时长（毫秒）
   getCollectingDuration(): number {
     if (!this.state.isCollecting) return 0;
-    return Date.now() - this.state.startTime;
+    const elapsedMs = Date.now() - this.state.startTime;
+    const maxSessionMs = MAX_SESSION_HOURS * 60 * 60 * 1000; // 8小时转换为毫秒
+    // 如果达到8小时上限，自动停止采集
+    if (elapsedMs >= maxSessionMs) {
+      this.state.isCollecting = false;
+      return maxSessionMs;
+    }
+    return elapsedMs;
   }
 
   // 获取格式化的采集时长
