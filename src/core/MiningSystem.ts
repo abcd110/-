@@ -285,7 +285,12 @@ export function serializeMiningTask(task: MiningTask): MiningTaskData {
 }
 
 export function deserializeMiningTask(data: MiningTaskData): MiningTask {
-  return { ...data };
+  return {
+    ...data,
+    assignedCrew: data.assignedCrew || [],
+    currentDepth: data.currentDepth || 0,
+    events: data.events || [],
+  };
 }
 
 export function isMiningComplete(task: MiningTask): boolean {

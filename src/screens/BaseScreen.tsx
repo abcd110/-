@@ -1700,8 +1700,8 @@ function MiningContent() {
             const mineralConfig = MINERAL_CONFIG[site.mineralType];
             const progress = getMiningProgress(task);
             const remaining = getRemainingTime(task);
-            const depthBonus = getDepthBonusDescription(task.currentDepth, site);
-            const assignedCrewNames = task.assignedCrew.map(id => crewMembers.find(c => c.id === id)?.name).filter(Boolean);
+            const depthBonus = getDepthBonusDescription(task.currentDepth || 0, site);
+            const assignedCrewNames = (task.assignedCrew || []).map(id => crewMembers.find(c => c.id === id)?.name).filter(Boolean);
 
             return (
               <div
@@ -1727,7 +1727,7 @@ function MiningContent() {
                 {/* Depth Info */}
                 <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ color: '#a1a1aa', fontSize: '10px' }}>
-                    深度: <span style={{ color: '#22c55e' }}>{task.currentDepth}m</span> / {site.maxDepth}m
+                    深度: <span style={{ color: '#22c55e' }}>{task.currentDepth || 0}m</span> / {site.maxDepth}m
                   </div>
                   <div style={{ color: '#22c55e', fontSize: '10px' }}>
                     {depthBonus}
@@ -1744,7 +1744,7 @@ function MiningContent() {
                   }}>
                     <div style={{
                       height: '100%',
-                      width: `${(task.currentDepth / site.maxDepth) * 100}%`,
+                      width: `${((task.currentDepth || 0) / site.maxDepth) * 100}%`,
                       background: 'linear-gradient(90deg, #22c55e, #16a34a)',
                       borderRadius: '2px',
                     }} />
@@ -1783,10 +1783,10 @@ function MiningContent() {
                 )}
 
                 {/* Recent Events */}
-                {task.events.length > 0 && (
+                {(task.events || []).length > 0 && (
                   <div style={{ marginBottom: '8px' }}>
                     <div style={{ color: '#a1a1aa', fontSize: '10px', marginBottom: '4px' }}>最近事件:</div>
-                    {task.events.slice(-2).map((event, idx) => {
+                    {(task.events || []).slice(-2).map((event, idx) => {
                       const eventConfig = getEventConfig(event.type);
                       return (
                         <div key={idx} style={{
