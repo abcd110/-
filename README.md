@@ -1,73 +1,126 @@
-# React + TypeScript + Vite
+# 星航荒域 (Xinghang Huangyu)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+一款科幻题材的生存冒险游戏，玩家驾驶列车在星际间穿梭，探索未知星球，收集资源，建设基地，招募船员，与敌人战斗。
 
-Currently, two official plugins are available:
+## 🚀 游戏特色
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **列车生存**: 在移动的列车上管理资源，应对各种随机事件
+- **星球探索**: 探索不同类型的星球，发现稀有资源和遗迹
+- **基地建设**: 升级各种设施，解锁更多功能
+- **船员系统**: 招募和培养船员，组建强大的队伍
+- **战斗系统**: 6v6回合制战斗，策略性排兵布阵
+- **科技研发**: 研究各种科技，提升整体实力
 
-## React Compiler
+## 🏗️ 基地设施系统
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+游戏包含12种可升级的基地设施：
 
-## Expanding the ESLint configuration
+| 设施 | 功能 |
+|------|------|
+| 🏠 指挥中心 | 解锁其他设施升级 |
+| 🔋 能源核心 | 提供能源效率加成 |
+| 🏭 生产车间 | 制造基础物品 |
+| 📡 通讯中心 | 接收随机事件 |
+| 🛒 交易站 | 物品交易市场 |
+| ⚔️ 竞技场 | 机械飞升系统 |
+| 🔬 科研实验室 | 科技研发 |
+| ⛏️ 采矿平台 | 资源采集 |
+| 💾 芯片研发中心 | 芯片制作与装备 |
+| 🧬 基因工程实验室 | 基因改造 |
+| 🛒 星际市场 | 玩家交易系统 |
+| 🏛️ 遗迹探索中心 | 探险任务 |
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🎮 核心系统
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### 采矿平台
+- **船员派遣**: 最多派遣4名船员，提升采矿效率
+- **深度挖掘**: 随深度增加获得更高产量加成
+- **随机事件**: 富矿脉、塌方、古代遗迹等多种事件
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### 芯片研发
+- **芯片类型**: 攻击、防御、生命、速度、暴击
+- **品质系统**: 普通、优秀、稀有、史诗、传说
+- **升级强化**: 消耗材料提升芯片等级
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 基因工程
+- **基因类型**: 力量、敏捷、体质、感知、意志
+- **节点改造**: 解锁和升级基因节点
+- **属性加成**: 获得永久属性提升
+
+### 机械飞升
+- **义体系统**: 6种义体类型（神经、骨骼、肌肉、感官、心血管、综合）
+- **制造升级**: 制造和升级义体
+- **特殊效果**: 高级义体带有特殊能力
+
+### 星际市场
+- **系统商店**: 购买稀有物品
+- **玩家交易**: 挂单出售自己的物品
+- **市场刷新**: 定期刷新商品
+
+### 遗迹探索
+- **遗迹类型**: 废弃空间站、古代遗迹、坠毁飞船等
+- **难度系统**: 简单到地狱5种难度
+- **探险奖励**: 信用点、稀有材料、特殊物品
+
+## 🛠️ 技术栈
+
+- **前端框架**: React 18 + TypeScript
+- **构建工具**: Vite
+- **状态管理**: Zustand
+- **样式方案**: CSS-in-JS (内联样式)
+- **数据持久化**: LocalStorage
+
+## 📁 项目结构
+
+```
+src/
+├── core/                    # 核心系统
+│   ├── GameManager.ts       # 游戏管理器
+│   ├── BaseFacilitySystem.ts # 基地设施系统
+│   ├── MiningSystem.ts      # 采矿系统
+│   ├── ResearchSystem.ts    # 科研系统
+│   ├── ChipSystem.ts        # 芯片系统
+│   ├── GeneSystem.ts        # 基因系统
+│   ├── CyberneticSystem.ts  # 机械飞升系统
+│   ├── MarketSystem.ts      # 市场系统
+│   ├── RuinSystem.ts        # 遗迹探索系统
+│   ├── CrewSystem.ts        # 船员系统
+│   └── ...
+├── screens/                 # 页面组件
+│   ├── HomeScreen.tsx       # 主页
+│   ├── BaseScreen.tsx       # 基地
+│   ├── CrewScreen.tsx       # 船员
+│   └── ...
+├── stores/                  # 状态管理
+│   └── gameStore.ts
+├── data/                    # 数据配置
+│   └── items.ts
+└── assets/                  # 静态资源
+    └── images/
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🚀 快速开始
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```bash
+# 安装依赖
+npm install
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# 启动开发服务器
+npm run dev
+
+# 构建生产版本
+npm run build
+
+# 预览生产版本
+npm run preview
 ```
+
+## 📝 开发说明
+
+- 所有游戏数据自动保存到 LocalStorage
+- 支持热重载开发
+- 类型安全的 TypeScript 开发体验
+
+## 📄 许可证
+
+MIT License
