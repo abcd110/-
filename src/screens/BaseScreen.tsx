@@ -7,7 +7,7 @@ import { CommEvent, COMM_EVENT_CONFIG, getRemainingTime, formatRemainingTime } f
 import { getItemTemplate } from '../data/items';
 import { ResearchStatus, ResearchCategory, RESEARCH_CATEGORY_CONFIG } from '../core/ResearchSystem';
 import { MINERAL_CONFIG, MINING_EVENTS, MiningEventType, getMiningProgress, getRemainingTime as getMiningRemainingTime, formatMiningTime, getDepthBonusDescription, getCrewMiningBonus } from '../core/MiningSystem';
-import { Chip, ChipSlot, ChipRarity, CHIP_RARITY_CONFIG, CHIP_MAIN_STAT_CONFIG, CHIP_SUB_STAT_CONFIG } from '../core/ChipSystem';
+import { Chip, ChipSlot, ChipRarity, ChipSet, CHIP_RARITY_CONFIG, CHIP_MAIN_STAT_CONFIG, CHIP_SUB_STAT_CONFIG, CHIP_SET_CONFIG, getEnhanceCost, getRerollCost } from '../core/ChipSystem';
 import { GeneType, GENE_TYPE_CONFIG, GENE_RARITY_CONFIG } from '../core/GeneSystem';
 import { Implant, ImplantType, ImplantRarity, IMPLANT_TYPE_CONFIG, IMPLANT_RARITY_CONFIG, getImplantStats } from '../core/CyberneticSystem';
 import { MarketListing, PlayerListing, MarketItemType, MarketRarity, MARKET_ITEM_TYPE_CONFIG, MARKET_RARITY_CONFIG } from '../core/MarketSystem';
@@ -2059,7 +2059,7 @@ function MiningContent() {
 
 // 8. 芯片研发内容
 function ChipContent() {
-  const { gameManager, saveGame, craftChip, upgradeChip, equipChip, unequipChip, decomposeChip } = useGameStore();
+  const { gameManager, saveGame, craftChip, upgradeChip, equipChip, unequipChip, decomposeChip, enhanceChip, rerollChipSubStat, rerollAllChipSubStats, toggleChipLock, getChipSetBonuses, getChipStatBonus } = useGameStore();
   const [activeTab, setActiveTab] = useState<'slots' | 'craft'>('slots');
   const [selectedChip, setSelectedChip] = useState<Chip | null>(null);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
@@ -2068,6 +2068,8 @@ function ChipContent() {
   const equippedChips = gameManager.getEquippedChips();
   const maxSlots = gameManager.getAvailableChipSlots();
   const level = gameManager.getFacilityLevel(FacilityType.CHIP);
+  const setBonuses = getChipSetBonuses();
+  const totalStats = getChipStatBonus();
 
   const showMessage = (text: string, type: 'success' | 'error') => {
     setMessage({ text, type });
@@ -2126,6 +2128,48 @@ function ChipContent() {
     }
   };
 
+  const handleEnhance = async (chipId: string, subStatIndex: number) => {
+    const result = enhanceChip(chipId, subStatIndex);
+    if (result.success) {
+      showMessage(result.message, 'success');
+      await saveGame();
+    } else {
+      showMessage(result.message, 'error');
+    }
+  };
+
+  const handleReroll = async (chipId: string, subStatIndex: number) => {
+    if (!confirm('确定要重随这个副属性吗？')) return;
+    const result = rerollChipSubStat(chipId, subStatIndex);
+    if (result.success) {
+      showMessage(result.message, 'success');
+      await saveGame();
+    } else {
+      showMessage(result.message, 'error');
+    }
+  };
+
+  const handleRerollAll = async (chipId: string) => {
+    if (!confirm('确定要重随所有副属性吗？')) return;
+    const result = rerollAllChipSubStats(chipId);
+    if (result.success) {
+      showMessage(result.message, 'success');
+      await saveGame();
+    } else {
+      showMessage(result.message, 'error');
+    }
+  };
+
+  const handleToggleLock = async (chipId: string) => {
+    const result = toggleChipLock(chipId);
+    if (result.success) {
+      showMessage(result.message, 'success');
+      await saveGame();
+    } else {
+      showMessage(result.message, 'error');
+    }
+  };
+
   const getEquippedChipForSlot = (slot: ChipSlot): Chip | undefined => {
     const chipId = gameManager.equippedChips[slot];
     return chips.find(c => c.id === chipId);
@@ -2172,6 +2216,64 @@ function ChipContent() {
           </div>
         </div>
       </div>
+
+      {/* Set Bonuses */}
+      {setBonuses.length > 0 && (
+        <div style={{
+          background: 'rgba(16, 185, 129, 0.1)',
+          borderRadius: '8px',
+          padding: '12px',
+          marginBottom: '12px',
+          border: '1px solid rgba(16, 185, 129, 0.2)',
+        }}>
+          <div style={{ color: '#10b981', fontSize: '12px', fontWeight: 'bold', marginBottom: '8px' }}>
+            套装效果
+          </div>
+          {setBonuses.map((bonus, idx) => {
+            const setConfig = CHIP_SET_CONFIG[bonus.set];
+            return (
+              <div key={idx} style={{ marginBottom: '4px' }}>
+                <div style={{ color: setConfig.color, fontSize: '11px', fontWeight: 'bold' }}>
+                  {setConfig.icon} {setConfig.name} ({bonus.count}件)
+                </div>
+                {bonus.bonuses.map((b, i) => (
+                  <div key={i} style={{ color: '#a1a1aa', fontSize: '10px', marginLeft: '16px' }}>
+                    {b}
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Total Stats */}
+      {Object.keys(totalStats).length > 0 && (
+        <div style={{
+          background: 'rgba(16, 185, 129, 0.1)',
+          borderRadius: '8px',
+          padding: '12px',
+          marginBottom: '12px',
+          border: '1px solid rgba(16, 185, 129, 0.2)',
+        }}>
+          <div style={{ color: '#10b981', fontSize: '12px', fontWeight: 'bold', marginBottom: '8px' }}>
+            总属性加成
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            {Object.entries(totalStats).map(([stat, value]) => (
+              <div key={stat} style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontSize: '11px',
+              }}>
+                <span style={{ color: '#10b981' }}>{stat}:</span>
+                <span style={{ color: '#fff' }}>+{typeof value === 'number' ? value.toFixed(1) : value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Tab Switcher */}
       <div style={{
@@ -2261,10 +2363,16 @@ function ChipContent() {
                           {CHIP_RARITY_CONFIG[equipped.rarity].name}
                         </span>
                         <span style={{ color: '#10b981', fontSize: '11px' }}>Lv.{equipped.level}</span>
+                        {equipped.locked && <span style={{ color: '#f59e0b', fontSize: '10px' }}>🔒</span>}
                       </div>
                       <div style={{ color: '#fff', fontSize: '11px' }}>
-                        主属性: {equipped.mainStatValue}
+                        主属性: {CHIP_MAIN_STAT_CONFIG[equipped.mainStat].name} +{equipped.mainStatValue}
                       </div>
+                      {equipped.setId && (
+                        <div style={{ color: CHIP_SET_CONFIG[equipped.setId].color, fontSize: '10px' }}>
+                          {CHIP_SET_CONFIG[equipped.setId].icon} {CHIP_SET_CONFIG[equipped.setId].name}
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div style={{ color: '#666', fontSize: '12px' }}>
@@ -2278,7 +2386,7 @@ function ChipContent() {
 
           {/* Chip Inventory */}
           <div style={{ color: '#a1a1aa', fontSize: '12px', marginBottom: '8px' }}>
-            📦 芯片仓库 ({chips.length})
+            📦 芯片仓库 ({chips.filter(c => !Object.values(gameManager.equippedChips).includes(c.id)).length})
           </div>
           <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
             {chips.filter(c => !Object.values(gameManager.equippedChips).includes(c.id)).map(chip => (
@@ -2302,6 +2410,7 @@ function ChipContent() {
                     <span style={{ color: '#a1a1aa', fontSize: '11px', marginLeft: '8px' }}>
                       {chip.slot}号位 Lv.{chip.level}
                     </span>
+                    {chip.locked && <span style={{ color: '#f59e0b', fontSize: '10px', marginLeft: '4px' }}>🔒</span>}
                   </div>
                   <button
                     onClick={(e) => { e.stopPropagation(); handleEquip(chip.id); }}
@@ -2318,6 +2427,11 @@ function ChipContent() {
                     装备
                   </button>
                 </div>
+                {chip.setId && (
+                  <div style={{ color: CHIP_SET_CONFIG[chip.setId].color, fontSize: '10px', marginTop: '4px' }}>
+                    {CHIP_SET_CONFIG[chip.setId].icon} {CHIP_SET_CONFIG[chip.setId].name}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -2331,13 +2445,102 @@ function ChipContent() {
               borderRadius: '12px',
               border: '1px solid rgba(16, 185, 129, 0.3)',
             }}>
-              <div style={{ color: CHIP_RARITY_CONFIG[selectedChip.rarity].color, fontWeight: 'bold', marginBottom: '8px' }}>
-                {CHIP_RARITY_CONFIG[selectedChip.rarity].name}芯片 Lv.{selectedChip.level}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <div style={{ color: CHIP_RARITY_CONFIG[selectedChip.rarity].color, fontWeight: 'bold' }}>
+                  {CHIP_RARITY_CONFIG[selectedChip.rarity].name}芯片 Lv.{selectedChip.level}
+                </div>
+                <button
+                  onClick={() => handleToggleLock(selectedChip.id)}
+                  style={{
+                    padding: '4px 8px',
+                    background: selectedChip.locked ? 'rgba(245, 158, 11, 0.3)' : 'rgba(100, 100, 100, 0.2)',
+                    border: selectedChip.locked ? '1px solid rgba(245, 158, 11, 0.5)' : '1px solid rgba(100, 100, 100, 0.3)',
+                    borderRadius: '4px',
+                    color: selectedChip.locked ? '#f59e0b' : '#a1a1aa',
+                    fontSize: '10px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {selectedChip.locked ? '🔒 已锁定' : '🔓 未锁定'}
+                </button>
               </div>
-              <div style={{ color: '#a1a1aa', fontSize: '11px', marginBottom: '8px' }}>
-                主属性: {selectedChip.mainStatValue} | 副属性: {selectedChip.subStats.map(s => s.value).join('/')}
+
+              {/* Set Info */}
+              {selectedChip.setId && (
+                <div style={{ color: CHIP_SET_CONFIG[selectedChip.setId].color, fontSize: '11px', marginBottom: '8px' }}>
+                  {CHIP_SET_CONFIG[selectedChip.setId].icon} {CHIP_SET_CONFIG[selectedChip.setId].name}套装
+                </div>
+              )}
+
+              {/* Main Stat */}
+              <div style={{ color: '#fff', fontSize: '11px', marginBottom: '8px' }}>
+                主属性: {CHIP_MAIN_STAT_CONFIG[selectedChip.mainStat].name} +{selectedChip.mainStatValue}
               </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
+
+              {/* Sub Stats */}
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ color: '#a1a1aa', fontSize: '11px', marginBottom: '4px' }}>副属性:</div>
+                {selectedChip.subStats.map((sub, idx) => {
+                  const enhanceCost = getEnhanceCost(selectedChip);
+                  const rerollCost = getRerollCost(selectedChip);
+                  return (
+                    <div key={idx} style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '6px 8px',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      borderRadius: '6px',
+                      marginBottom: '4px',
+                    }}>
+                      <span style={{ color: '#fff', fontSize: '11px' }}>
+                        {CHIP_SUB_STAT_CONFIG[sub.stat].name} +{sub.value}
+                      </span>
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        <button
+                          onClick={() => handleEnhance(selectedChip.id, idx)}
+                          style={{
+                            padding: '2px 6px',
+                            background: 'rgba(16, 185, 129, 0.2)',
+                            border: '1px solid rgba(16, 185, 129, 0.4)',
+                            borderRadius: '4px',
+                            color: '#10b981',
+                            fontSize: '9px',
+                            cursor: 'pointer',
+                          }}
+                          title={`强化消耗: ${enhanceCost.credits}信用点, ${enhanceCost.materials}水晶矿`}
+                        >
+                          强化
+                        </button>
+                        <button
+                          onClick={() => handleReroll(selectedChip.id, idx)}
+                          disabled={selectedChip.locked}
+                          style={{
+                            padding: '2px 6px',
+                            background: selectedChip.locked ? 'rgba(100, 100, 100, 0.2)' : 'rgba(168, 85, 247, 0.2)',
+                            border: selectedChip.locked ? '1px solid rgba(100, 100, 100, 0.3)' : '1px solid rgba(168, 85, 247, 0.4)',
+                            borderRadius: '4px',
+                            color: selectedChip.locked ? '#666' : '#a855f7',
+                            fontSize: '9px',
+                            cursor: selectedChip.locked ? 'not-allowed' : 'pointer',
+                          }}
+                          title={`重随消耗: ${rerollCost.credits}信用点, ${rerollCost.materials}量子矿`}
+                        >
+                          重随
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Enhance Info */}
+              <div style={{ color: '#a1a1aa', fontSize: '10px', marginBottom: '12px' }}>
+                强化次数: {selectedChip.enhanceCount}/{CHIP_RARITY_CONFIG[selectedChip.rarity].maxEnhance}
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
                 <button
                   onClick={() => handleUpgrade(selectedChip.id, 1)}
                   style={{
@@ -2355,22 +2558,40 @@ function ChipContent() {
                   升级
                 </button>
                 <button
-                  onClick={() => handleDecompose(selectedChip.id)}
+                  onClick={() => handleRerollAll(selectedChip.id)}
+                  disabled={selectedChip.locked}
                   style={{
                     flex: 1,
                     padding: '8px',
-                    background: 'rgba(239, 68, 68, 0.2)',
-                    border: '1px solid rgba(239, 68, 68, 0.4)',
+                    background: selectedChip.locked ? 'rgba(100, 100, 100, 0.3)' : 'rgba(168, 85, 247, 0.2)',
+                    border: selectedChip.locked ? '1px solid rgba(100, 100, 100, 0.3)' : '1px solid rgba(168, 85, 247, 0.4)',
                     borderRadius: '6px',
-                    color: '#f87171',
+                    color: selectedChip.locked ? '#666' : '#a855f7',
                     fontWeight: 'bold',
                     fontSize: '11px',
-                    cursor: 'pointer',
+                    cursor: selectedChip.locked ? 'not-allowed' : 'pointer',
                   }}
                 >
-                  分解
+                  重随全部
                 </button>
               </div>
+              <button
+                onClick={() => handleDecompose(selectedChip.id)}
+                disabled={selectedChip.locked}
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  background: selectedChip.locked ? 'rgba(100, 100, 100, 0.3)' : 'rgba(239, 68, 68, 0.2)',
+                  border: selectedChip.locked ? '1px solid rgba(100, 100, 100, 0.3)' : '1px solid rgba(239, 68, 68, 0.4)',
+                  borderRadius: '6px',
+                  color: selectedChip.locked ? '#666' : '#f87171',
+                  fontWeight: 'bold',
+                  fontSize: '11px',
+                  cursor: selectedChip.locked ? 'not-allowed' : 'pointer',
+                }}
+              >
+                分解
+              </button>
             </div>
           )}
         </div>

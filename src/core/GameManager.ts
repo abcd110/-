@@ -23,7 +23,7 @@ import { CrewMember, CrewMemberData, RecruitType, RECRUIT_CONFIG, RARITY_CONFIG,
 import { CommEvent, CommEventData, generateCommEvent, getMaxEvents, getScanCooldown, serializeCommEvent, deserializeCommEvent, isEventExpired, COMM_EVENT_CONFIG } from './CommSystem';
 import { ResearchProject, ResearchProjectData, ResearchStatus, createResearchProject, serializeResearchProject, deserializeResearchProject, canStartResearch, getMaxConcurrentResearch, getResearchSpeedBonus, RESEARCH_PROJECTS } from './ResearchSystem';
 import { MiningTask, MiningTaskData, MiningStatus, MiningSite, MINING_SITES, MINERAL_CONFIG, MINING_EVENTS, MiningEventType, getMiningYield, getMiningDuration, getMaxMiningSlots, createMiningTask, serializeMiningTask, deserializeMiningTask, isMiningComplete, getMiningProgress, getRemainingTime, getCrewMiningBonus, checkMiningEvent, processMiningEvent, getDepthProgress, getDepthBonusDescription } from './MiningSystem';
-import { Chip, ChipData, ChipSlot, ChipRarity, createChip, upgradeChip, serializeChip, deserializeChip, getUpgradeCost, getChipStats, CHIP_RARITY_CONFIG } from './ChipSystem';
+import { Chip, ChipData, ChipSlot, ChipRarity, ChipSet, ChipSubStat, createChip, upgradeChip, enhanceChip, rerollSubStat, rerollAllSubStats, toggleChipLock, serializeChip, deserializeChip, getUpgradeCost, getEnhanceCost, getRerollCost, getChipStats, getSetBonus, CHIP_RARITY_CONFIG, CHIP_SET_CONFIG, CHIP_MAIN_STAT_CONFIG, CHIP_SUB_STAT_CONFIG } from './ChipSystem';
 import { GeneNode, GeneNodeData, GeneType, GENE_TREE, createGeneNode, upgradeGeneNode, getGeneUpgradeCost, getGeneTotalStats, serializeGeneNode, deserializeGeneNode, GENE_TYPE_CONFIG, GENE_RARITY_CONFIG } from './GeneSystem';
 import { Implant, ImplantData, ImplantType, ImplantRarity, IMPLANT_TEMPLATES, IMPLANT_TYPE_CONFIG, IMPLANT_RARITY_CONFIG, createImplant, upgradeImplant, getImplantStats, getImplantUpgradeCost, serializeImplant, deserializeImplant, getRandomImplantRarity, getRandomImplantByRarity } from './CyberneticSystem';
 import { MarketListing, PlayerListing, MarketTransaction, MarketItemType, MarketRarity, MARKET_MAX_LISTINGS, createMarketListing, isListingExpired, calculateTax, calculateFinalPrice, generateSystemListings, serializeMarketListing, deserializeMarketListing, serializePlayerListing, deserializePlayerListing, serializeMarketTransaction, deserializeMarketTransaction } from './MarketSystem';
@@ -2085,7 +2085,7 @@ export class GameManager {
 
     const progress = getMiningProgress(task);
     const newDepth = Math.floor((progress / 100) * site.maxDepth);
-    
+
     if (newDepth > task.currentDepth) {
       task.currentDepth = newDepth;
     }
@@ -2353,6 +2353,116 @@ export class GameManager {
     this.addLog('芯片研发', `分解了芯片，获得${rewards.join('、')}`);
 
     return { success: true, message: '分解成功', rewards: rewards.join('、') };
+  }
+
+  // 强化芯片副属性
+  enhanceChipItem(chipId: string, subStatIndex: number): { success: boolean; message: string } {
+    const chip = this.chips.find(c => c.id === chipId);
+
+    if (!chip) {
+      return { success: false, message: '芯片不存在' };
+    }
+
+    const cost = getEnhanceCost(chip);
+
+    if (this.trainCoins < cost.credits) {
+      return { success: false, message: `信用点不足，需要${cost.credits}` };
+    }
+
+    if (!this.inventory.hasItem('mineral_crystal', cost.materials)) {
+      return { success: false, message: `水晶矿不足，需要${cost.materials}个` };
+    }
+
+    this.trainCoins -= cost.credits;
+    this.inventory.removeItem('mineral_crystal', cost.materials);
+
+    const result = enhanceChip(chip, subStatIndex);
+
+    if (result.success) {
+      this.addLog('芯片研发', `强化芯片: ${result.message}`);
+    }
+
+    return result;
+  }
+
+  // 重随单个副属性
+  rerollChipSubStat(chipId: string, subStatIndex: number): { success: boolean; message: string; newValue?: number } {
+    const chip = this.chips.find(c => c.id === chipId);
+
+    if (!chip) {
+      return { success: false, message: '芯片不存在' };
+    }
+
+    const cost = getRerollCost(chip);
+
+    if (this.trainCoins < cost.credits) {
+      return { success: false, message: `信用点不足，需要${cost.credits}` };
+    }
+
+    if (!this.inventory.hasItem('mineral_quantum', cost.materials)) {
+      return { success: false, message: `量子矿不足，需要${cost.materials}个` };
+    }
+
+    this.trainCoins -= cost.credits;
+    this.inventory.removeItem('mineral_quantum', cost.materials);
+
+    const result = rerollSubStat(chip, subStatIndex);
+
+    if (result.success) {
+      this.addLog('芯片研发', `重随副属性: ${result.message}`);
+    }
+
+    return result;
+  }
+
+  // 重随所有副属性
+  rerollAllChipSubStats(chipId: string): { success: boolean; message: string } {
+    const chip = this.chips.find(c => c.id === chipId);
+
+    if (!chip) {
+      return { success: false, message: '芯片不存在' };
+    }
+
+    const cost = getRerollCost(chip);
+    const totalCost = { credits: cost.credits * 2, materials: cost.materials * 2 };
+
+    if (this.trainCoins < totalCost.credits) {
+      return { success: false, message: `信用点不足，需要${totalCost.credits}` };
+    }
+
+    if (!this.inventory.hasItem('mineral_quantum', totalCost.materials)) {
+      return { success: false, message: `量子矿不足，需要${totalCost.materials}个` };
+    }
+
+    this.trainCoins -= totalCost.credits;
+    this.inventory.removeItem('mineral_quantum', totalCost.materials);
+
+    const result = rerollAllSubStats(chip);
+
+    if (result.success) {
+      this.addLog('芯片研发', '重随了所有副属性');
+    }
+
+    return result;
+  }
+
+  // 切换芯片锁定状态
+  toggleChipLockState(chipId: string): { success: boolean; message: string; locked?: boolean } {
+    const chip = this.chips.find(c => c.id === chipId);
+
+    if (!chip) {
+      return { success: false, message: '芯片不存在' };
+    }
+
+    const locked = toggleChipLock(chip);
+    this.addLog('芯片研发', locked ? '锁定了芯片' : '解锁了芯片');
+
+    return { success: true, message: locked ? '已锁定' : '已解锁', locked };
+  }
+
+  // 获取芯片套装效果
+  getChipSetBonuses(): { set: ChipSet; count: number; bonuses: string[] }[] {
+    return getSetBonus(this.getEquippedChips());
   }
 
   // 获取芯片总属性加成

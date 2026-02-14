@@ -157,6 +157,12 @@ interface GameStore {
   equipChip: (chipId: string) => { success: boolean; message: string };
   unequipChip: (slot: import('../core/ChipSystem').ChipSlot) => { success: boolean; message: string };
   decomposeChip: (chipId: string) => { success: boolean; message: string; rewards?: string };
+  enhanceChip: (chipId: string, subStatIndex: number) => { success: boolean; message: string };
+  rerollChipSubStat: (chipId: string, subStatIndex: number) => { success: boolean; message: string; newValue?: number };
+  rerollAllChipSubStats: (chipId: string) => { success: boolean; message: string };
+  toggleChipLock: (chipId: string) => { success: boolean; message: string; locked?: boolean };
+  getChipSetBonuses: () => { set: import('../core/ChipSystem').ChipSet; count: number; bonuses: string[] }[];
+  getChipStatBonus: () => Record<string, number>;
 
   // 基因系统
   getGeneNodes: () => import('../core/GeneSystem').GeneNode[];
@@ -459,6 +465,12 @@ export const useGameStore = create<GameStore>((set, get) => {
     equipChip: (chipId) => executeGameAction(() => get().gameManager.equipChip(chipId)),
     unequipChip: (slot) => executeGameAction(() => get().gameManager.unequipChip(slot)),
     decomposeChip: (chipId) => executeGameAction(() => get().gameManager.decomposeChip(chipId)),
+    enhanceChip: (chipId, subStatIndex) => executeGameAction(() => get().gameManager.enhanceChipItem(chipId, subStatIndex)),
+    rerollChipSubStat: (chipId, subStatIndex) => executeGameAction(() => get().gameManager.rerollChipSubStat(chipId, subStatIndex)),
+    rerollAllChipSubStats: (chipId) => executeGameAction(() => get().gameManager.rerollAllChipSubStats(chipId)),
+    toggleChipLock: (chipId) => executeGameAction(() => get().gameManager.toggleChipLockState(chipId)),
+    getChipSetBonuses: () => get().gameManager.getChipSetBonuses(),
+    getChipStatBonus: () => get().gameManager.getChipStatBonus(),
 
     // 基因系统
     getGeneNodes: () => get().gameManager.getGeneNodes(),
