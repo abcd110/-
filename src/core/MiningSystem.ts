@@ -77,7 +77,7 @@ export interface MiningEvent {
 }
 
 export const MINERAL_CONFIG: Record<MineralType, { name: string; color: string; icon: string; itemId: string }> = {
-  [MineralType.IRON]: { name: '铁矿', color: '#9ca3af', icon: '�ite', itemId: 'mineral_iron' },
+  [MineralType.IRON]: { name: '铁矿', color: '#9ca3af', icon: '⛏️', itemId: 'mineral_iron' },
   [MineralType.COPPER]: { name: '铜矿', color: '#f59e0b', icon: '🟤', itemId: 'mineral_copper' },
   [MineralType.TITANIUM]: { name: '钛矿', color: '#60a5fa', icon: '🔵', itemId: 'mineral_titanium' },
   [MineralType.CRYSTAL]: { name: '水晶矿', color: '#a855f7', icon: '💎', itemId: 'mineral_crystal' },
@@ -290,6 +290,10 @@ export function deserializeMiningTask(data: MiningTaskData): MiningTask {
     assignedCrew: data.assignedCrew || [],
     currentDepth: data.currentDepth || 0,
     events: data.events || [],
+    startTime: data.startTime || Date.now(),
+    duration: data.duration || 3600000,
+    status: data.status || MiningStatus.MINING,
+    accumulated: data.accumulated || 0,
   };
 }
 
@@ -300,14 +304,18 @@ export function isMiningComplete(task: MiningTask): boolean {
 
 export function getMiningProgress(task: MiningTask): number {
   if (task.status !== MiningStatus.MINING) return 0;
-  const elapsed = Date.now() - task.startTime;
-  return Math.min(100, (elapsed / task.duration) * 100);
+  const startTime = task.startTime || Date.now();
+  const duration = task.duration || 3600000;
+  const elapsed = Date.now() - startTime;
+  return Math.min(100, (elapsed / duration) * 100);
 }
 
 export function getRemainingTime(task: MiningTask): number {
   if (task.status !== MiningStatus.MINING) return 0;
-  const elapsed = Date.now() - task.startTime;
-  return Math.max(0, task.duration - elapsed);
+  const startTime = task.startTime || Date.now();
+  const duration = task.duration || 3600000;
+  const elapsed = Date.now() - startTime;
+  return Math.max(0, duration - elapsed);
 }
 
 export function formatMiningTime(ms: number): string {
