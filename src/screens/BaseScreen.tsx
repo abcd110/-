@@ -7,7 +7,7 @@ import { CommEvent, COMM_EVENT_CONFIG, getRemainingTime, formatRemainingTime } f
 import { getItemTemplate } from '../data/items';
 import { ResearchStatus, ResearchCategory, RESEARCH_CATEGORY_CONFIG } from '../core/ResearchSystem';
 import { MINERAL_CONFIG, MINING_EVENTS, MiningEventType, getMiningProgress, getRemainingTime as getMiningRemainingTime, formatMiningTime, getDepthBonusDescription, getCrewMiningBonus } from '../core/MiningSystem';
-import { Chip, ChipSlot, ChipRarity, ChipSet, CHIP_RARITY_CONFIG, CHIP_MAIN_STAT_CONFIG, CHIP_SUB_STAT_CONFIG, CHIP_SET_CONFIG, getEnhanceCost, getRerollCost } from '../core/ChipSystem';
+import { Chip, ChipSlot, ChipRarity, ChipSet, CHIP_RARITY_CONFIG, CHIP_MAIN_STAT_CONFIG, CHIP_SUB_STAT_CONFIG, CHIP_SET_CONFIG, CHIP_CRAFT_COST, getEnhanceCost, getRerollCost } from '../core/ChipSystem';
 import { GeneType, GENE_TYPE_CONFIG, GENE_RARITY_CONFIG } from '../core/GeneSystem';
 import { Implant, ImplantType, ImplantRarity, IMPLANT_TYPE_CONFIG, IMPLANT_RARITY_CONFIG, getImplantStats } from '../core/CyberneticSystem';
 import { MarketListing, PlayerListing, MarketItemType, MarketRarity, MARKET_ITEM_TYPE_CONFIG, MARKET_RARITY_CONFIG } from '../core/MarketSystem';
@@ -2327,8 +2327,6 @@ function ChipContent() {
           }}>
             {[ChipSlot.SLOT_1, ChipSlot.SLOT_2, ChipSlot.SLOT_3, ChipSlot.SLOT_4].map(slot => {
               const equipped = getEquippedChipForSlot(slot);
-              const isUnlocked = slot <= maxSlots as unknown as ChipSlot;
-
               return (
                 <div
                   key={slot}
@@ -2337,10 +2335,9 @@ function ChipContent() {
                   }}
                   style={{
                     padding: '12px',
-                    background: isUnlocked ? 'rgba(16, 185, 129, 0.1)' : 'rgba(100, 100, 100, 0.1)',
+                    background: 'rgba(16, 185, 129, 0.1)',
                     borderRadius: '12px',
                     border: equipped ? `2px solid ${CHIP_RARITY_CONFIG[equipped.rarity].color}` : '1px solid rgba(255, 255, 255, 0.1)',
-                    opacity: isUnlocked ? 1 : 0.5,
                     cursor: equipped ? 'pointer' : 'default',
                   }}
                 >
@@ -2376,7 +2373,7 @@ function ChipContent() {
                     </div>
                   ) : (
                     <div style={{ color: '#666', fontSize: '12px' }}>
-                      {isUnlocked ? '空' : '🔒 未解锁'}
+                      空
                     </div>
                   )}
                 </div>
@@ -2605,7 +2602,6 @@ function ChipContent() {
           </div>
 
           {[ChipSlot.SLOT_1, ChipSlot.SLOT_2, ChipSlot.SLOT_3, ChipSlot.SLOT_4].map(slot => {
-            const isUnlocked = slot <= maxSlots as unknown as ChipSlot;
             const slotName = slot === ChipSlot.SLOT_1 ? '生命' : slot === ChipSlot.SLOT_2 ? '攻击' : '随机';
 
             return (
@@ -2613,11 +2609,10 @@ function ChipContent() {
                 key={slot}
                 style={{
                   padding: '12px',
-                  background: isUnlocked ? 'rgba(255, 255, 255, 0.03)' : 'rgba(100, 100, 100, 0.1)',
+                  background: 'rgba(255, 255, 255, 0.03)',
                   borderRadius: '12px',
                   marginBottom: '8px',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
-                  opacity: isUnlocked ? 1 : 0.5,
                 }}
               >
                 <div style={{
@@ -2629,31 +2624,88 @@ function ChipContent() {
                   {slot}号位 ({slotName}主属性)
                 </div>
 
-                {isUnlocked ? (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                    {Object.values(ChipRarity).map(rarity => (
-                      <button
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {Object.values(ChipRarity).map(rarity => {
+                    const cost = CHIP_CRAFT_COST[rarity];
+                    const canAfford = gameManager.trainCoins >= cost.credits &&
+                      cost.materials.every(m => gameManager.inventory.hasItem(m.itemId, m.count));
+
+                    return (
+                      <div
                         key={rarity}
-                        onClick={() => handleCraft(slot, rarity)}
                         style={{
-                          padding: '6px 10px',
-                          background: `linear-gradient(135deg, ${CHIP_RARITY_CONFIG[rarity].color}40, ${CHIP_RARITY_CONFIG[rarity].color}20)`,
-                          border: `1px solid ${CHIP_RARITY_CONFIG[rarity].color}60`,
-                          borderRadius: '6px',
-                          color: CHIP_RARITY_CONFIG[rarity].color,
-                          fontSize: '11px',
-                          cursor: 'pointer',
+                          padding: '10px',
+                          background: `linear-gradient(135deg, ${CHIP_RARITY_CONFIG[rarity].color}20, ${CHIP_RARITY_CONFIG[rarity].color}10)`,
+                          borderRadius: '8px',
+                          border: `1px solid ${CHIP_RARITY_CONFIG[rarity].color}40`,
                         }}
                       >
-                        {CHIP_RARITY_CONFIG[rarity].name}
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div style={{ color: '#666', fontSize: '11px' }}>
-                    🔒 需要 Lv.{slot <= 2 ? 1 : slot === 3 ? 3 : 5} 解锁
-                  </div>
-                )}
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          marginBottom: '8px',
+                        }}>
+                          <span style={{
+                            color: CHIP_RARITY_CONFIG[rarity].color,
+                            fontWeight: 'bold',
+                            fontSize: '12px',
+                          }}>
+                            {CHIP_RARITY_CONFIG[rarity].name}
+                          </span>
+                          <span style={{ color: '#a1a1aa', fontSize: '10px' }}>
+                            强化上限: {CHIP_RARITY_CONFIG[rarity].maxEnhance}次
+                          </span>
+                        </div>
+
+                        <div style={{
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          gap: '6px',
+                          marginBottom: '8px',
+                          fontSize: '10px',
+                        }}>
+                          <span style={{ color: '#fbbf24' }}>
+                            💰 {cost.credits}
+                          </span>
+                          {cost.materials.map((m, idx) => {
+                            const hasEnough = gameManager.inventory.hasItem(m.itemId, m.count);
+                            const currentCount = gameManager.inventory.getItem(m.itemId)?.quantity || 0;
+                            return (
+                              <span
+                                key={idx}
+                                style={{ color: hasEnough ? '#10b981' : '#ef4444' }}
+                              >
+                                {m.itemId} x{m.count} ({currentCount})
+                              </span>
+                            );
+                          })}
+                        </div>
+
+                        <button
+                          onClick={() => handleCraft(slot, rarity)}
+                          disabled={!canAfford}
+                          style={{
+                            width: '100%',
+                            padding: '6px',
+                            background: canAfford
+                              ? `linear-gradient(135deg, ${CHIP_RARITY_CONFIG[rarity].color}60, ${CHIP_RARITY_CONFIG[rarity].color}40)`
+                              : 'rgba(100, 100, 100, 0.3)',
+                            border: canAfford
+                              ? `1px solid ${CHIP_RARITY_CONFIG[rarity].color}80`
+                              : '1px solid rgba(100, 100, 100, 0.3)',
+                            borderRadius: '6px',
+                            color: canAfford ? '#fff' : '#666',
+                            fontSize: '11px',
+                            cursor: canAfford ? 'pointer' : 'not-allowed',
+                          }}
+                        >
+                          {canAfford ? '制作' : '材料不足'}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             );
           })}

@@ -27,8 +27,6 @@ export enum ChipSubStat {
 }
 
 export enum ChipRarity {
-  COMMON = 'common',
-  UNCOMMON = 'uncommon',
   RARE = 'rare',
   EPIC = 'epic',
   LEGENDARY = 'legendary',
@@ -71,10 +69,8 @@ export interface ChipData {
 }
 
 export const CHIP_RARITY_CONFIG: Record<ChipRarity, { name: string; color: string; subStatCount: number; maxEnhance: number }> = {
-  [ChipRarity.COMMON]: { name: '普通', color: '#9ca3af', subStatCount: 1, maxEnhance: 5 },
-  [ChipRarity.UNCOMMON]: { name: '优秀', color: '#22c55e', subStatCount: 2, maxEnhance: 8 },
-  [ChipRarity.RARE]: { name: '稀有', color: '#3b82f6', subStatCount: 2, maxEnhance: 10 },
-  [ChipRarity.EPIC]: { name: '史诗', color: '#a855f7', subStatCount: 3, maxEnhance: 12 },
+  [ChipRarity.RARE]: { name: '稀有', color: '#3b82f6', subStatCount: 2, maxEnhance: 5 },
+  [ChipRarity.EPIC]: { name: '史诗', color: '#a855f7', subStatCount: 3, maxEnhance: 10 },
   [ChipRarity.LEGENDARY]: { name: '传说', color: '#f59e0b', subStatCount: 4, maxEnhance: 15 },
 };
 
@@ -118,6 +114,33 @@ export const SUB_STAT_UNLOCK_LEVELS = [3, 5, 8, 12];
 
 export const MAX_CHIP_LEVEL = 15;
 
+export const CHIP_CRAFT_COST: Record<ChipRarity, { credits: number; materials: { itemId: string; count: number }[] }> = {
+  [ChipRarity.RARE]: {
+    credits: 500,
+    materials: [
+      { itemId: 'mineral_titanium', count: 10 },
+      { itemId: 'chip_material', count: 5 },
+    ],
+  },
+  [ChipRarity.EPIC]: {
+    credits: 2000,
+    materials: [
+      { itemId: 'mineral_crystal', count: 5 },
+      { itemId: 'chip_material', count: 15 },
+      { itemId: 'gene_material', count: 5 },
+    ],
+  },
+  [ChipRarity.LEGENDARY]: {
+    credits: 5000,
+    materials: [
+      { itemId: 'mineral_quantum', count: 2 },
+      { itemId: 'chip_material', count: 30 },
+      { itemId: 'gene_material', count: 10 },
+      { itemId: 'cyber_core', count: 1 },
+    ],
+  },
+};
+
 let chipIdCounter = 0;
 
 function generateChipId(): string {
@@ -145,7 +168,13 @@ export function createChip(slot: ChipSlot, rarity: ChipRarity): Chip {
   const mainStatConfig = CHIP_MAIN_STAT_CONFIG[mainStat];
   const rarityConfig = CHIP_RARITY_CONFIG[rarity];
 
-  const mainStatValue = mainStatConfig.baseValue * (1 + Object.keys(ChipRarity).indexOf(rarity) * 0.1);
+  const rarityMultiplier = {
+    [ChipRarity.RARE]: 1,
+    [ChipRarity.EPIC]: 1.2,
+    [ChipRarity.LEGENDARY]: 1.5,
+  };
+
+  const mainStatValue = mainStatConfig.baseValue * rarityMultiplier[rarity];
 
   const subStats: { stat: ChipSubStat; value: number }[] = [];
   const usedStats: ChipSubStat[] = [];
@@ -337,8 +366,14 @@ export function serializeChip(chip: Chip): ChipData {
 }
 
 export function deserializeChip(data: ChipData): Chip {
+  let rarity = data.rarity;
+  if (rarity === 'common' || rarity === 'uncommon') {
+    rarity = ChipRarity.RARE;
+  }
+  
   return {
     ...data,
+    rarity,
     locked: data.locked || false,
     enhanceCount: data.enhanceCount || 0,
     setId: data.setId,
