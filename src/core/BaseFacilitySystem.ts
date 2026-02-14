@@ -11,6 +11,9 @@ export enum FacilityType {
   ARENA = 'arena',
   MARKET = 'market',
   RELIC = 'relic',
+  GENE = 'gene',
+  CYBERNETIC = 'cybernetic',
+  RUINS = 'ruins',
 }
 
 export interface FacilityLevel {
@@ -185,6 +188,36 @@ export const FACILITY_DEFINITIONS: FacilityDefinition[] = [
       { level: 3, upgradeCost: { credits: 8000, materials: [{ itemId: 'gene_material', count: 10 }] }, effects: { description: '基因解锁', value: 7 } },
       { level: 4, upgradeCost: { credits: 15000, materials: [{ itemId: 'gene_material', count: 15 }] }, effects: { description: '基因解锁', value: 9 } },
       { level: 5, upgradeCost: { credits: 30000, materials: [{ itemId: 'gene_material', count: 20 }] }, effects: { description: '基因解锁', value: 12 } },
+    ],
+  },
+  {
+    id: FacilityType.CYBERNETIC,
+    name: '机械飞升',
+    icon: '🦾',
+    description: '义体改造强化船员能力',
+    color: '#f97316',
+    maxLevel: 5,
+    levels: [
+      { level: 1, upgradeCost: { credits: 0, materials: [] }, effects: { description: '义体槽位', value: 2 } },
+      { level: 2, upgradeCost: { credits: 5000, materials: [{ itemId: 'cyber_material', count: 10 }] }, effects: { description: '义体槽位', value: 3 } },
+      { level: 3, upgradeCost: { credits: 10000, materials: [{ itemId: 'cyber_material', count: 20 }] }, effects: { description: '义体槽位', value: 4 } },
+      { level: 4, upgradeCost: { credits: 20000, materials: [{ itemId: 'cyber_core', count: 3 }] }, effects: { description: '义体槽位', value: 5 } },
+      { level: 5, upgradeCost: { credits: 40000, materials: [{ itemId: 'cyber_core', count: 5 }] }, effects: { description: '义体槽位', value: 6 } },
+    ],
+  },
+  {
+    id: FacilityType.RUINS,
+    name: '遗迹探索',
+    icon: '🏛️',
+    description: '探索遗迹获取稀有资源',
+    color: '#a855f7',
+    maxLevel: 5,
+    levels: [
+      { level: 1, upgradeCost: { credits: 0, materials: [] }, effects: { description: '探索等级', value: 1 } },
+      { level: 2, upgradeCost: { credits: 3000, materials: [{ itemId: 'chip_material', count: 5 }] }, effects: { description: '探索等级', value: 2 } },
+      { level: 3, upgradeCost: { credits: 6000, materials: [{ itemId: 'chip_material', count: 10 }] }, effects: { description: '探索等级', value: 3 } },
+      { level: 4, upgradeCost: { credits: 12000, materials: [{ itemId: 'gene_material', count: 10 }] }, effects: { description: '探索等级', value: 4 } },
+      { level: 5, upgradeCost: { credits: 25000, materials: [{ itemId: 'cyber_core', count: 3 }] }, effects: { description: '探索等级', value: 5 } },
     ],
   },
 ];

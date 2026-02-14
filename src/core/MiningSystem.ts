@@ -336,3 +336,29 @@ export function getDepthBonusDescription(depth: number, site: MiningSite): strin
   const bonus = (1 + depth * site.depthBonus - 1) * 100;
   return `+${bonus.toFixed(1)}%产量`;
 }
+
+export function getMiningEfficiencyBonus(facilityLevel: number): number {
+  return (facilityLevel - 1) * 10;
+}
+
+export function getMiningSpeedBonus(facilityLevel: number): number {
+  return (facilityLevel - 1) * 5;
+}
+
+export function getMiningEventChanceBonus(facilityLevel: number): number {
+  return (facilityLevel - 1) * 2;
+}
+
+export function getMiningDepthBonus(facilityLevel: number): number {
+  return (facilityLevel - 1) * 20;
+}
+
+export function getMiningUpgradeDescription(level: number): string {
+  const efficiency = getMiningEfficiencyBonus(level);
+  const speed = getMiningSpeedBonus(level);
+  const eventChance = getMiningEventChanceBonus(level);
+  const depth = getMiningDepthBonus(level);
+  const slots = getMaxMiningSlots(level);
+  
+  return `效率+${efficiency}% | 速度+${speed}% | 事件率+${eventChance}% | 深度+${depth}m | 槽位${slots}`;
+}

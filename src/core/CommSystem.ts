@@ -4,6 +4,7 @@ export enum CommEventType {
   MYSTERY = 'mystery',
   BOUNTY = 'bounty',
   TREASURE = 'treasure',
+  CHIP_SUPPLY = 'chip_supply',
 }
 
 export interface CommEvent {
@@ -78,6 +79,12 @@ export const COMM_EVENT_CONFIG: Record<CommEventType, {
     color: '#10b981',
     description: '探测到宝藏信号',
   },
+  [CommEventType.CHIP_SUPPLY]: {
+    name: '芯片补给',
+    icon: '💾',
+    color: '#06b6d4',
+    description: '芯片研发材料的补给信号',
+  },
 };
 
 const EVENT_TEMPLATES: Array<{
@@ -91,6 +98,7 @@ const EVENT_TEMPLATES: Array<{
   maxExp: number;
   staminaCost: number;
   rarity: number;
+  minFacilityLevel: number;
 }> = [
   {
     type: CommEventType.TRADER,
@@ -106,6 +114,7 @@ const EVENT_TEMPLATES: Array<{
     maxExp: 50,
     staminaCost: 0,
     rarity: 1,
+    minFacilityLevel: 1,
   },
   {
     type: CommEventType.TRADER,
@@ -121,6 +130,7 @@ const EVENT_TEMPLATES: Array<{
     maxExp: 100,
     staminaCost: 0,
     rarity: 3,
+    minFacilityLevel: 2,
   },
   {
     type: CommEventType.DISTRESS,
@@ -135,6 +145,7 @@ const EVENT_TEMPLATES: Array<{
     maxExp: 60,
     staminaCost: 10,
     rarity: 1,
+    minFacilityLevel: 1,
   },
   {
     type: CommEventType.DISTRESS,
@@ -150,6 +161,7 @@ const EVENT_TEMPLATES: Array<{
     maxExp: 100,
     staminaCost: 20,
     rarity: 2,
+    minFacilityLevel: 2,
   },
   {
     type: CommEventType.MYSTERY,
@@ -164,6 +176,7 @@ const EVENT_TEMPLATES: Array<{
     maxExp: 80,
     staminaCost: 15,
     rarity: 2,
+    minFacilityLevel: 1,
   },
   {
     type: CommEventType.MYSTERY,
@@ -179,6 +192,7 @@ const EVENT_TEMPLATES: Array<{
     maxExp: 200,
     staminaCost: 30,
     rarity: 4,
+    minFacilityLevel: 3,
   },
   {
     type: CommEventType.BOUNTY,
@@ -193,6 +207,7 @@ const EVENT_TEMPLATES: Array<{
     maxExp: 120,
     staminaCost: 25,
     rarity: 2,
+    minFacilityLevel: 1,
   },
   {
     type: CommEventType.BOUNTY,
@@ -208,6 +223,7 @@ const EVENT_TEMPLATES: Array<{
     maxExp: 300,
     staminaCost: 40,
     rarity: 4,
+    minFacilityLevel: 3,
   },
   {
     type: CommEventType.TREASURE,
@@ -223,6 +239,7 @@ const EVENT_TEMPLATES: Array<{
     maxExp: 60,
     staminaCost: 15,
     rarity: 2,
+    minFacilityLevel: 1,
   },
   {
     type: CommEventType.TREASURE,
@@ -238,6 +255,57 @@ const EVENT_TEMPLATES: Array<{
     maxExp: 200,
     staminaCost: 35,
     rarity: 5,
+    minFacilityLevel: 4,
+  },
+  {
+    type: CommEventType.CHIP_SUPPLY,
+    title: '芯片补给站',
+    description: '发现一个芯片材料补给站',
+    minCredits: 300,
+    maxCredits: 600,
+    possibleItems: [
+      { itemId: 'chip_material', minCount: 5, maxCount: 10 },
+      { itemId: 'mineral_titanium', minCount: 3, maxCount: 5 },
+    ],
+    minExp: 50,
+    maxExp: 100,
+    staminaCost: 20,
+    rarity: 2,
+    minFacilityLevel: 2,
+  },
+  {
+    type: CommEventType.CHIP_SUPPLY,
+    title: '高级芯片补给',
+    description: '探测到高级芯片研发材料的信号',
+    minCredits: 800,
+    maxCredits: 1500,
+    possibleItems: [
+      { itemId: 'chip_material', minCount: 15, maxCount: 25 },
+      { itemId: 'gene_material', minCount: 5, maxCount: 10 },
+      { itemId: 'mineral_crystal', minCount: 3, maxCount: 5 },
+    ],
+    minExp: 150,
+    maxExp: 250,
+    staminaCost: 35,
+    rarity: 4,
+    minFacilityLevel: 3,
+  },
+  {
+    type: CommEventType.CHIP_SUPPLY,
+    title: '神经核心信号',
+    description: '探测到稀有神经核心的信号源',
+    minCredits: 2000,
+    maxCredits: 4000,
+    possibleItems: [
+      { itemId: 'cyber_core', minCount: 1, maxCount: 2 },
+      { itemId: 'chip_material', minCount: 20, maxCount: 35 },
+      { itemId: 'mineral_quantum', minCount: 1, maxCount: 3 },
+    ],
+    minExp: 300,
+    maxExp: 500,
+    staminaCost: 50,
+    rarity: 5,
+    minFacilityLevel: 5,
   },
 ];
 
@@ -249,13 +317,13 @@ function generateEventId(): string {
 }
 
 export function generateCommEvent(facilityLevel: number): CommEvent | null {
-  const availableTemplates = EVENT_TEMPLATES.filter(t => t.rarity <= facilityLevel + 2);
+  const availableTemplates = EVENT_TEMPLATES.filter(t => t.minFacilityLevel <= facilityLevel);
   
   if (availableTemplates.length === 0) {
     return null;
   }
   
-  const weights = availableTemplates.map(t => Math.max(1, 6 - t.rarity));
+  const weights = availableTemplates.map(t => Math.max(1, 6 - t.rarity + facilityLevel));
   const totalWeight = weights.reduce((a, b) => a + b, 0);
   let roll = Math.random() * totalWeight;
   
@@ -287,7 +355,9 @@ export function generateCommEvent(facilityLevel: number): CommEvent | null {
     selectedTemplate.minExp + Math.random() * (selectedTemplate.maxExp - selectedTemplate.minExp)
   );
   
-  const expireMinutes = 30 + Math.floor(Math.random() * 90);
+  const baseExpireMinutes = 30;
+  const levelBonus = facilityLevel * 10;
+  const expireMinutes = baseExpireMinutes + Math.floor(Math.random() * 90) + levelBonus;
   const expireTime = Date.now() + expireMinutes * 60 * 1000;
   
   return {
@@ -311,7 +381,15 @@ export function getMaxEvents(facilityLevel: number): number {
 }
 
 export function getScanCooldown(facilityLevel: number): number {
-  return Math.max(10, 30 - facilityLevel * 5);
+  return Math.max(5, 30 - facilityLevel * 5);
+}
+
+export function getRareEventChance(facilityLevel: number): number {
+  return 5 + facilityLevel * 3;
+}
+
+export function getEventDurationBonus(facilityLevel: number): number {
+  return facilityLevel * 10;
 }
 
 export function serializeCommEvent(event: CommEvent): CommEventData {

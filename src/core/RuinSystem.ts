@@ -5,6 +5,8 @@ export enum RuinType {
   MYSTERIOUS_CAVE = 'mysterious_cave',
   ANCIENT_LAB = 'ancient_lab',
   VOID_RIFT = 'void_rift',
+  CHIP_FACTORY = 'chip_factory',
+  NEURAL_NEXUS = 'neural_nexus',
 }
 
 export enum RuinDifficulty {
@@ -35,7 +37,7 @@ export interface Ruin {
   difficulty: RuinDifficulty;
   description: string;
   requiredLevel: number;
-  duration: number; // 探索时长（毫秒）
+  duration: number;
   rewards: RuinReward;
   status: ExploreStatus;
   exploredAt?: number;
@@ -59,6 +61,8 @@ export const RUIN_TYPE_CONFIG: Record<RuinType, { name: string; icon: string; co
   [RuinType.MYSTERIOUS_CAVE]: { name: '神秘洞穴', icon: '🕳️', color: '#8b5cf6' },
   [RuinType.ANCIENT_LAB]: { name: '古代实验室', icon: '🔬', color: '#22c55e' },
   [RuinType.VOID_RIFT]: { name: '虚空裂缝', icon: '🌀', color: '#ec4899' },
+  [RuinType.CHIP_FACTORY]: { name: '芯片工厂', icon: '🏭', color: '#06b6d4' },
+  [RuinType.NEURAL_NEXUS]: { name: '神经枢纽', icon: '🧠', color: '#f59e0b' },
 };
 
 export const RUIN_DIFFICULTY_CONFIG: Record<RuinDifficulty, { name: string; color: string; multiplier: number }> = {
@@ -94,7 +98,7 @@ export const RUIN_TEMPLATES: Omit<Ruin, 'status' | 'exploredAt' | 'assignedCrew'
     type: RuinType.ANCIENT_RUINS,
     difficulty: RuinDifficulty.NORMAL,
     description: '一处神秘的古代文明遗迹，据说藏有珍贵的科技遗物。',
-    requiredLevel: 2,
+    requiredLevel: 1,
     duration: 15 * 60 * 1000,
     rewards: {
       credits: 500,
@@ -112,7 +116,7 @@ export const RUIN_TEMPLATES: Omit<Ruin, 'status' | 'exploredAt' | 'assignedCrew'
     type: RuinType.CRASHED_SHIP,
     difficulty: RuinDifficulty.NORMAL,
     description: '一艘坠毁的运输船，货舱里可能还有完好的货物。',
-    requiredLevel: 2,
+    requiredLevel: 1,
     duration: 10 * 60 * 1000,
     rewards: {
       credits: 400,
@@ -130,7 +134,7 @@ export const RUIN_TEMPLATES: Omit<Ruin, 'status' | 'exploredAt' | 'assignedCrew'
     type: RuinType.MYSTERIOUS_CAVE,
     difficulty: RuinDifficulty.HARD,
     description: '一个充满未知生物的洞穴系统，传说深处有宝藏。',
-    requiredLevel: 3,
+    requiredLevel: 2,
     duration: 30 * 60 * 1000,
     rewards: {
       credits: 1000,
@@ -148,7 +152,7 @@ export const RUIN_TEMPLATES: Omit<Ruin, 'status' | 'exploredAt' | 'assignedCrew'
     type: RuinType.ANCIENT_LAB,
     difficulty: RuinDifficulty.HARD,
     description: '一个被遗弃的高科技实验室，可能还有实验样本。',
-    requiredLevel: 4,
+    requiredLevel: 2,
     duration: 45 * 60 * 1000,
     rewards: {
       credits: 1500,
@@ -166,7 +170,7 @@ export const RUIN_TEMPLATES: Omit<Ruin, 'status' | 'exploredAt' | 'assignedCrew'
     type: RuinType.VOID_RIFT,
     difficulty: RuinDifficulty.NIGHTMARE,
     description: '一个通往虚空的裂缝，极度危险但可能获得稀有物品。',
-    requiredLevel: 5,
+    requiredLevel: 3,
     duration: 60 * 60 * 1000,
     rewards: {
       credits: 3000,
@@ -184,7 +188,7 @@ export const RUIN_TEMPLATES: Omit<Ruin, 'status' | 'exploredAt' | 'assignedCrew'
     type: RuinType.VOID_RIFT,
     difficulty: RuinDifficulty.HELL,
     description: '传说中通往另一个维度的门户，只有最勇敢的探险者才能幸存。',
-    requiredLevel: 5,
+    requiredLevel: 4,
     duration: 120 * 60 * 1000,
     rewards: {
       credits: 10000,
@@ -194,6 +198,99 @@ export const RUIN_TEMPLATES: Omit<Ruin, 'status' | 'exploredAt' | 'assignedCrew'
         { itemId: 'recruit_ticket_limited', count: 5, chance: 0.3 },
       ],
       experience: 2000,
+    },
+  },
+  {
+    id: 'ruin_chip_001',
+    name: '废弃芯片工厂',
+    type: RuinType.CHIP_FACTORY,
+    difficulty: RuinDifficulty.NORMAL,
+    description: '一座废弃的芯片制造工厂，可能还有残留的芯片材料。',
+    requiredLevel: 1,
+    duration: 20 * 60 * 1000,
+    rewards: {
+      credits: 600,
+      items: [
+        { itemId: 'chip_material', count: 8, chance: 0.7 },
+        { itemId: 'mineral_titanium', count: 5, chance: 0.5 },
+        { itemId: 'gene_material', count: 2, chance: 0.3 },
+      ],
+      experience: 200,
+    },
+  },
+  {
+    id: 'ruin_chip_002',
+    name: '高级芯片实验室',
+    type: RuinType.CHIP_FACTORY,
+    difficulty: RuinDifficulty.HARD,
+    description: '一个专门研发高级芯片的实验室，藏有珍贵的芯片材料。',
+    requiredLevel: 2,
+    duration: 40 * 60 * 1000,
+    rewards: {
+      credits: 1500,
+      items: [
+        { itemId: 'chip_material', count: 20, chance: 0.6 },
+        { itemId: 'gene_material', count: 8, chance: 0.5 },
+        { itemId: 'mineral_crystal', count: 5, chance: 0.4 },
+        { itemId: 'cyber_core', count: 1, chance: 0.15 },
+      ],
+      experience: 450,
+    },
+  },
+  {
+    id: 'ruin_chip_003',
+    name: '量子芯片中心',
+    type: RuinType.CHIP_FACTORY,
+    difficulty: RuinDifficulty.NIGHTMARE,
+    description: '一个研究量子芯片的顶级设施，可能藏有传说级芯片材料。',
+    requiredLevel: 3,
+    duration: 90 * 60 * 1000,
+    rewards: {
+      credits: 4000,
+      items: [
+        { itemId: 'chip_material', count: 35, chance: 0.5 },
+        { itemId: 'gene_material', count: 15, chance: 0.4 },
+        { itemId: 'mineral_quantum', count: 3, chance: 0.3 },
+        { itemId: 'cyber_core', count: 2, chance: 0.25 },
+      ],
+      experience: 900,
+    },
+  },
+  {
+    id: 'ruin_neural_001',
+    name: '神经中枢遗迹',
+    type: RuinType.NEURAL_NEXUS,
+    difficulty: RuinDifficulty.HARD,
+    description: '一个古老的神经中枢设施，据说能产出稀有的神经核心。',
+    requiredLevel: 2,
+    duration: 50 * 60 * 1000,
+    rewards: {
+      credits: 2000,
+      items: [
+        { itemId: 'cyber_core', count: 2, chance: 0.4 },
+        { itemId: 'chip_material', count: 15, chance: 0.6 },
+        { itemId: 'gene_material', count: 10, chance: 0.5 },
+      ],
+      experience: 550,
+    },
+  },
+  {
+    id: 'ruin_neural_002',
+    name: '神经核心深渊',
+    type: RuinType.NEURAL_NEXUS,
+    difficulty: RuinDifficulty.HELL,
+    description: '传说中神经核心的诞生之地，极度危险但奖励丰厚。',
+    requiredLevel: 4,
+    duration: 150 * 60 * 1000,
+    rewards: {
+      credits: 8000,
+      items: [
+        { itemId: 'cyber_core', count: 5, chance: 0.35 },
+        { itemId: 'chip_material', count: 50, chance: 0.5 },
+        { itemId: 'mineral_quantum', count: 5, chance: 0.3 },
+        { itemId: 'void_essence', count: 1, chance: 0.1 },
+      ],
+      experience: 1500,
     },
   },
 ];
